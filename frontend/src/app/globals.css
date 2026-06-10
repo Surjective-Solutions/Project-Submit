@@ -1,0 +1,164 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+  /* Auth panel */
+  --color-auth-panel: var(--auth-panel);
+  --color-auth-panel-muted: var(--auth-panel-muted);
+}
+
+:root {
+  --background: #FFFFFF;
+  --foreground: #1F2937;
+  --card: #F8FAFC;
+  --card-foreground: #1F2937;
+  --popover: #F8FAFC;
+  --popover-foreground: #1F2937;
+  --primary: #3940A0;
+  --primary-foreground: #FFFFFF;
+  --secondary: #34A0C5;
+  --secondary-foreground: #FFFFFF;
+  --muted: #F8FAFC;
+  --muted-foreground: #6B7280;
+  --accent: #B8FF8F;
+  --accent-foreground: #053A34;
+  --destructive: #F51A25;
+  --border: #E5E7EB;
+  --input: #E5E7EB;
+  --ring: #3940A0;
+  --chart-1: #3940A0;
+  --chart-2: #34A0C5;
+  --chart-3: #B8FF8F;
+  --chart-4: #E9D848;
+  --chart-5: #053A34;
+  --radius: 0.625rem;
+  --sidebar: #F8FAFC;
+  --sidebar-foreground: #1F2937;
+  --sidebar-primary: #3940A0;
+  --sidebar-primary-foreground: #842424;
+  --sidebar-accent: #EEF2FF;
+  --sidebar-accent-foreground: #1F2937;
+  --sidebar-border: #E5E7EB;
+  --sidebar-ring: #3940A0;
+  /* Auth design system */
+  --auth-panel: #053A34;
+  --auth-panel-muted: rgba(255, 255, 255, 0.5);
+  /* Semantic */
+  --alert: #F51A25;
+  --achievement: #E9D848;
+}
+
+.dark {
+  --background: #050608;
+  --foreground: #F8FAFC;
+  --card: #161B22;
+  --card-foreground: #F8FAFC;
+  --popover: #161B22;
+  --popover-foreground: #F8FAFC;
+  --primary: #5A62C4;
+  --primary-foreground: #FFFFFF;
+  --secondary: #34A0C5;
+  --secondary-foreground: #FFFFFF;
+  --muted: #21262D;
+  --muted-foreground: #8B949E;
+  --accent: #B8FF8F;
+  --accent-foreground: #053A34;
+  --destructive: #F51A25;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.15);
+  --ring: #5A62C4;
+  --chart-1: #5A62C4;
+  --chart-2: #34A0C5;
+  --chart-3: #B8FF8F;
+  --chart-4: #E9D848;
+  --chart-5: #053A34;
+  --sidebar: #161B22;
+  --sidebar-foreground: #F8FAFC;
+  --sidebar-primary: #5A62C4;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #21262D;
+  --sidebar-accent-foreground: #F8FAFC;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: #5A62C4;
+}
+
+/* Admin / Teacher / Cashier shell — override compiled Tailwind sidebar tokens */
+[data-admin-shell],
+[data-teacher-shell],
+[data-cashier-shell] {
+  --sidebar: #1e1d42;
+  --color-sidebar: #1e1d42;
+  --sidebar-foreground: rgba(255, 255, 255, 0.82);
+  --color-sidebar-foreground: rgba(255, 255, 255, 0.82);
+  --sidebar-primary: #ffffff;
+  --color-sidebar-primary: linear-gradient(165deg, #1e1b4b 0%, #1a2e50 30%, #0e3540 60%, #053a34 100%) !important;;
+  /*  --sidebar-primary-foreground: #1e1d42; */
+  /* --color-sidebar-primary-foreground: #1e1d42; */
+  --sidebar-accent: rgba(255, 255, 255, 0.10);
+  --color-sidebar-accent: rgba(255, 255, 255, 0.10);
+  --sidebar-accent-foreground: #ffffff;
+  --color-sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --color-sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: rgba(255, 255, 255, 0.25);
+  --color-sidebar-ring: rgba(255, 255, 255, 0.25);
+}
+
+/* Sidebar gradient is applied via the Sidebar innerStyle prop in AdminSidebar.jsx
+   to avoid HMR CSS injection-order issues. */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}

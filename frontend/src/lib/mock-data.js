@@ -316,6 +316,7 @@ export const MOCK_STUDENT_ENROLLED_CLASSES = [
         status: 'GRADED',
         exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper+PDF',
         submission_url: 'https://placehold.co/600x800?text=My+Submission',
+        graded_pdf_url: 'https://placehold.co/600x800?text=Graded+Submission',
       },
       {
         id: 'prev-001-2',
@@ -334,6 +335,7 @@ export const MOCK_STUDENT_ENROLLED_CLASSES = [
         status: 'GRADED',
         exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper+PDF',
         submission_url: 'https://placehold.co/600x800?text=My+Submission',
+        graded_pdf_url: 'https://placehold.co/600x800?text=Graded+Submission',
       },
       {
         id: 'prev-001-4',
@@ -374,6 +376,7 @@ export const MOCK_STUDENT_ENROLLED_CLASSES = [
         status: 'GRADED',
         exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper+PDF',
         submission_url: 'https://placehold.co/600x800?text=My+Submission',
+        graded_pdf_url: 'https://placehold.co/600x800?text=Graded+Submission',
       },
       {
         id: 'prev-002-2',
@@ -392,6 +395,7 @@ export const MOCK_STUDENT_ENROLLED_CLASSES = [
         status: 'GRADED',
         exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper+PDF',
         submission_url: 'https://placehold.co/600x800?text=My+Submission',
+        graded_pdf_url: 'https://placehold.co/600x800?text=Graded+Submission',
       },
     ],
   },

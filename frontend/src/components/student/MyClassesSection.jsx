@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { User, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MOCK_STUDENT_ENROLLED_CLASSES } from '@/lib/mock-data';
@@ -27,6 +27,7 @@ const PAYMENT_BADGE = {
 // ── Class Card ────────────────────────────────────────────────────────────────
 
 function ClassCard({ cls }) {
+  const router = useRouter();
   const subjectColor = SUBJECT_COLORS[cls.subject] ?? SUBJECT_COLORS.default;
   const badge = PAYMENT_BADGE[cls.payment_status];
 
@@ -71,9 +72,9 @@ function ClassCard({ cls }) {
         <Button
           variant="outline"
           className="w-full border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 text-xs h-8"
-          asChild
+          onClick={() => router.push(`/student/dashboard/classes/${cls.id}`)}
         >
-          <Link href={`/student/dashboard/classes/${cls.id}`}>View</Link>
+          View
         </Button>
       </div>
     </div>

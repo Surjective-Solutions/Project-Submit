@@ -129,7 +129,8 @@
 /* Admin / Teacher / Cashier shell — override compiled Tailwind sidebar tokens */
 [data-admin-shell],
 [data-teacher-shell],
-[data-cashier-shell] {
+[data-cashier-shell],
+[data-student-shell] {
   --sidebar: #1e1d42;
   --color-sidebar: #1e1d42;
   --sidebar-foreground: rgba(255, 255, 255, 0.82);

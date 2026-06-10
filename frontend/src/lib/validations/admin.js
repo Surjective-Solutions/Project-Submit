@@ -167,6 +167,43 @@ export const adminInstructorEditSchema = z
     { message: 'Passwords do not match', path: ['confirm_password'] }
   );
 
+export const studentSelfEditSchema = z
+  .object({
+    first_name: z.string().min(1, 'First name is required'),
+    last_name: z.string().min(1, 'Last name is required'),
+    contact_number: sriLankaPhone,
+    whatsapp_number: z
+      .string()
+      .refine((v) => v === '' || /^\+94\d{9}$/.test(v), 'Enter a valid Sri Lanka number (+94XXXXXXXXX)')
+      .optional()
+      .or(z.literal('')),
+    email: z.string().email('Invalid email address').optional().or(z.literal('')),
+    date_of_birth: z.string().optional().or(z.literal('')),
+    gender: z.enum(['MALE', 'FEMALE', 'OTHER']),
+    school_name: z.string().optional().or(z.literal('')),
+    grade: z.string().optional().or(z.literal('')),
+    subject_stream: z.string().optional().or(z.literal('')),
+    district: z.string().optional().or(z.literal('')),
+    guardian_name: z.string().optional().or(z.literal('')),
+    guardian_contact: z.string().optional().or(z.literal('')),
+    address: z.string().optional().or(z.literal('')),
+    new_password: z
+      .string()
+      .refine((v) => !v || v.length >= 8, 'Password must be at least 8 characters')
+      .optional()
+      .or(z.literal('')),
+    confirm_password: z.string().optional().or(z.literal('')),
+  })
+  .refine(
+    (d) => {
+      if (d.new_password && d.new_password !== '') {
+        return d.confirm_password === d.new_password;
+      }
+      return true;
+    },
+    { message: 'Passwords do not match', path: ['confirm_password'] }
+  );
+
 export const studentCreateSchema = z
   .object({
     first_name: z.string().min(1, 'First name is required'),

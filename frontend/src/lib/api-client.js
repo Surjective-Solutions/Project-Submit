@@ -122,6 +122,23 @@ export async function updateAdminInstructor(id, data) {
   return request(`/admin/instructors/${id}`, { method: 'PUT', body: data });
 }
 
+// ── Student Profile ───────────────────────────────────────────────────────────
+
+// TODO: replace with actual microservice endpoint
+export async function getEnrolledClasses() {
+  return request('/student/classes', { method: 'GET' });
+}
+
+// TODO: replace with actual microservice endpoint
+export async function getStudentProfile() {
+  return request('/student/profile', { method: 'GET' });
+}
+
+// TODO: replace with actual microservice endpoint
+export async function updateStudentProfile(data) {
+  return request('/student/profile', { method: 'PUT', body: data });
+}
+
 // ── Payments ──────────────────────────────────────────────────────────────────
 
 // TODO: replace with actual microservice endpoint

@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
@@ -17,7 +16,6 @@ import { studentLoginSchema } from '@/lib/validations/student';
 import { studentLogin } from '@/lib/api-client';
 
 export default function StudentLoginForm() {
-  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -35,7 +33,6 @@ export default function StudentLoginForm() {
     try {
       const result = await studentLogin(data.identifier, data.password);
       toast.success(result.message ?? 'Logged in successfully');
-      router.push('/student/dashboard');
     } catch {
       toast.error('Login failed. Please check your credentials.');
     } finally {

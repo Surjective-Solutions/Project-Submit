@@ -1,13 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { BookOpen, User, Search } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
+import Link from 'next/link';
+import { User, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MOCK_STUDENT_ENROLLED_CLASSES } from '@/lib/mock-data';
 
@@ -29,120 +24,9 @@ const PAYMENT_BADGE = {
   REJECTED: { label: 'Payment Rejected', className: 'bg-red-500 text-white'   },
 };
 
-const PAYMENT_BANNER = {
-  PAID: {
-    className: 'bg-green-50 border border-green-200 text-green-800',
-    text: 'Your payment has been approved. You have full access to this class.',
-  },
-  PENDING: {
-    className: 'bg-amber-50 border border-amber-200 text-amber-800',
-    text: 'Your payment slip is under review. Access will be granted once approved.',
-  },
-  REJECTED: {
-    className: 'bg-red-50 border border-red-200 text-red-800',
-    text: 'Your payment was rejected. Please contact the cashier to resolve this.',
-  },
-};
-
-function formatLKR(amount) {
-  return `LKR ${Number(amount).toLocaleString('en-LK')}`;
-}
-
-function formatDate(iso) {
-  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-}
-
-// ── View Class Dialog ─────────────────────────────────────────────────────────
-
-function ViewClassDialog({ open, onOpenChange, cls }) {
-  if (!cls) return null;
-  const subjectColor = SUBJECT_COLORS[cls.subject] ?? SUBJECT_COLORS.default;
-  const banner = PAYMENT_BANNER[cls.payment_status];
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="sm:max-w-lg p-0 gap-0 overflow-hidden max-h-[90vh]"
-        style={{ display: 'flex', flexDirection: 'column' }}
-      >
-        {/* Fixed header */}
-        <div
-          className="px-6 py-5 flex items-center gap-3 shrink-0"
-          style={{ background: 'linear-gradient(135deg, #3940A0 0%, #5a62ff 100%)' }}
-        >
-          <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
-            <BookOpen className="h-5 w-5 text-white" />
-          </div>
-          <div className="min-w-0">
-            <DialogTitle className="text-white text-base font-semibold leading-tight m-0 truncate">
-              {cls.class_name}
-            </DialogTitle>
-            <DialogDescription className="text-white/60 text-xs mt-0.5 m-0">
-              {cls.class_year}
-            </DialogDescription>
-          </div>
-        </div>
-
-        {/* Scrollable body */}
-        <div className="flex-1 min-h-0 overflow-y-auto">
-          <div className="px-6 py-5 space-y-4">
-
-            {/* Class image */}
-            <div className="rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
-              <img
-                src={cls.image_url ?? 'https://placehold.co/400x200?text=Class+Image'}
-                alt={cls.class_name}
-                className="w-full object-cover"
-                style={{ maxHeight: '180px' }}
-              />
-            </div>
-
-            {/* Payment status banner */}
-            <div className={`rounded-xl px-4 py-3 text-sm ${banner.className}`}>
-              {banner.text}
-            </div>
-
-            {/* Details grid */}
-            <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-              {[
-                { label: 'Class Name',    value: cls.class_name },
-                { label: 'Year',          value: cls.class_year },
-                { label: 'Subject',       value: <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${subjectColor}`}>{cls.subject}</span> },
-                { label: 'Teacher',       value: cls.teacher_name },
-                { label: 'Monthly Fee',   value: formatLKR(cls.monthly_fee) },
-                { label: 'Enrolled',      value: formatDate(cls.enrolled_at) },
-              ].map(({ label, value }) => (
-                <div key={label}>
-                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">{label}</p>
-                  <p className="text-sm text-gray-800">{value}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Description */}
-            {cls.description && (
-              <div>
-                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">About</p>
-                <p className="text-sm text-gray-600 leading-relaxed">{cls.description}</p>
-              </div>
-            )}
-
-            <div className="h-1" />
-          </div>
-        </div>
-
-        {/* Fixed footer */}
-        <div className="shrink-0 flex items-center justify-end px-6 py-4 border-t bg-gray-50/60 rounded-b-xl">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 // ── Class Card ────────────────────────────────────────────────────────────────
 
-function ClassCard({ cls, onView }) {
+function ClassCard({ cls }) {
   const subjectColor = SUBJECT_COLORS[cls.subject] ?? SUBJECT_COLORS.default;
   const badge = PAYMENT_BADGE[cls.payment_status];
 
@@ -187,9 +71,9 @@ function ClassCard({ cls, onView }) {
         <Button
           variant="outline"
           className="w-full border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 text-xs h-8"
-          onClick={() => onView(cls)}
+          asChild
         >
-          View
+          <Link href={`/student/dashboard/classes/${cls.id}`}>View</Link>
         </Button>
       </div>
     </div>
@@ -199,7 +83,6 @@ function ClassCard({ cls, onView }) {
 // ── Section ───────────────────────────────────────────────────────────────────
 
 export default function MyClassesSection() {
-  const [viewClass, setViewClass] = useState(null);
   const [query, setQuery] = useState('');
 
   const filtered = MOCK_STUDENT_ENROLLED_CLASSES.filter((cls) => {
@@ -235,16 +118,10 @@ export default function MyClassesSection() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filtered.map((cls) => (
-            <ClassCard key={cls.id} cls={cls} onView={setViewClass} />
+            <ClassCard key={cls.id} cls={cls} />
           ))}
         </div>
       )}
-
-      <ViewClassDialog
-        open={!!viewClass}
-        onOpenChange={(o) => !o && setViewClass(null)}
-        cls={viewClass}
-      />
     </div>
   );
 }

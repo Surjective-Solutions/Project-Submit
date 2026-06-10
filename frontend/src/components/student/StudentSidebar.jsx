@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, usePathname } from 'next/navigation';
 import { BookOpen, User, GraduationCap, BarChart2, CalendarDays, HelpCircle, LogOut } from 'lucide-react';
 import {
   Sidebar,
@@ -29,10 +29,13 @@ const NAV_ITEMS = [
 
 export default function StudentSidebar() {
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
 
-  const activeSection = searchParams.get('section') ?? 'classes';
+  const activeSection = pathname.includes('/dashboard/classes/')
+    ? 'classes'
+    : (searchParams.get('section') ?? 'classes');
   const student = MOCK_LOGGED_IN_STUDENT;
   const initials = `${student.first_name[0]}${student.last_name[0]}`.toUpperCase();
 

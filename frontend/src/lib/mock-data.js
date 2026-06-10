@@ -260,6 +260,86 @@ export const MOCK_INSTRUCTORS = [
   },
 ];
 
+export const MOCK_LOGGED_IN_INSTRUCTOR = {
+  id: '1',
+  employee_id: 'EMP-001',
+  first_name: 'Chamara',
+  last_name: 'Perera',
+  email: 'chamara.perera@submitx.app',
+  contact_number: '+94775550123',
+  subject_area: 'Mathematics',
+  status: 'ACTIVE',
+  profile_photo_url: null,
+  created_at: '2026-01-10T08:30:00.000Z',
+};
+
+export const MOCK_INSTRUCTOR_TEACHERS = [
+  {
+    id: 'teacher-001',
+    teacher_name: 'Dr. Anusha Perera',
+    subject_area: 'Mathematics',
+    bio: 'Advanced mathematics teacher focused on A/L problem solving and structured revision.',
+    classes: [
+      {
+        id: 'class-001',
+        class_name: 'Grade 12 Advanced Mathematics',
+        class_year: '2026',
+        subject: 'Mathematics',
+        monthly_fee: 2500,
+        status: 'ACTIVE',
+      },
+      {
+        id: 'class-002',
+        class_name: 'Grade 13 Combined Revision',
+        class_year: '2026',
+        subject: 'Combined Mathematics',
+        monthly_fee: 3200,
+        status: 'ACTIVE',
+      },
+    ],
+  },
+  {
+    id: 'teacher-002',
+    teacher_name: 'Mr. Rohan Fernando',
+    subject_area: 'Physics',
+    bio: 'Physics classes with practical examples, model papers, and exam-focused discussion.',
+    classes: [
+      {
+        id: 'class-003',
+        class_name: 'Grade 12 Physics',
+        class_year: '2026',
+        subject: 'Physics',
+        monthly_fee: 2800,
+        status: 'ACTIVE',
+      },
+      {
+        id: 'class-004',
+        class_name: 'Grade 13 Mechanics Revision',
+        class_year: '2026',
+        subject: 'Physics',
+        monthly_fee: 3000,
+        status: 'INACTIVE',
+      },
+    ],
+  },
+  {
+    id: 'teacher-003',
+    teacher_name: 'Ms. Tharindi Wickrama',
+    subject_area: 'Chemistry',
+    bio: 'Chemistry teacher covering organic, inorganic, and physical chemistry with weekly paper practice.',
+    classes: [
+      {
+        id: 'class-005',
+        class_name: 'Grade 12 Chemistry',
+        class_year: '2026',
+        subject: 'Chemistry',
+        monthly_fee: 2600,
+        status: 'ACTIVE',
+      },
+    ],
+  },
+];
+
 export const MOCK_LOGGED_IN_STUDENT = {
   id: '1',
   student_number: 'SUBMITX-2026-000001',

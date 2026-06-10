@@ -40,3 +40,36 @@ export const instructorRegisterSchema = z
     message: 'Passwords do not match',
     path: ['confirmPassword'],
   });
+
+export const instructorProfileSchema = z
+  .object({
+    first_name: z.string().min(1, 'First name is required'),
+    last_name: z.string().min(1, 'Last name is required'),
+    email: z.string().email('Invalid email address').optional().or(z.literal('')),
+    contact_number: sriLankaPhone,
+    subject_area: z.string().min(1, 'Subject area is required'),
+    employee_id: z.string().min(1, 'Employee ID is required'),
+    new_password: z
+      .string()
+      .refine(
+        (v) =>
+          !v ||
+          (v.length >= 8 &&
+            /[A-Z]/.test(v) &&
+            /\d/.test(v) &&
+            /[^A-Za-z0-9]/.test(v)),
+        'Password must be 8+ chars with uppercase, number, and special character'
+      )
+      .optional()
+      .or(z.literal('')),
+    confirm_password: z.string().optional().or(z.literal('')),
+  })
+  .refine(
+    (data) => {
+      if (data.new_password && data.new_password !== '') {
+        return data.confirm_password === data.new_password;
+      }
+      return true;
+    },
+    { message: 'Passwords do not match', path: ['confirm_password'] }
+  );

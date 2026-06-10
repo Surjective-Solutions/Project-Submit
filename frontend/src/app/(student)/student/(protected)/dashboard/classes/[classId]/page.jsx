@@ -11,6 +11,7 @@ import {
   FileText,
   AlertTriangle,
   XCircle,
+  CheckCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -157,6 +158,26 @@ function ViewPaperDialog({ open, onOpenChange, paper }) {
               <p className="text-sm text-gray-400">Submission file not available.</p>
             )}
           </div>
+
+          {/* Graded Submission — only for GRADED papers */}
+          {paper.status === 'GRADED' && (
+            <div className="sm:col-span-2 rounded-xl border border-green-200 bg-green-50/40 p-4 space-y-3">
+              <p className="text-xs font-semibold text-green-700 uppercase tracking-wider">Graded Submission</p>
+              {paper.graded_pdf_url ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-2 border-green-200 text-green-700 hover:bg-green-50"
+                  onClick={() => window.open(paper.graded_pdf_url, '_blank')}
+                >
+                  <CheckCircle className="h-3.5 w-3.5" />
+                  Open Graded Submission
+                </Button>
+              ) : (
+                <p className="text-sm text-gray-400">Graded submission not available yet.</p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Footer */}

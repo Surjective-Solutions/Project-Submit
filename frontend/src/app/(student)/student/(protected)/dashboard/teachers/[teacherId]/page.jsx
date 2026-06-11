@@ -4,9 +4,11 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { toast } from 'sonner';
-import { ArrowLeft, BookOpen, CheckCircle } from 'lucide-react';
+import { ArrowLeft, BookOpen, CheckCircle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { MOCK_TUTORS, MOCK_STUDENT_ENROLLED_CLASSES } from '@/lib/mock-data';
+import DeleteConfirmDialog from '@/components/admin/DeleteConfirmDialog';
+import { useEnrolledClasses } from '@/context/EnrolledClassesContext';
+import { MOCK_TUTORS } from '@/lib/mock-data';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -46,8 +48,10 @@ function TeacherInitials({ name, size = 48 }) {
 
 // ── Class Card ────────────────────────────────────────────────────────────────
 
-function ClassCard({ cls, isEnrolled, onAdd }) {
+function ClassCard({ cls, enrolledEntry, onAdd, onRemove }) {
   const subjectColor = SUBJECT_COLORS[cls.subject] ?? SUBJECT_COLORS.default;
+  const isEnrolled = !!enrolledEntry;
+  const canRemove = enrolledEntry?.payment_status === 'NOT_PAID';
 
   return (
     <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">
@@ -78,7 +82,6 @@ function ClassCard({ cls, isEnrolled, onAdd }) {
           <span className={`inline-block text-[11px] px-2 py-0.5 rounded-full font-medium ${subjectColor}`}>
             {cls.subject}
           </span>
-
           <p className="text-xs text-gray-400">
             {formatLKR(cls.monthly_fee)}{' '}
             <span className="text-gray-300">/ month</span>
@@ -87,18 +90,33 @@ function ClassCard({ cls, isEnrolled, onAdd }) {
 
         {/* Footer button */}
         <div className="mt-auto pt-1">
-          {isEnrolled ? (
-            <div className="w-full inline-flex items-center justify-center gap-1.5 h-9 rounded-lg border border-green-200 bg-green-50 text-green-700 text-xs font-medium cursor-default select-none">
-              <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-              Already Added
-            </div>
-          ) : (
+          {!isEnrolled ? (
             <Button
               className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs h-9"
               onClick={() => onAdd(cls)}
             >
               Add to My Classes
             </Button>
+          ) : canRemove ? (
+            <div className="flex gap-2">
+              <div className="flex-1 inline-flex items-center justify-center gap-1.5 h-9 rounded-lg border border-green-200 bg-green-50 text-green-700 text-xs font-medium cursor-default select-none">
+                <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+                Already Added
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 border-red-200 text-red-500 hover:text-red-600 hover:bg-red-50 shrink-0"
+                onClick={() => onRemove(cls)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <div className="w-full inline-flex items-center justify-center gap-1.5 h-9 rounded-lg border border-green-200 bg-green-50 text-green-700 text-xs font-medium cursor-default select-none">
+              <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+              Already Added
+            </div>
           )}
         </div>
       </div>
@@ -111,8 +129,8 @@ function ClassCard({ cls, isEnrolled, onAdd }) {
 export default function TeacherClassesPage() {
   const { teacherId } = useParams();
   const teacher = MOCK_TUTORS.find((t) => t.id === teacherId);
-
-  const [addedIds, setAddedIds] = useState(new Set());
+  const { classes, addClass, removeClass } = useEnrolledClasses();
+  const [classToRemove, setClassToRemove] = useState(null);
 
   if (!teacher) {
     return (
@@ -130,31 +148,34 @@ export default function TeacherClassesPage() {
 
   const subjectColor = SUBJECT_COLORS[teacher.subject_area] ?? SUBJECT_COLORS.default;
 
-  function isEnrolled(classId) {
-    return addedIds.has(classId) || MOCK_STUDENT_ENROLLED_CLASSES.some((c) => c.id === classId);
+  function getEnrolledEntry(classId) {
+    return classes.find((c) => c.id === classId) ?? null;
   }
 
   function handleAdd(cls) {
-    if (isEnrolled(cls.id)) return;
-
-    MOCK_STUDENT_ENROLLED_CLASSES.push({
+    if (getEnrolledEntry(cls.id)) return;
+    addClass({
       id: cls.id,
       class_name: cls.class_name,
       class_year: cls.class_year,
       teacher_name: teacher.teacher_name,
       subject: cls.subject,
       image_url: cls.image_url,
-      payment_status: 'PENDING',
+      payment_status: 'NOT_PAID',
       enrolled_at: new Date().toISOString(),
       monthly_fee: cls.monthly_fee,
-      description: cls.description,
+      description: cls.description ?? '',
       papers: [],
       previous_papers: [],
     });
-
-    setAddedIds((prev) => new Set([...prev, cls.id]));
-
     toast.success('Added to My Classes! Complete your payment to get access.');
+  }
+
+  function handleConfirmRemove() {
+    if (!classToRemove) return;
+    removeClass(classToRemove.id);
+    toast.success('Class removed');
+    setClassToRemove(null);
   }
 
   const classCount = teacher.classes.length;
@@ -209,13 +230,27 @@ export default function TeacherClassesPage() {
               <ClassCard
                 key={cls.id}
                 cls={cls}
-                isEnrolled={isEnrolled(cls.id)}
+                enrolledEntry={getEnrolledEntry(cls.id)}
                 onAdd={handleAdd}
+                onRemove={setClassToRemove}
               />
             ))}
           </div>
         )}
       </div>
+
+      <DeleteConfirmDialog
+        open={!!classToRemove}
+        onOpenChange={(o) => !o && setClassToRemove(null)}
+        title="Remove Class"
+        description={
+          classToRemove
+            ? `Are you sure you want to remove "${classToRemove.class_name}" from your classes? You can add it again later.`
+            : ''
+        }
+        confirmLabel="Remove"
+        onConfirm={handleConfirmRemove}
+      />
     </div>
   );
 }

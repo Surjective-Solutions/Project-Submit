@@ -78,9 +78,7 @@ function ClassCard({ cls, isEnrolled, onAdd }) {
           <span className={`inline-block text-[11px] px-2 py-0.5 rounded-full font-medium ${subjectColor}`}>
             {cls.subject}
           </span>
-          {cls.description && (
-            <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{cls.description}</p>
-          )}
+
           <p className="text-xs text-gray-400">
             {formatLKR(cls.monthly_fee)}{' '}
             <span className="text-gray-300">/ month</span>

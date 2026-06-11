@@ -52,9 +52,7 @@ function TeacherCard({ teacher }) {
             {teacher.subject_area}
           </span>
         </div>
-        {teacher.bio && (
-          <p className="text-xs text-gray-500 text-center line-clamp-2 leading-relaxed">{teacher.bio}</p>
-        )}
+
       </div>
       <div className="px-4 pb-4 mt-auto">
         <Link

@@ -26,7 +26,7 @@ export const MOCK_TUTORS = [
         id: 'tc-002',
         class_name: 'Grade 13 Combined Revision',
         class_year: '2026',
-        subject: 'Combined Mathematics',
+        subject: 'Mathematics',
         image_url: 'https://placehold.co/400x200?text=Class+Image',
         monthly_fee: 3200,
         description: 'Intensive combined mathematics revision for Grade 13 students targeting university entrance.',

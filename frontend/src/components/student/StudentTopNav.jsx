@@ -1,11 +1,15 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { Bell } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
 export default function StudentTopNav() {
+  const pathname = usePathname();
+  const title = pathname.startsWith('/student') ? 'Dashboard' : 'Student';
+  
   return (
     <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-white px-4">
       <SidebarTrigger className="-ml-1 text-gray-400 hover:text-gray-700" />

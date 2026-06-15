@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   XCircle,
   CheckCircle,
+  Info,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -335,8 +336,29 @@ function PreviousPapersSection({ papers }) {
 
 // ── Unpaid State ──────────────────────────────────────────────────────────────
 
+const UNPAID_CONFIG = {
+  NOT_PAID: {
+    iconEl: <Info className="h-8 w-8 text-slate-500" />,
+    iconBg: 'bg-slate-100',
+    heading: 'Payment Required',
+    body: 'You have not made a payment for this class yet. Please complete your payment to get access.',
+  },
+  PENDING: {
+    iconEl: <AlertTriangle className="h-8 w-8 text-amber-500" />,
+    iconBg: 'bg-amber-100',
+    heading: 'Payment Under Review',
+    body: 'Your payment slip has been submitted and is currently being reviewed. You will get access once approved.',
+  },
+  REJECTED: {
+    iconEl: <XCircle className="h-8 w-8 text-red-500" />,
+    iconBg: 'bg-red-100',
+    heading: 'Payment Rejected',
+    body: 'Your payment was rejected. Please contact the cashier and resubmit your payment.',
+  },
+};
+
 function UnpaidView({ cls }) {
-  const isPending = cls.payment_status === 'PENDING';
+  const cfg = UNPAID_CONFIG[cls.payment_status] ?? UNPAID_CONFIG.NOT_PAID;
 
   return (
     <div className="space-y-4">
@@ -355,23 +377,13 @@ function UnpaidView({ cls }) {
             <p className="text-sm text-gray-400 mt-1">{cls.teacher_name} · {cls.subject} · {cls.class_year}</p>
           </div>
 
-          <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto ${isPending ? 'bg-amber-100' : 'bg-red-100'}`}>
-            {isPending ? (
-              <AlertTriangle className="h-8 w-8 text-amber-500" />
-            ) : (
-              <XCircle className="h-8 w-8 text-red-500" />
-            )}
+          <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto ${cfg.iconBg}`}>
+            {cfg.iconEl}
           </div>
 
           <div className="space-y-2">
-            <h2 className="text-base font-semibold text-gray-900">
-              {isPending ? 'Payment Under Review' : 'Payment Rejected'}
-            </h2>
-            <p className="text-sm text-gray-500 leading-relaxed">
-              {isPending
-                ? 'Your payment slip has been submitted and is currently being reviewed by our team. You will get access to this class once your payment is approved.'
-                : 'Your payment was rejected. Please contact the cashier to resolve this issue and resubmit your payment.'}
-            </p>
+            <h2 className="text-base font-semibold text-gray-900">{cfg.heading}</h2>
+            <p className="text-sm text-gray-500 leading-relaxed">{cfg.body}</p>
           </div>
 
           <Button
@@ -439,7 +451,7 @@ export default function ClassDetailPage() {
     );
   }
 
-  if (cls.payment_status === 'PENDING' || cls.payment_status === 'REJECTED') {
+  if (cls.payment_status !== 'PAID') {
     return <UnpaidView cls={cls} />;
   }
 

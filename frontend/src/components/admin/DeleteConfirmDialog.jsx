@@ -11,14 +11,24 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-export default function DeleteConfirmDialog({ open, onOpenChange, name, onConfirm }) {
+export default function DeleteConfirmDialog({
+  open,
+  onOpenChange,
+  name,
+  onConfirm,
+  title,
+  description,
+  confirmLabel,
+}) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete {name}</AlertDialogTitle>
+          <AlertDialogTitle>{title ?? `Delete ${name}`}</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete <strong>{name}</strong>? This action cannot be undone.
+            {description ?? (
+              <>Are you sure you want to delete <strong>{name}</strong>? This action cannot be undone.</>
+            )}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -27,7 +37,7 @@ export default function DeleteConfirmDialog({ open, onOpenChange, name, onConfir
             onClick={onConfirm}
             className="bg-destructive text-white hover:bg-destructive/90"
           >
-            Yes, Delete
+            {confirmLabel ?? 'Yes, Delete'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

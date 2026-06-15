@@ -2,34 +2,38 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { User, Search } from 'lucide-react';
+import { User, Search, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { MOCK_STUDENT_ENROLLED_CLASSES } from '@/lib/mock-data';
+import DeleteConfirmDialog from '@/components/admin/DeleteConfirmDialog';
+import { useEnrolledClasses } from '@/context/EnrolledClassesContext';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const SUBJECT_COLORS = {
-  Mathematics:          'bg-blue-50 text-blue-700',
-  Physics:              'bg-orange-50 text-orange-700',
-  Chemistry:            'bg-purple-50 text-purple-700',
-  Biology:              'bg-green-50 text-green-700',
-  'English Literature': 'bg-pink-50 text-pink-700',
+  Mathematics:            'bg-blue-50 text-blue-700',
+  Physics:                'bg-orange-50 text-orange-700',
+  Chemistry:              'bg-purple-50 text-purple-700',
+  Biology:                'bg-green-50 text-green-700',
+  'English Literature':   'bg-pink-50 text-pink-700',
   'Combined Mathematics': 'bg-cyan-50 text-cyan-700',
-  default:              'bg-gray-100 text-gray-600',
+  default:                'bg-gray-100 text-gray-600',
 };
 
 const PAYMENT_BADGE = {
-  PAID:     { label: 'Paid',             className: 'bg-green-500 text-white' },
-  PENDING:  { label: 'Payment Pending',  className: 'bg-amber-500 text-white' },
-  REJECTED: { label: 'Payment Rejected', className: 'bg-red-500 text-white'   },
+  PAID:     { label: 'Paid',             className: 'bg-green-500 text-white'  },
+  NOT_PAID: { label: 'Not Paid',         className: 'bg-slate-400 text-white'  },
+  PENDING:  { label: 'Payment Pending',  className: 'bg-amber-500 text-white'  },
+  REJECTED: { label: 'Payment Rejected', className: 'bg-red-500 text-white'    },
 };
 
 // ── Class Card ────────────────────────────────────────────────────────────────
 
-function ClassCard({ cls }) {
+function ClassCard({ cls, onRemove }) {
   const router = useRouter();
   const subjectColor = SUBJECT_COLORS[cls.subject] ?? SUBJECT_COLORS.default;
-  const badge = PAYMENT_BADGE[cls.payment_status];
+  const badge = PAYMENT_BADGE[cls.payment_status] ?? PAYMENT_BADGE.NOT_PAID;
+  const canRemove = cls.payment_status === 'NOT_PAID';
 
   return (
     <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">
@@ -40,9 +44,7 @@ function ClassCard({ cls }) {
           alt={cls.class_name}
           className="w-full h-full object-cover"
         />
-        {/* Gradient scrim */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-        {/* Payment status badge */}
         <span className={`absolute top-2.5 right-2.5 text-[10px] font-semibold px-2 py-1 rounded-full ${badge.className}`}>
           {badge.label}
         </span>
@@ -68,14 +70,24 @@ function ClassCard({ cls }) {
       </div>
 
       {/* Footer */}
-      <div className="px-4 pb-4">
+      <div className="px-4 pb-4 flex gap-2">
         <Button
           variant="outline"
-          className="w-full border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 text-xs h-8"
+          className="flex-1 border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 text-xs h-8"
           onClick={() => router.push(`/student/dashboard/classes/${cls.id}`)}
         >
           View
         </Button>
+        {canRemove && (
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 border-red-200 text-red-500 hover:text-red-600 hover:bg-red-50 shrink-0"
+            onClick={() => onRemove(cls)}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        )}
       </div>
     </div>
   );
@@ -84,9 +96,11 @@ function ClassCard({ cls }) {
 // ── Section ───────────────────────────────────────────────────────────────────
 
 export default function MyClassesSection() {
+  const { classes, removeClass } = useEnrolledClasses();
   const [query, setQuery] = useState('');
+  const [classToRemove, setClassToRemove] = useState(null);
 
-  const filtered = MOCK_STUDENT_ENROLLED_CLASSES.filter((cls) => {
+  const filtered = classes.filter((cls) => {
     const q = query.toLowerCase();
     return (
       cls.class_name.toLowerCase().includes(q) ||
@@ -95,12 +109,19 @@ export default function MyClassesSection() {
     );
   });
 
+  function handleConfirmRemove() {
+    if (!classToRemove) return;
+    removeClass(classToRemove.id);
+    toast.success('Class removed from My Classes');
+    setClassToRemove(null);
+  }
+
   return (
     <div className="space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <div className="flex items-center gap-2.5 shrink-0">
           <h2 className="text-xl font-semibold text-gray-900">My Classes</h2>
-          <span className="text-sm text-gray-400">•&nbsp;{MOCK_STUDENT_ENROLLED_CLASSES.length} enrolled</span>
+          <span className="text-sm text-gray-400">•&nbsp;{classes.length} enrolled</span>
         </div>
         <div className="relative sm:max-w-xs w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
@@ -119,10 +140,23 @@ export default function MyClassesSection() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filtered.map((cls) => (
-            <ClassCard key={cls.id} cls={cls} />
+            <ClassCard key={cls.id} cls={cls} onRemove={setClassToRemove} />
           ))}
         </div>
       )}
+
+      <DeleteConfirmDialog
+        open={!!classToRemove}
+        onOpenChange={(o) => !o && setClassToRemove(null)}
+        title="Remove Class"
+        description={
+          classToRemove
+            ? `Are you sure you want to remove "${classToRemove.class_name}" from your classes? You can add it again later.`
+            : ''
+        }
+        confirmLabel="Remove"
+        onConfirm={handleConfirmRemove}
+      />
     </div>
   );
 }

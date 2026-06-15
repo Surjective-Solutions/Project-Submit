@@ -35,6 +35,8 @@ export default function StudentSidebar() {
 
   const activeSection = pathname.includes('/dashboard/classes/')
     ? 'classes'
+    : pathname.includes('/dashboard/teachers/')
+    ? 'teachers'
     : (searchParams.get('section') ?? 'classes');
   const student = MOCK_LOGGED_IN_STUDENT;
   const initials = `${student.first_name[0]}${student.last_name[0]}`.toUpperCase();

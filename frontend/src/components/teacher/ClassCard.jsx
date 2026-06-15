@@ -1,18 +1,37 @@
 'use client';
 
-import Link from 'next/link';
 import { Eye, Pencil, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 
-export default function ClassCard({ classItem, onEdit, onToggleStatus }) {
+const SUBJECT_COLORS = {
+  Mathematics: 'bg-blue-100 text-blue-700',
+  Biology: 'bg-green-100 text-green-700',
+  Chemistry: 'bg-purple-100 text-purple-700',
+  Physics: 'bg-orange-100 text-orange-700',
+  English: 'bg-pink-100 text-pink-700',
+  default: 'bg-gray-100 text-gray-700',
+};
+
+export default function ClassCard({ classItem, onView, onEdit, onToggleStatus }) {
   const isActive = classItem.status === 'ACTIVE';
+  const subjectColor = SUBJECT_COLORS[classItem.subject] ?? SUBJECT_COLORS.default;
 
   return (
     <div className="bg-white border border-border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col">
-      {/* Header banner */}
-      <div className="h-28 relative shrink-0 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #3940A0 100%)' }}>
-        <BookOpen className="h-10 w-10 text-white/30" />
+      {/* Image banner */}
+      <div className="h-36 relative shrink-0" style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #3940A0 100%)' }}>
+        {classItem.imageUrl ? (
+          <img
+            src={classItem.imageUrl}
+            alt={classItem.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <BookOpen className="h-12 w-12 text-white/30" />
+          </div>
+        )}
         {/* Status badge overlay */}
         <div className="absolute top-2 right-2">
           <span
@@ -31,10 +50,13 @@ export default function ClassCard({ classItem, onEdit, onToggleStatus }) {
       {/* Card body */}
       <div className="p-4 flex flex-col gap-3 flex-1">
         <div>
-          <h3 className="font-semibold text-gray-900 leading-snug truncate">{classItem.display_name}</h3>
-          <div className="mt-1.5">
-            <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-sky-100 text-sky-700">
-              {classItem.subject_name}
+          <h3 className="font-semibold text-gray-900 leading-snug truncate">{classItem.title}</h3>
+          <div className="flex flex-wrap gap-1.5 mt-1.5">
+            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${subjectColor}`}>
+              {classItem.subject}
+            </span>
+            <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-indigo-50 text-indigo-700">
+              {classItem.grade}
             </span>
           </div>
         </div>
@@ -44,7 +66,7 @@ export default function ClassCard({ classItem, onEdit, onToggleStatus }) {
         </p>
 
         <div className="text-sm font-semibold text-gray-900">
-          LKR {classItem.monthly_fee.toLocaleString()}
+          LKR {classItem.fee.toLocaleString()}
           <span className="text-xs font-normal text-gray-400 ml-1">/ month</span>
         </div>
 
@@ -57,13 +79,7 @@ export default function ClassCard({ classItem, onEdit, onToggleStatus }) {
             />
             <span className="text-xs text-gray-500">{isActive ? 'Active' : 'Inactive'}</span>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            nativeButton={false}
-            className="gap-1"
-            render={<Link href={`/teacher/dashboard/classes/${classItem.id}`} />}
-          >
+          <Button variant="outline" size="sm" className="gap-1" onClick={() => onView(classItem)}>
             <Eye className="h-3.5 w-3.5" />
             View
           </Button>

@@ -7,6 +7,10 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import DeleteConfirmDialog from '@/components/admin/DeleteConfirmDialog';
 import { useEnrolledClasses } from '@/context/EnrolledClassesContext';
+import {
+  getCurrentMonthStatus,
+  getLastPaidMonth,
+} from '@/lib/billing-utils';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -20,20 +24,24 @@ const SUBJECT_COLORS = {
   default:                'bg-gray-100 text-gray-600',
 };
 
-const PAYMENT_BADGE = {
-  PAID:     { label: 'Paid',             className: 'bg-green-500 text-white'  },
-  NOT_PAID: { label: 'Not Paid',         className: 'bg-slate-400 text-white'  },
-  PENDING:  { label: 'Payment Pending',  className: 'bg-amber-500 text-white'  },
-  REJECTED: { label: 'Payment Rejected', className: 'bg-red-500 text-white'    },
-};
+function getPaymentBadge(monthly_payments) {
+  const status = getCurrentMonthStatus(monthly_payments);
+  if (status === 'PAID')     return { label: 'Paid',             className: 'bg-green-500 text-white'  };
+  if (status === 'PENDING')  return { label: 'Payment Pending',  className: 'bg-amber-500 text-white'  };
+  if (status === 'REJECTED') return { label: 'Payment Rejected', className: 'bg-red-500 text-white'    };
+  // NOT_PAID — distinguish never-paid from lapsed
+  const lastPaid = getLastPaidMonth(monthly_payments);
+  if (lastPaid) return { label: 'Not Paid',   className: 'bg-gray-400 text-white'  };
+  return            { label: 'Never Paid',    className: 'bg-slate-500 text-white' };
+}
 
 // ── Class Card ────────────────────────────────────────────────────────────────
 
 function ClassCard({ cls, onRemove }) {
   const router = useRouter();
   const subjectColor = SUBJECT_COLORS[cls.subject] ?? SUBJECT_COLORS.default;
-  const badge = PAYMENT_BADGE[cls.payment_status] ?? PAYMENT_BADGE.NOT_PAID;
-  const canRemove = cls.payment_status === 'NOT_PAID';
+  const badge = getPaymentBadge(cls.monthly_payments);
+  const canRemove = getLastPaidMonth(cls.monthly_payments) === null;
 
   return (
     <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">

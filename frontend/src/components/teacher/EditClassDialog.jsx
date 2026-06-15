@@ -9,13 +9,17 @@ import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import AvatarUpload from '@/components/admin/AvatarUpload';
 import { teacherClassSchema } from '@/lib/validations/teacher';
+import { updateClass } from '@/lib/api-client';
 
 function Field({ label, required, error, id, children }) {
   return (
@@ -36,33 +40,40 @@ function Field({ label, required, error, id, children }) {
 
 export default function EditClassDialog({ open, onOpenChange, classItem, onSave }) {
   const [isLoading, setIsLoading] = useState(false);
+  const [imageUrl, setImageUrl] = useState(null);
 
   const {
     register,
     handleSubmit,
+    watch,
     reset,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(teacherClassSchema),
   });
 
+  const titleValue = watch('title', classItem?.title ?? '');
+
   useEffect(() => {
     if (classItem && open) {
       reset({
-        display_name: classItem.display_name,
-        subject_name: classItem.subject_name,
-        description:  classItem.description,
-        monthly_fee:  classItem.monthly_fee,
+        title: classItem.title,
+        description: classItem.description,
+        subject: classItem.subject,
+        grade: classItem.grade,
+        fee: classItem.fee,
       });
+      setImageUrl(classItem.imageUrl ?? null);
     }
   }, [classItem, open, reset]);
 
   async function onSubmit(data) {
     setIsLoading(true);
     try {
+      await updateClass(classItem.id, { ...data, imageUrl });
       toast.success('Class updated successfully');
       onOpenChange(false);
-      onSave({ ...classItem, ...data });
+      onSave({ ...classItem, ...data, imageUrl });
     } catch {
       toast.error('Failed to update class. Please try again.');
     } finally {
@@ -97,21 +108,25 @@ export default function EditClassDialog({ open, onOpenChange, classItem, onSave 
           noValidate
           className="px-6 py-5 space-y-5 max-h-[70vh] overflow-y-auto"
         >
-          <Field label="Display Name" required id="display_name" error={errors.display_name?.message}>
-            <Input
-              id="display_name"
-              placeholder="e.g. 2026 A/L English Medium"
-              aria-invalid={!!errors.display_name}
-              {...register('display_name')}
+          {/* Image upload */}
+          <div className="flex justify-center">
+            <AvatarUpload
+              key={classItem?.id}
+              name={titleValue}
+              initialUrl={classItem?.imageUrl ?? null}
+              onChange={(_, url) => setImageUrl(url)}
+              size={80}
             />
-          </Field>
+          </div>
 
-          <Field label="Subject Name" required id="subject_name" error={errors.subject_name?.message}>
+          <Separator />
+
+          <Field label="Display Name" required id="title" error={errors.title?.message}>
             <Input
-              id="subject_name"
-              placeholder="e.g. Combined Mathematics"
-              aria-invalid={!!errors.subject_name}
-              {...register('subject_name')}
+              id="title"
+              placeholder="e.g. Advanced Mathematics"
+              aria-invalid={!!errors.title}
+              {...register('title')}
             />
           </Field>
 
@@ -126,14 +141,33 @@ export default function EditClassDialog({ open, onOpenChange, classItem, onSave 
             />
           </Field>
 
-          <Field label="Monthly Fee (LKR)" required id="monthly_fee" error={errors.monthly_fee?.message}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field label="Subject" required id="subject" error={errors.subject?.message}>
+              <Input
+                id="subject"
+                placeholder="e.g. Mathematics"
+                aria-invalid={!!errors.subject}
+                {...register('subject')}
+              />
+            </Field>
+            <Field label="Grade" required id="grade" error={errors.grade?.message}>
+              <Input
+                id="grade"
+                placeholder="e.g. Grade 12"
+                aria-invalid={!!errors.grade}
+                {...register('grade')}
+              />
+            </Field>
+          </div>
+
+          <Field label="Monthly Fee (LKR)" required id="fee" error={errors.fee?.message}>
             <Input
-              id="monthly_fee"
+              id="fee"
               type="number"
               min="0"
-              placeholder="e.g. 3500"
-              aria-invalid={!!errors.monthly_fee}
-              {...register('monthly_fee')}
+              placeholder="e.g. 2500"
+              aria-invalid={!!errors.fee}
+              {...register('fee')}
             />
           </Field>
 

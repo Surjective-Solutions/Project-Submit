@@ -2,8 +2,7 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { BookOpen, Users, BarChart2, LogOut, User } from 'lucide-react';
-import { MOCK_LOGGED_IN_TEACHER } from '@/lib/mock-data';
+import { BookOpen, Users, BarChart2, LogOut } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -40,22 +39,12 @@ const NAV_ITEMS = [
     accent: '#E9D848',
     activeBg: 'rgba(233,216,72,0.13)',
   },
-  {
-    label: 'My Account',
-    section: 'account',
-    icon: User,
-    accent: '#34A0C5',
-    activeBg: 'rgba(52,160,197,0.15)',
-  },
 ];
 
 export default function TeacherSidebar() {
   const searchParams = useSearchParams();
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
-
-  const initials = `${MOCK_LOGGED_IN_TEACHER.first_name[0]}${MOCK_LOGGED_IN_TEACHER.last_name[0]}`.toUpperCase();
-  const fullName = `${MOCK_LOGGED_IN_TEACHER.first_name} ${MOCK_LOGGED_IN_TEACHER.last_name}`;
 
   const activeSection = searchParams.get('section') ?? 'classes';
 
@@ -199,7 +188,7 @@ export default function TeacherSidebar() {
               style={{ background: 'linear-gradient(135deg, #3940A0 0%, #B8FF8F 100%)', color: '#0e1a2a' }}
               aria-hidden="true"
             >
-              {initials}
+              T
             </div>
           </div>
         ) : (
@@ -212,10 +201,10 @@ export default function TeacherSidebar() {
               style={{ background: 'linear-gradient(135deg, #3940A0 0%, #B8FF8F 100%)', color: '#0e1a2a' }}
               aria-hidden="true"
             >
-              {initials}
+              T
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold text-white truncate leading-none mb-1">{fullName}</p>
+              <p className="text-xs font-semibold text-white truncate leading-none mb-1">Teacher</p>
               <span
                 className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold leading-tight"
                 style={{

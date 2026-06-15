@@ -2,17 +2,15 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
   ArrowLeft,
   Clock,
   Eye,
   FileText,
-  AlertTriangle,
-  XCircle,
   CheckCircle,
-  Info,
+  ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,7 +26,13 @@ import {
   DialogContent,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { MOCK_STUDENT_ENROLLED_CLASSES } from '@/lib/mock-data';
+import { useEnrolledClasses } from '@/context/EnrolledClassesContext';
+import {
+  getCurrentMonthStatus,
+  getMonthStatus,
+  formatMonthYear,
+  toMonthYearSlug,
+} from '@/lib/billing-utils';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -46,22 +50,7 @@ function isPast(iso) {
 
 // ── Badges ────────────────────────────────────────────────────────────────────
 
-function CurrentStatusBadge({ status }) {
-  if (status === 'SUBMITTED') {
-    return (
-      <span className="inline-flex items-center text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
-        Submitted
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
-      Not Submitted
-    </span>
-  );
-}
-
-function PreviousStatusBadge({ status }) {
+function SubmissionStatusBadge({ status }) {
   if (status === 'GRADED') {
     return (
       <span className="inline-flex items-center text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
@@ -91,7 +80,6 @@ function ViewPaperDialog({ open, onOpenChange, paper }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden">
-        {/* Header */}
         <div
           className="px-6 py-5 flex items-center gap-3"
           style={{ background: 'linear-gradient(135deg, #3940A0 0%, #5a62ff 100%)' }}
@@ -107,8 +95,7 @@ function ViewPaperDialog({ open, onOpenChange, paper }) {
           </div>
         </div>
 
-        {/* Grade banner */}
-        {paper.status === 'GRADED' && paper.grade && (
+        {paper.submission_status === 'GRADED' && paper.grade && (
           <div className="mx-6 mt-5 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-green-50 border border-green-200">
             <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center shrink-0">
               <span className="text-green-600 text-base font-bold">A</span>
@@ -120,9 +107,7 @@ function ViewPaperDialog({ open, onOpenChange, paper }) {
           </div>
         )}
 
-        {/* Body */}
         <div className="px-6 py-5 grid sm:grid-cols-2 gap-4">
-          {/* Exam Paper */}
           <div className="rounded-xl border border-gray-200 p-4 space-y-3">
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Exam Paper</p>
             {paper.exam_pdf_url ? (
@@ -140,10 +125,9 @@ function ViewPaperDialog({ open, onOpenChange, paper }) {
             )}
           </div>
 
-          {/* Submission */}
           <div className="rounded-xl border border-gray-200 p-4 space-y-3">
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Your Submission</p>
-            {paper.status === 'NOT_SUBMITTED' ? (
+            {paper.submission_status === 'NOT_SUBMITTED' ? (
               <p className="text-sm text-gray-400">You did not submit this paper.</p>
             ) : paper.submission_url ? (
               <Button
@@ -160,8 +144,7 @@ function ViewPaperDialog({ open, onOpenChange, paper }) {
             )}
           </div>
 
-          {/* Graded Submission — only for GRADED papers */}
-          {paper.status === 'GRADED' && (
+          {paper.submission_status === 'GRADED' && (
             <div className="sm:col-span-2 rounded-xl border border-green-200 bg-green-50/40 p-4 space-y-3">
               <p className="text-xs font-semibold text-green-700 uppercase tracking-wider">Graded Submission</p>
               {paper.graded_pdf_url ? (
@@ -181,7 +164,6 @@ function ViewPaperDialog({ open, onOpenChange, paper }) {
           )}
         </div>
 
-        {/* Footer */}
         <div className="flex items-center justify-end px-6 py-4 border-t bg-gray-50/60">
           <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
             Close
@@ -192,19 +174,19 @@ function ViewPaperDialog({ open, onOpenChange, paper }) {
   );
 }
 
-// ── Current Papers Table ──────────────────────────────────────────────────────
+// ── Current Papers — Paid ─────────────────────────────────────────────────────
 
-function CurrentPapersSection({ papers }) {
+function PaidCurrentPapersSection({ monthLabel, papers }) {
   return (
     <div>
       <div className="flex items-center gap-2 mb-4">
         <div className="w-1 h-5 rounded-full bg-indigo-500" />
-        <h2 className="text-base font-semibold text-gray-900">Current Papers</h2>
+        <h2 className="text-base font-semibold text-gray-900">Current Papers — {monthLabel}</h2>
       </div>
 
       {papers.length === 0 ? (
         <div className="py-10 text-center text-sm text-gray-400 bg-white rounded-xl border border-border">
-          No current papers available.
+          No papers available this month.
         </div>
       ) : (
         <div className="rounded-xl border border-border overflow-hidden">
@@ -229,7 +211,7 @@ function CurrentPapersSection({ papers }) {
                       </span>
                     </TableCell>
                     <TableCell>
-                      <CurrentStatusBadge status={paper.submission_status} />
+                      <SubmissionStatusBadge status={paper.submission_status} />
                     </TableCell>
                     <TableCell>
                       {paper.submission_status === 'NOT_SUBMITTED' ? (
@@ -262,10 +244,94 @@ function CurrentPapersSection({ papers }) {
   );
 }
 
-// ── Previous Papers Table ─────────────────────────────────────────────────────
+// ── Current Papers — Unpaid Banner ────────────────────────────────────────────
 
-function PreviousPapersSection({ papers }) {
-  const [viewPaper, setViewPaper] = useState(null);
+const BANNER_CONFIG = {
+  PENDING: {
+    containerClass: 'bg-amber-50 border-amber-200',
+    titleClass:     'text-amber-800',
+    bodyClass:      'text-amber-700',
+  },
+  REJECTED: {
+    containerClass: 'bg-red-50 border-red-200',
+    titleClass:     'text-red-800',
+    bodyClass:      'text-red-700',
+  },
+  NOT_PAID: {
+    containerClass: 'bg-gray-50 border-gray-200',
+    titleClass:     'text-gray-800',
+    bodyClass:      'text-gray-600',
+  },
+};
+
+function UnpaidCurrentSection({ status, monthLabel }) {
+  const cfg = BANNER_CONFIG[status] ?? BANNER_CONFIG.NOT_PAID;
+
+  const bannerBody = {
+    PENDING:  `Your ${monthLabel} payment is under review. You will get access once approved.`,
+    REJECTED: `Your ${monthLabel} payment was rejected. Please resubmit your payment.`,
+    NOT_PAID: `You have not paid for ${monthLabel}. Pay now to access this month's papers.`,
+  }[status] ?? `You have not paid for ${monthLabel}.`;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <div className="w-1 h-5 rounded-full bg-indigo-500" />
+        <h2 className="text-base font-semibold text-gray-900">Current Papers</h2>
+      </div>
+
+      <div className={`rounded-xl border px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 ${cfg.containerClass}`}>
+        <p className={`text-sm font-semibold ${cfg.titleClass}`}>{bannerBody}</p>
+        <Button
+          size="sm"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs h-8 shrink-0 self-start sm:self-auto"
+          onClick={() => toast.info('Payment flow coming soon')}
+        >
+          Pay Now
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ── Previous Papers — Monthly Navigation ─────────────────────────────────────
+
+function buildMonthList(cls) {
+  const now = new Date();
+  const currentMonth = now.getMonth() + 1;
+  const currentYear = now.getFullYear();
+
+  return (cls.papers_by_month ?? [])
+    .filter((entry) => {
+      if (entry.month === currentMonth && entry.year === currentYear) return false;
+      return getMonthStatus(cls.monthly_payments, entry.month, entry.year) === 'PAID';
+    })
+    .map((entry) => ({
+      month: entry.month,
+      year: entry.year,
+      month_label: entry.month_label ?? formatMonthYear(entry.month, entry.year),
+      paperCount: entry.papers.length,
+    }))
+    .sort((a, b) => a.year !== b.year ? b.year - a.year : b.month - a.month);
+}
+
+function PreviousPapersSection({ cls }) {
+  const router = useRouter();
+  const monthList = buildMonthList(cls);
+
+  if (monthList.length === 0) {
+    return (
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-1 h-5 rounded-full bg-slate-400" />
+          <h2 className="text-base font-semibold text-gray-900">Previous Papers</h2>
+        </div>
+        <div className="py-10 text-center text-sm text-gray-400 bg-white rounded-xl border border-border">
+          No previous months available.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -274,133 +340,59 @@ function PreviousPapersSection({ papers }) {
         <h2 className="text-base font-semibold text-gray-900">Previous Papers</h2>
       </div>
 
-      {papers.length === 0 ? (
-        <div className="py-10 text-center text-sm text-gray-400 bg-white rounded-xl border border-border">
-          No previous papers yet.
-        </div>
-      ) : (
-        <div className="rounded-xl border border-border overflow-hidden">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Paper Name</TableHead>
-                  <TableHead>Due Date</TableHead>
-                  <TableHead>Grade</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>View</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {papers.map((paper) => (
-                  <TableRow key={paper.id}>
-                    <TableCell className="font-medium text-gray-900">{paper.paper_name}</TableCell>
-                    <TableCell className="text-sm text-gray-500">{formatDate(paper.due_date)}</TableCell>
-                    <TableCell>
-                      {paper.status === 'GRADED' && paper.grade ? (
-                        <span className="font-semibold text-amber-600">{paper.grade}</span>
-                      ) : paper.status === 'SUBMITTED' ? (
-                        <span className="text-sm text-gray-400">Pending</span>
-                      ) : (
-                        <span className="text-sm text-gray-300">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <PreviousStatusBadge status={paper.status} />
-                    </TableCell>
-                    <TableCell>
-                      <button
-                        onClick={() => setViewPaper(paper)}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600 transition-colors"
-                        title="View paper"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-      )}
-
-      <ViewPaperDialog
-        open={!!viewPaper}
-        onOpenChange={(o) => !o && setViewPaper(null)}
-        paper={viewPaper}
-      />
-    </div>
-  );
-}
-
-// ── Unpaid State ──────────────────────────────────────────────────────────────
-
-const UNPAID_CONFIG = {
-  NOT_PAID: {
-    iconEl: <Info className="h-8 w-8 text-slate-500" />,
-    iconBg: 'bg-slate-100',
-    heading: 'Payment Required',
-    body: 'You have not made a payment for this class yet. Please complete your payment to get access.',
-  },
-  PENDING: {
-    iconEl: <AlertTriangle className="h-8 w-8 text-amber-500" />,
-    iconBg: 'bg-amber-100',
-    heading: 'Payment Under Review',
-    body: 'Your payment slip has been submitted and is currently being reviewed. You will get access once approved.',
-  },
-  REJECTED: {
-    iconEl: <XCircle className="h-8 w-8 text-red-500" />,
-    iconBg: 'bg-red-100',
-    heading: 'Payment Rejected',
-    body: 'Your payment was rejected. Please contact the cashier and resubmit your payment.',
-  },
-};
-
-function UnpaidView({ cls }) {
-  const cfg = UNPAID_CONFIG[cls.payment_status] ?? UNPAID_CONFIG.NOT_PAID;
-
-  return (
-    <div className="space-y-4">
-      <Link
-        href="/student/dashboard"
-        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-600 transition-colors"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to My Classes
-      </Link>
-
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="bg-white rounded-2xl border border-border shadow-sm p-8 max-w-md w-full text-center space-y-5">
-          <div>
-            <h1 className="text-lg font-bold text-gray-900">{cls.class_name}</h1>
-            <p className="text-sm text-gray-400 mt-1">{cls.teacher_name} · {cls.subject} · {cls.class_year}</p>
-          </div>
-
-          <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto ${cfg.iconBg}`}>
-            {cfg.iconEl}
-          </div>
-
-          <div className="space-y-2">
-            <h2 className="text-base font-semibold text-gray-900">{cfg.heading}</h2>
-            <p className="text-sm text-gray-500 leading-relaxed">{cfg.body}</p>
-          </div>
-
-          <Button
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold h-10"
-            onClick={() => toast.info('Payment flow coming soon')}
+      <div className="rounded-xl border border-border overflow-hidden divide-y divide-border bg-white">
+        {monthList.map((m) => (
+          <button
+            key={`${m.year}-${m.month}`}
+            onClick={() => router.push(`/student/dashboard/classes/${cls.id}/${toMonthYearSlug(m.month, m.year)}`)}
+            className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-indigo-50/60 transition-colors"
           >
-            Pay Now
-          </Button>
-        </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-900 leading-tight">{m.month_label}</p>
+              <p className="text-xs text-gray-400 mt-0.5">
+                {m.paperCount} {m.paperCount === 1 ? 'paper' : 'papers'}
+              </p>
+            </div>
+            <ChevronRight className="h-4 w-4 shrink-0 text-gray-400" />
+          </button>
+        ))}
       </div>
     </div>
   );
 }
 
-// ── Paid State ────────────────────────────────────────────────────────────────
+// ── Page ──────────────────────────────────────────────────────────────────────
 
-function PaidView({ cls }) {
+export default function ClassDetailPage() {
+  const { classId } = useParams();
+  const { classes } = useEnrolledClasses();
+  const cls = classes.find((c) => c.id === classId);
+
+  if (!cls) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <p className="text-gray-500 text-sm">Class not found.</p>
+        <Button variant="outline" asChild>
+          <Link href="/student/dashboard">
+            <ArrowLeft className="h-4 w-4 mr-1.5" />
+            Back to My Classes
+          </Link>
+        </Button>
+      </div>
+    );
+  }
+
+  const now = new Date();
+  const currentMonth = now.getMonth() + 1;
+  const currentYear = now.getFullYear();
+  const currentMonthLabel = formatMonthYear(currentMonth, currentYear);
+  const currentStatus = getCurrentMonthStatus(cls.monthly_payments);
+
+  const currentMonthEntry = (cls.papers_by_month ?? []).find(
+    (e) => e.month === currentMonth && e.year === currentYear,
+  );
+  const currentPapers = currentMonthEntry?.papers ?? [];
+
   return (
     <div className="space-y-6">
       {/* Top bar */}
@@ -419,41 +411,21 @@ function PaidView({ cls }) {
         </div>
       </div>
 
-      {/* Current papers */}
-      <CurrentPapersSection papers={cls.papers} />
+      {/* Current Papers */}
+      {currentStatus === 'PAID' ? (
+        <PaidCurrentPapersSection monthLabel={currentMonthLabel} papers={currentPapers} />
+      ) : (
+        <UnpaidCurrentSection
+          status={currentStatus}
+          monthLabel={currentMonthLabel}
+        />
+      )}
 
       {/* Divider */}
       <div className="h-px bg-gray-200" />
 
-      {/* Previous papers */}
-      <PreviousPapersSection papers={cls.previous_papers} />
+      {/* Previous Papers — monthly navigation */}
+      <PreviousPapersSection cls={cls} />
     </div>
   );
-}
-
-// ── Page ──────────────────────────────────────────────────────────────────────
-
-export default function ClassDetailPage() {
-  const { classId } = useParams();
-  const cls = MOCK_STUDENT_ENROLLED_CLASSES.find((c) => c.id === classId);
-
-  if (!cls) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <p className="text-gray-500 text-sm">Class not found.</p>
-        <Button variant="outline" asChild>
-          <Link href="/student/dashboard">
-            <ArrowLeft className="h-4 w-4 mr-1.5" />
-            Back to My Classes
-          </Link>
-        </Button>
-      </div>
-    );
-  }
-
-  if (cls.payment_status !== 'PAID') {
-    return <UnpaidView cls={cls} />;
-  }
-
-  return <PaidView cls={cls} />;
 }

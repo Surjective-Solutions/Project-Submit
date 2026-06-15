@@ -14,13 +14,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import AvatarUpload from '@/components/admin/AvatarUpload';
 import PasswordField from '@/components/admin/PasswordField';
 import PasswordStrengthIndicator from '@/components/admin/PasswordStrengthIndicator';
-import { studentSelfEditSchema } from '@/lib/validations/admin';
-
-const SELECT_CLASS =
-  'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring disabled:cursor-not-allowed disabled:opacity-50';
+import { teacherProfileSchema } from '@/lib/validations/teacher';
 
 function Field({ label, required, error, id, children }) {
   return (
@@ -43,43 +41,36 @@ function SectionDivider({ label }) {
   );
 }
 
-export default function EditProfileDialog({ open, onOpenChange, student, onSave, isLoading }) {
+export default function EditTeacherProfileDialog({ open, onOpenChange, teacher, onSave, isLoading }) {
   const [photoUrl, setPhotoUrl] = useState(null);
 
   const { register, handleSubmit, watch, reset, formState: { errors } } = useForm({
-    resolver: zodResolver(studentSelfEditSchema),
+    resolver: zodResolver(teacherProfileSchema),
   });
 
   const newPasswordValue = watch('new_password', '');
-  const firstNameValue = watch('first_name', student?.first_name ?? '');
-  const lastNameValue = watch('last_name', student?.last_name ?? '');
+  const firstNameValue = watch('first_name', teacher?.first_name ?? '');
+  const lastNameValue = watch('last_name', teacher?.last_name ?? '');
 
   useEffect(() => {
-    if (student && open) {
+    if (teacher && open) {
       reset({
-        first_name:       student.first_name ?? '',
-        last_name:        student.last_name ?? '',
-        contact_number:   student.contact_number ?? '',
-        whatsapp_number:  student.whatsapp_number ?? '',
-        email:            student.email ?? '',
-        date_of_birth:    student.date_of_birth ?? '',
-        gender:           student.gender ?? 'MALE',
-        school_name:      student.school_name ?? '',
-        grade:            student.grade ?? '',
-        subject_stream:   student.subject_stream ?? '',
-        district:         student.district ?? '',
-        guardian_name:    student.guardian_name ?? '',
-        guardian_contact: student.guardian_contact ?? '',
-        address:          student.address ?? '',
+        first_name:       teacher.first_name ?? '',
+        last_name:        teacher.last_name ?? '',
+        email:            teacher.email ?? '',
+        contact_number:   teacher.contact_number ?? '',
+        subject_area:     teacher.subject_area ?? '',
+        bio:              teacher.bio ?? '',
+        username:         teacher.username ?? '',
         new_password:     '',
         confirm_password: '',
       });
-      setPhotoUrl(student.profile_photo_url ?? null);
+      setPhotoUrl(teacher.profile_image_url ?? null);
     }
-  }, [student, open, reset]);
+  }, [teacher, open, reset]);
 
   function onSubmit(data) {
-    onSave({ ...data, profile_photo_url: photoUrl });
+    onSave({ ...data, profile_image_url: photoUrl });
   }
 
   return (
@@ -98,7 +89,7 @@ export default function EditProfileDialog({ open, onOpenChange, student, onSave,
           </div>
           <div>
             <DialogTitle className="text-white text-base font-semibold leading-tight m-0">Edit Profile</DialogTitle>
-            <DialogDescription className="text-white/60 text-xs mt-0.5 m-0">{student?.student_number}</DialogDescription>
+            <DialogDescription className="text-white/60 text-xs mt-0.5 m-0">{teacher?.username}</DialogDescription>
           </div>
         </div>
 
@@ -109,9 +100,9 @@ export default function EditProfileDialog({ open, onOpenChange, student, onSave,
               {/* Avatar */}
               <div className="flex justify-center pb-1">
                 <AvatarUpload
-                  key={student?.id}
+                  key={teacher?.id}
                   name={`${firstNameValue} ${lastNameValue}`}
-                  initialUrl={student?.profile_photo_url ?? null}
+                  initialUrl={teacher?.profile_image_url ?? null}
                   onChange={(_, url) => setPhotoUrl(url)}
                   size={80}
                 />
@@ -126,80 +117,45 @@ export default function EditProfileDialog({ open, onOpenChange, student, onSave,
                 <Field label="Last Name" required id="last_name" error={errors.last_name?.message}>
                   <Input id="last_name" placeholder="Last name" {...register('last_name')} />
                 </Field>
-                <Field label="Date of Birth" id="date_of_birth" error={errors.date_of_birth?.message}>
-                  <Input id="date_of_birth" type="date" {...register('date_of_birth')} />
-                </Field>
-                <Field label="Gender" required id="gender" error={errors.gender?.message}>
-                  <select id="gender" className={SELECT_CLASS} {...register('gender')}>
-                    <option value="MALE">Male</option>
-                    <option value="FEMALE">Female</option>
-                    <option value="OTHER">Other</option>
-                  </select>
+                <Field label="Email" id="email" error={errors.email?.message}>
+                  <Input id="email" type="email" placeholder="you@example.com" {...register('email')} />
                 </Field>
                 <Field label="Contact Number" required id="contact_number" error={errors.contact_number?.message}>
                   <Input id="contact_number" placeholder="+94XXXXXXXXX" {...register('contact_number')} />
                 </Field>
-                <Field label="WhatsApp Number" id="whatsapp_number" error={errors.whatsapp_number?.message}>
-                  <Input id="whatsapp_number" placeholder="+94XXXXXXXXX" {...register('whatsapp_number')} />
+              </div>
+
+              {/* Professional */}
+              <SectionDivider label="Professional Information" />
+              <div className="grid grid-cols-1 gap-4">
+                <Field label="Subject Area" required id="subject_area" error={errors.subject_area?.message}>
+                  <Input id="subject_area" placeholder="e.g. Combined Mathematics" {...register('subject_area')} />
                 </Field>
-                <Field label="Email" id="email" error={errors.email?.message}>
-                  <Input id="email" type="email" placeholder="you@example.com" {...register('email')} />
+                <Field label="Bio" id="bio" error={errors.bio?.message}>
+                  <Textarea
+                    id="bio"
+                    placeholder="Short bio..."
+                    rows={3}
+                    {...register('bio')}
+                  />
                 </Field>
               </div>
 
-              {/* Academic */}
-              <SectionDivider label="Academic Information" />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="School Name" id="school_name" error={errors.school_name?.message}>
-                  <Input id="school_name" placeholder="School name" {...register('school_name')} />
-                </Field>
-                <Field label="Grade" id="grade" error={errors.grade?.message}>
-                  <Input id="grade" placeholder="e.g. Grade 12" {...register('grade')} />
-                </Field>
-                <Field label="Subject Stream" id="subject_stream" error={errors.subject_stream?.message}>
-                  <select id="subject_stream" className={SELECT_CLASS} {...register('subject_stream')}>
-                    <option value="">Select stream</option>
-                    <option value="Physical Science">Physical Science</option>
-                    <option value="Biological Science">Biological Science</option>
-                    <option value="Commerce">Commerce</option>
-                    <option value="Arts">Arts</option>
-                    <option value="Technology">Technology</option>
-                    <option value="Combined Mathematics">Combined Mathematics</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </Field>
-                <Field label="District" id="district" error={errors.district?.message}>
-                  <Input id="district" placeholder="e.g. Colombo" {...register('district')} />
+              {/* Account */}
+              <SectionDivider label="Account" />
+              <div className="grid grid-cols-1 gap-4">
+                <Field label="Username" required id="username" error={errors.username?.message}>
+                  <Input id="username" placeholder="e.g. john.perera" {...register('username')} />
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    Only letters, numbers, and dots allowed. Changing your username will affect your login credentials.
+                  </p>
                 </Field>
               </div>
-
-              {/* Guardian */}
-              <SectionDivider label="Guardian Information" />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="Guardian Name" id="guardian_name" error={errors.guardian_name?.message}>
-                  <Input id="guardian_name" placeholder="Guardian name" {...register('guardian_name')} />
-                </Field>
-                <Field label="Guardian Contact" id="guardian_contact" error={errors.guardian_contact?.message}>
-                  <Input id="guardian_contact" placeholder="+94XXXXXXXXX" {...register('guardian_contact')} />
-                </Field>
-              </div>
-
-              {/* Address */}
-              <SectionDivider label="Address" />
-              <Field label="Full Address" id="address" error={errors.address?.message}>
-                <textarea
-                  id="address"
-                  rows={2}
-                  placeholder="Street, city, postal code"
-                  className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring resize-none"
-                  {...register('address')}
-                />
-              </Field>
 
               {/* Password */}
               <div className="rounded-lg bg-gray-50 border border-gray-200 px-4 py-4 space-y-4">
                 <SectionDivider label="Change Password" />
-                <p className="text-xs text-gray-400">Leave blank to keep the current password.</p>
+                <p className="text-xs text-gray-400">Leave blank to keep current password.</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
                   <div>
                     <PasswordField

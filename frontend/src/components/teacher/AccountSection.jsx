@@ -4,14 +4,12 @@ import { useState } from 'react';
 import { Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import EditProfileDialog from './EditProfileDialog';
-import { MOCK_LOGGED_IN_STUDENT } from '@/lib/mock-data';
+import EditTeacherProfileDialog from './EditTeacherProfileDialog';
+import { MOCK_LOGGED_IN_TEACHER } from '@/lib/mock-data';
 
 const STATUS_STYLES = {
-  ACTIVE:    'bg-green-100 text-green-700',
-  INACTIVE:  'bg-gray-100 text-gray-600',
-  SUSPENDED: 'bg-red-100 text-red-700',
-  GRADUATED: 'bg-blue-100 text-blue-700',
+  ACTIVE:   'bg-green-100 text-green-700',
+  INACTIVE: 'bg-gray-100 text-gray-600',
 };
 
 function Field({ label, value }) {
@@ -32,18 +30,24 @@ function SectionDivider({ label }) {
   );
 }
 
+function formatMemberSince(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
+
 export default function AccountSection() {
-  const [student, setStudent] = useState(MOCK_LOGGED_IN_STUDENT);
+  const [teacher, setTeacher] = useState(MOCK_LOGGED_IN_TEACHER);
   const [editOpen, setEditOpen] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
 
-  const initials = `${student.first_name[0]}${student.last_name[0]}`.toUpperCase();
-  const statusClass = STATUS_STYLES[student.status] ?? STATUS_STYLES.INACTIVE;
+  const initials = `${teacher.first_name[0]}${teacher.last_name[0]}`.toUpperCase();
+  const statusClass = STATUS_STYLES[teacher.status] ?? STATUS_STYLES.INACTIVE;
 
   async function handleSave(data) {
     setEditLoading(true);
     try {
-      setStudent((prev) => ({ ...prev, ...data }));
+      setTeacher((prev) => ({ ...prev, ...data }));
       toast.success('Profile updated');
       setEditOpen(false);
     } finally {
@@ -55,12 +59,12 @@ export default function AccountSection() {
     <div className="flex justify-center">
       <div className="w-full max-w-[700px] space-y-6">
 
-        {/* Avatar + student number + status */}
+        {/* Avatar + name + badges */}
         <div className="flex flex-col items-center gap-3 py-6">
-          {student.profile_photo_url ? (
+          {teacher.profile_image_url ? (
             <img
-              src={student.profile_photo_url}
-              alt={`${student.first_name} ${student.last_name}`}
+              src={teacher.profile_image_url}
+              alt={`${teacher.first_name} ${teacher.last_name}`}
               className="w-20 h-20 rounded-full object-cover ring-4 ring-indigo-100"
             />
           ) : (
@@ -71,15 +75,19 @@ export default function AccountSection() {
               {initials}
             </div>
           )}
+
           <div className="flex flex-col items-center gap-1.5">
-            <p className="text-lg font-bold text-gray-900">{student.first_name} {student.last_name}</p>
-            <span className="font-mono text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-500">
-              {student.student_number}
+            <p className="text-lg font-bold text-gray-900">
+              {teacher.first_name} {teacher.last_name}
+            </p>
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-700 font-semibold">
+              {teacher.subject_area}
             </span>
             <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${statusClass}`}>
-              {student.status}
+              {teacher.status}
             </span>
           </div>
+
           <Button
             variant="outline"
             className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 gap-1.5"
@@ -90,44 +98,36 @@ export default function AccountSection() {
           </Button>
         </div>
 
-        {/* Profile details card */}
+        {/* Profile details */}
         <div className="bg-white rounded-2xl border border-border shadow-sm px-6 py-5 space-y-5">
 
           <SectionDivider label="Personal Information" />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="First Name"      value={student.first_name} />
-            <Field label="Last Name"       value={student.last_name} />
-            <Field label="Date of Birth"   value={student.date_of_birth} />
-            <Field label="Gender"          value={student.gender} />
-            <Field label="Contact Number"  value={student.contact_number} />
-            <Field label="WhatsApp"        value={student.whatsapp_number} />
-            <Field label="Email"           value={student.email} />
+            <Field label="First Name"     value={teacher.first_name} />
+            <Field label="Last Name"      value={teacher.last_name} />
+            <Field label="Email"          value={teacher.email} />
+            <Field label="Contact Number" value={teacher.contact_number} />
           </div>
 
-          <SectionDivider label="Academic Information" />
+          <SectionDivider label="Professional Information" />
+          <div className="space-y-4">
+            <Field label="Subject Area" value={teacher.subject_area} />
+            <Field label="Bio"          value={teacher.bio} />
+          </div>
+
+          <SectionDivider label="Account" />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="School"         value={student.school_name} />
-            <Field label="Grade"          value={student.grade} />
-            <Field label="Subject Stream" value={student.subject_stream} />
-            <Field label="District"       value={student.district} />
+            <Field label="Username"     value={teacher.username} />
+            <Field label="Member Since" value={formatMemberSince(teacher.created_at)} />
           </div>
-
-          <SectionDivider label="Guardian Information" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Guardian Name"    value={student.guardian_name} />
-            <Field label="Guardian Contact" value={student.guardian_contact} />
-          </div>
-
-          <SectionDivider label="Address" />
-          <Field label="Full Address" value={student.address} />
 
         </div>
       </div>
 
-      <EditProfileDialog
+      <EditTeacherProfileDialog
         open={editOpen}
         onOpenChange={setEditOpen}
-        student={student}
+        teacher={teacher}
         onSave={handleSave}
         isLoading={editLoading}
       />

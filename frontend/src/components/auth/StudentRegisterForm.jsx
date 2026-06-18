@@ -22,6 +22,8 @@ import {
 import PasswordStrength from './PasswordStrength';
 import { studentStep1Schema, studentStep2Schema, SRI_LANKA_DISTRICTS } from '@/lib/validations/student';
 import { studentRegister } from '@/lib/api-client';
+import { redirect } from "next/dist/server/api-utils";
+import { navigate } from "next/dist/client/components/segment-cache/navigation";
 
 // ─── Field wrapper ────────────────────────────────────────────────────────────
 
@@ -29,7 +31,7 @@ function Field({ label, required, error, id, children }) {
   return (
     <div className="space-y-1.5">
       {label && (
-        <Label htmlFor={id} className={error ? 'text-destructive' : ''}>
+        <Label htmlFor={id} className={error ? "text-destructive" : ""}>
           {label}
           {required && <span className="text-destructive ml-0.5">*</span>}
         </Label>
@@ -60,10 +62,10 @@ function PhoneInput({ id, error, value, onChange, onBlur, name }) {
         maxLength={9}
         placeholder="XXXXXXXXX"
         aria-invalid={!!error}
-        value={value?.replace(/^\+94/, '') ?? ''}
+        value={value?.replace(/^\+94/, "") ?? ""}
         onChange={(e) => {
-          const digits = e.target.value.replace(/\D/g, '').slice(0, 9);
-          onChange(digits ? `+94${digits}` : '');
+          const digits = e.target.value.replace(/\D/g, "").slice(0, 9);
+          onChange(digits ? `+94${digits}` : "");
         }}
         onBlur={onBlur}
         className="rounded-l-none"
@@ -87,11 +89,11 @@ function Step1({ onNext }) {
   } = useForm({
     resolver: zodResolver(studentStep1Schema),
     defaultValues: {
-      gender: '',
-      subjectStream: '',
-      district: '',
-      contactNumber: '',
-      guardianContactNumber: '',
+      gender: "",
+      subjectStream: "",
+      district: "",
+      contactNumber: "",
+      guardianContactNumber: "",
     },
   });
 
@@ -102,26 +104,65 @@ function Step1({ onNext }) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
-        <Field label="First Name" required id="firstName" error={errors.firstName?.message}>
-          <Input id="firstName" autoComplete="given-name" aria-invalid={!!errors.firstName} {...register('firstName')} />
+        <Field
+          label="First Name"
+          required
+          id="firstName"
+          error={errors.firstName?.message}
+        >
+          <Input
+            id="firstName"
+            autoComplete="given-name"
+            aria-invalid={!!errors.firstName}
+            {...register("firstName")}
+          />
         </Field>
-        <Field label="Last Name" required id="lastName" error={errors.lastName?.message}>
-          <Input id="lastName" autoComplete="family-name" aria-invalid={!!errors.lastName} {...register('lastName')} />
+        <Field
+          label="Last Name"
+          required
+          id="lastName"
+          error={errors.lastName?.message}
+        >
+          <Input
+            id="lastName"
+            autoComplete="family-name"
+            aria-invalid={!!errors.lastName}
+            {...register("lastName")}
+          />
         </Field>
       </div>
 
-      <Field label="Contact Number" required id="contactNumber" error={errors.contactNumber?.message}>
+      <Field
+        label="Contact Number"
+        required
+        id="contactNumber"
+        error={errors.contactNumber?.message}
+      >
         <Controller
           control={control}
           name="contactNumber"
           render={({ field }) => (
-            <PhoneInput id="contactNumber" error={errors.contactNumber} {...field} />
+            <PhoneInput
+              id="contactNumber"
+              error={errors.contactNumber}
+              {...field}
+            />
           )}
         />
       </Field>
 
-      <Field label="Date of Birth" required id="dateOfBirth" error={errors.dateOfBirth?.message}>
-        <Input id="dateOfBirth" type="date" aria-invalid={!!errors.dateOfBirth} {...register('dateOfBirth')} />
+      <Field
+        label="Date of Birth"
+        required
+        id="dateOfBirth"
+        error={errors.dateOfBirth?.message}
+      >
+        <Input
+          id="dateOfBirth"
+          type="date"
+          aria-invalid={!!errors.dateOfBirth}
+          {...register("dateOfBirth")}
+        />
       </Field>
 
       <Field label="Gender" required id="gender" error={errors.gender?.message}>
@@ -130,35 +171,69 @@ function Step1({ onNext }) {
           name="gender"
           render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger id="gender" className="w-full" aria-invalid={!!errors.gender}>
+              <SelectTrigger
+                id="gender"
+                className="w-full"
+                aria-invalid={!!errors.gender}
+              >
                 <SelectValue placeholder="Select gender" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Male">Male</SelectItem>
                 <SelectItem value="Female">Female</SelectItem>
-                <SelectItem value="Prefer not to say">Prefer not to say</SelectItem>
+                <SelectItem value="Prefer not to say">
+                  Prefer not to say
+                </SelectItem>
               </SelectContent>
             </Select>
           )}
         />
       </Field>
 
-      <Field label="Guardian Name" required id="guardianName" error={errors.guardianName?.message}>
-        <Input id="guardianName" aria-invalid={!!errors.guardianName} {...register('guardianName')} />
+      <Field
+        label="Guardian Name"
+        required
+        id="guardianName"
+        error={errors.guardianName?.message}
+      >
+        <Input
+          id="guardianName"
+          aria-invalid={!!errors.guardianName}
+          {...register("guardianName")}
+        />
       </Field>
 
-      <Field label="Guardian Contact Number" required id="guardianContactNumber" error={errors.guardianContactNumber?.message}>
+      <Field
+        label="Guardian Contact Number"
+        required
+        id="guardianContactNumber"
+        error={errors.guardianContactNumber?.message}
+      >
         <Controller
           control={control}
           name="guardianContactNumber"
           render={({ field }) => (
-            <PhoneInput id="guardianContactNumber" error={errors.guardianContactNumber} {...field} />
+            <PhoneInput
+              id="guardianContactNumber"
+              error={errors.guardianContactNumber}
+              {...field}
+            />
           )}
         />
       </Field>
 
-      <Field label="Address" required id="address" error={errors.address?.message}>
-        <Input id="address" autoComplete="street-address" aria-invalid={!!errors.address} {...register('address')} />
+      <Field
+        label="Address"
+        required
+        id="address"
+        error={errors.address?.message}
+      >
+        <Input
+          id="address"
+          autoComplete="street-address"
+          aria-invalid={!!errors.address}
+          {...register("address")}
+        />
       </Field>
 
       {/* Additional Information (collapsible) */}
@@ -186,24 +261,47 @@ function Step1({ onNext }) {
                 autoComplete="email"
                 placeholder="name@example.com"
                 aria-invalid={!!errors.email}
-                {...register('email')}
+                {...register("email")}
               />
-              <p className="text-xs text-gray-400">Recommended for notifications</p>
+              <p className="text-xs text-gray-400">
+                Recommended for notifications
+              </p>
             </Field>
 
-            <Field label="WhatsApp Number" id="whatsappNumber" error={errors.whatsappNumber?.message}>
-              <Input id="whatsappNumber" type="tel" placeholder="+94XXXXXXXXX" {...register('whatsappNumber')} />
+            <Field
+              label="WhatsApp Number"
+              id="whatsappNumber"
+              error={errors.whatsappNumber?.message}
+            >
+              <Input
+                id="whatsappNumber"
+                type="tel"
+                placeholder="+94XXXXXXXXX"
+                {...register("whatsappNumber")}
+              />
             </Field>
 
-            <Field label="School Name" id="schoolName" error={errors.schoolName?.message}>
-              <Input id="schoolName" {...register('schoolName')} />
+            <Field
+              label="School Name"
+              id="schoolName"
+              error={errors.schoolName?.message}
+            >
+              <Input id="schoolName" {...register("schoolName")} />
             </Field>
 
             <Field label="Grade" id="grade" error={errors.grade?.message}>
-              <Input id="grade" placeholder="e.g. Grade 12" {...register('grade')} />
+              <Input
+                id="grade"
+                placeholder="e.g. Grade 12"
+                {...register("grade")}
+              />
             </Field>
 
-            <Field label="Subject Stream" id="subjectStream" error={errors.subjectStream?.message}>
+            <Field
+              label="Subject Stream"
+              id="subjectStream"
+              error={errors.subjectStream?.message}
+            >
               <Controller
                 control={control}
                 name="subjectStream"
@@ -213,16 +311,24 @@ function Step1({ onNext }) {
                       <SelectValue placeholder="Select stream" />
                     </SelectTrigger>
                     <SelectContent>
-                      {['Maths', 'Bio', 'Commerce', 'Arts', 'Technology'].map((s) => (
-                        <SelectItem key={s} value={s}>{s}</SelectItem>
-                      ))}
+                      {["Maths", "Bio", "Commerce", "Arts", "Technology"].map(
+                        (s) => (
+                          <SelectItem key={s} value={s}>
+                            {s}
+                          </SelectItem>
+                        ),
+                      )}
                     </SelectContent>
                   </Select>
                 )}
               />
             </Field>
 
-            <Field label="District" id="district" error={errors.district?.message}>
+            <Field
+              label="District"
+              id="district"
+              error={errors.district?.message}
+            >
               <Controller
                 control={control}
                 name="district"
@@ -233,7 +339,9 @@ function Step1({ onNext }) {
                     </SelectTrigger>
                     <SelectContent>
                       {SRI_LANKA_DISTRICTS.map((d) => (
-                        <SelectItem key={d} value={d}>{d}</SelectItem>
+                        <SelectItem key={d} value={d}>
+                          {d}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -247,7 +355,11 @@ function Step1({ onNext }) {
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center shrink-0">
                   {preview ? (
-                    <img src={preview} alt="Profile preview" className="w-full h-full object-cover" />
+                    <img
+                      src={preview}
+                      alt="Profile preview"
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
                     <UserCircle className="w-10 h-10 text-gray-300" />
                   )}
@@ -310,16 +422,18 @@ function Step2({ onBack, step1Data }) {
     },
   });
 
-  const passwordValue = watch('password', '');
+  const passwordValue = watch("password", "");
 
   async function onSubmit(data) {
     setIsLoading(true);
     try {
       const payload = { ...step1Data, ...data };
       const result = await studentRegister(payload);
-      toast.success(result.message ?? 'Account created! Please verify your number.');
+      toast.success(
+        result.message ?? "Account created! Please verify your number.",
+      );
     } catch {
-      toast.error('Registration failed. Please try again.');
+      toast.error("Registration failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -328,48 +442,66 @@ function Step2({ onBack, step1Data }) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
       {/* Password */}
-      <Field label="Password" required id="password" error={errors.password?.message}>
+      <Field
+        label="Password"
+        required
+        id="password"
+        error={errors.password?.message}
+      >
         <div className="relative">
           <Input
             id="password"
-            type={showPassword ? 'text' : 'password'}
+            type={showPassword ? "text" : "password"}
             autoComplete="new-password"
             placeholder="Create a password"
             aria-invalid={!!errors.password}
             className="pr-10"
-            {...register('password')}
+            {...register("password")}
           />
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}
-            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            aria-label={showPassword ? "Hide password" : "Show password"}
             className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
           >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {showPassword ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
           </button>
         </div>
         <PasswordStrength value={passwordValue} />
       </Field>
 
       {/* Confirm password */}
-      <Field label="Confirm Password" required id="confirmPassword" error={errors.confirmPassword?.message}>
+      <Field
+        label="Confirm Password"
+        required
+        id="confirmPassword"
+        error={errors.confirmPassword?.message}
+      >
         <div className="relative">
           <Input
             id="confirmPassword"
-            type={showConfirm ? 'text' : 'password'}
+            type={showConfirm ? "text" : "password"}
             autoComplete="new-password"
             placeholder="Repeat your password"
             aria-invalid={!!errors.confirmPassword}
             className="pr-10"
-            {...register('confirmPassword')}
+            {...register("confirmPassword")}
           />
           <button
             type="button"
             onClick={() => setShowConfirm((v) => !v)}
-            aria-label={showConfirm ? 'Hide password' : 'Show password'}
+            aria-label={showConfirm ? "Hide password" : "Show password"}
             className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
           >
-            {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {showConfirm ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
           </button>
         </div>
       </Field>
@@ -387,8 +519,12 @@ function Step2({ onBack, step1Data }) {
                 onCheckedChange={field.onChange}
                 className="mt-0.5"
               />
-              <Label htmlFor="marketingConsent" className="text-sm text-gray-500 font-normal leading-relaxed cursor-pointer">
-                I agree to receive promotional materials, updates and offers via SMS, WhatsApp and email.
+              <Label
+                htmlFor="marketingConsent"
+                className="text-sm text-gray-500 font-normal leading-relaxed cursor-pointer"
+              >
+                I agree to receive promotional materials, updates and offers via
+                SMS, WhatsApp and email.
               </Label>
             </div>
           )}
@@ -409,13 +545,22 @@ function Step2({ onBack, step1Data }) {
                 aria-invalid={!!errors.termsAccepted}
                 className="mt-0.5"
               />
-              <Label htmlFor="termsAccepted" className="text-sm text-gray-700 font-normal leading-relaxed cursor-pointer">
-                I agree to the{' '}
-                <Link href="/terms" className="underline text-gray-900 font-medium">
+              <Label
+                htmlFor="termsAccepted"
+                className="text-sm text-gray-700 font-normal leading-relaxed cursor-pointer"
+              >
+                I agree to the{" "}
+                <Link
+                  href="/terms"
+                  className="underline text-gray-900 font-medium"
+                >
                   Terms of Service
-                </Link>{' '}
-                and{' '}
-                <Link href="/privacy" className="underline text-gray-900 font-medium">
+                </Link>{" "}
+                and{" "}
+                <Link
+                  href="/privacy"
+                  className="underline text-gray-900 font-medium"
+                >
                   Privacy Policy
                 </Link>
               </Label>
@@ -450,8 +595,11 @@ function Step2({ onBack, step1Data }) {
       </div>
 
       <p className="text-center text-xs text-gray-400 pt-1">
-        Are you an instructor?{' '}
-        <Link href="/instructor/register" className="text-gray-500 hover:underline">
+        Are you an instructor?{" "}
+        <Link
+          href="/instructor/register"
+          className="text-gray-500 hover:underline"
+        >
           Register here
         </Link>
       </p>

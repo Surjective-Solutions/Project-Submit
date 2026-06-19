@@ -1,14 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Copy, Check } from 'lucide-react';
 import { toast } from 'sonner';
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { MOCK_LOGGED_IN_INSTRUCTOR, MOCK_INSTRUCTOR_TEACHERS } from '@/lib/mock-data';
 
@@ -24,17 +19,8 @@ const SUBJECT_COLORS = {
   default:                'bg-gray-100 text-gray-600',
 };
 
-const STATUS_BADGE = {
-  ACTIVE:   'bg-green-100 text-green-700',
-  INACTIVE: 'bg-gray-100 text-gray-500',
-};
-
 function subjectColor(subject) {
   return SUBJECT_COLORS[subject] ?? SUBJECT_COLORS.default;
-}
-
-function formatLKR(amount) {
-  return `LKR ${Number(amount).toLocaleString('en-LK')}`;
 }
 
 function TeacherInitials({ name, size = 80 }) {
@@ -58,105 +44,9 @@ function TeacherInitials({ name, size = 80 }) {
   );
 }
 
-// ── View Classes Dialog ───────────────────────────────────────────────────────
-
-function ViewClassesDialog({ open, onOpenChange, teacher }) {
-  if (!teacher) return null;
-  const color = subjectColor(teacher.subject_area);
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="sm:max-w-lg p-0 gap-0 overflow-hidden max-h-[90vh]"
-        style={{ display: 'flex', flexDirection: 'column' }}
-      >
-        {/* Fixed header */}
-        <div
-          className="px-6 py-5 flex items-center gap-3 shrink-0"
-          style={{ background: 'linear-gradient(135deg, #3940A0 0%, #5a62ff 100%)' }}
-        >
-          <TeacherInitials name={teacher.teacher_name} size={44} />
-          <div className="min-w-0">
-            <DialogTitle className="text-white text-base font-semibold leading-tight m-0 truncate">
-              {teacher.teacher_name}
-            </DialogTitle>
-            <DialogDescription className="mt-1 m-0">
-              <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${color}`}>
-                {teacher.subject_area}
-              </span>
-            </DialogDescription>
-          </div>
-        </div>
-
-        {/* Scrollable body */}
-        <div className="flex-1 min-h-0 overflow-y-auto">
-          <div className="px-6 py-5 space-y-5">
-
-            {teacher.bio && (
-              <p className="text-sm text-gray-600 leading-relaxed">{teacher.bio}</p>
-            )}
-
-            {/* Classes */}
-            <div>
-              <div className="flex items-center gap-3 mb-3">
-                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest whitespace-nowrap">
-                  Classes
-                </span>
-                <div className="flex-1 h-px bg-gray-200" />
-              </div>
-
-              {teacher.classes.length === 0 ? (
-                <p className="text-sm text-gray-400 italic text-center py-6">No classes listed yet.</p>
-              ) : (
-                <div className="space-y-2">
-                  {teacher.classes.map((cls, i) => (
-                    <div key={cls.id}>
-                      <div className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-100">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-semibold text-gray-900 leading-tight truncate">
-                            {cls.class_name}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1 flex-wrap">
-                            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-600">
-                              {cls.class_year}
-                            </span>
-                            <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${subjectColor(cls.subject)}`}>
-                              {cls.subject}
-                            </span>
-                            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${STATUS_BADGE[cls.status] ?? STATUS_BADGE.INACTIVE}`}>
-                              {cls.status}
-                            </span>
-                          </div>
-                        </div>
-                        <span className="text-xs font-semibold text-gray-700 shrink-0">
-                          {formatLKR(cls.monthly_fee)}<span className="text-gray-400 font-normal">/mo</span>
-                        </span>
-                      </div>
-                      {i < teacher.classes.length - 1 && (
-                        <div className="mx-3 h-px bg-gray-100" />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="h-1" />
-          </div>
-        </div>
-
-        {/* Fixed footer */}
-        <div className="shrink-0 flex items-center justify-end px-6 py-4 border-t bg-gray-50/60 rounded-b-xl">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 // ── Teacher Card ──────────────────────────────────────────────────────────────
 
-function TeacherCard({ teacher, onView }) {
+function TeacherCard({ teacher }) {
   const color = subjectColor(teacher.subject_area);
 
   return (
@@ -178,8 +68,9 @@ function TeacherCard({ teacher, onView }) {
       <div className="px-4 pb-4 mt-auto">
         <Button
           variant="outline"
+          nativeButton={false}
           className="w-full border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 text-xs h-8"
-          onClick={() => onView(teacher)}
+          render={<Link href={`/instructor/dashboard/teachers/${teacher.id}`} />}
         >
           View Classes
         </Button>
@@ -216,7 +107,6 @@ function CopyButton({ value }) {
 // ── Section ───────────────────────────────────────────────────────────────────
 
 export default function TeachersSection() {
-  const [viewTeacher, setViewTeacher] = useState(null);
   const instructor = MOCK_LOGGED_IN_INSTRUCTOR;
 
   return (
@@ -246,7 +136,7 @@ export default function TeachersSection() {
             <CopyButton value={instructor.employee_id} />
           </div>
           <p className="text-[11px] text-gray-500 leading-snug">
-            To get added to a teacher's class, share this ID with your teacher.
+            To get added to a teacher&apos;s class, share this ID with your teacher.
           </p>
         </div>
       </div>
@@ -259,16 +149,10 @@ export default function TeachersSection() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {MOCK_INSTRUCTOR_TEACHERS.map((teacher) => (
-            <TeacherCard key={teacher.id} teacher={teacher} onView={setViewTeacher} />
+            <TeacherCard key={teacher.id} teacher={teacher} />
           ))}
         </div>
       )}
-
-      <ViewClassesDialog
-        open={!!viewTeacher}
-        onOpenChange={(o) => !o && setViewTeacher(null)}
-        teacher={viewTeacher}
-      />
     </div>
   );
 }

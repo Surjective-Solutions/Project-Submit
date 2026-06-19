@@ -227,3 +227,13 @@ export async function updateCashier(id, data) {
 export async function deleteCashier(id) {
   return request(`/admin/cashiers/${id}`, { method: 'DELETE', body: { id } });
 }
+
+export async function getTeacherPapers(teacherId) {
+  // TODO: GET /instructor/teachers/:teacherId/papers
+  return [];
+}
+
+export async function getPaperSubmissions(paperId) {
+  // TODO: GET /instructor/papers/:paperId/submissions
+  return [];
+}

@@ -37,10 +37,6 @@ export async function studentRegister(data) {
   return actualRequest("/api/test/hello", { body: data });
 }
 
-<<<<<<< HEAD
-export async function verifyOtp(phone, otp) {
-  return request("/auth/otp/verify", { body: { phone, otp } });
-=======
 export async function sendOtp(identifier) {
   // TODO: POST /auth/otp/send  body: { identifier }
   // Returns: { success: true, expires_in: 45 }
@@ -51,7 +47,6 @@ export async function verifyOtp(otp, identifier) {
   // TODO: POST /auth/otp/verify  body: { otp, identifier }
   // Returns: { success: true, token, user }
   return { success: true };
->>>>>>> main
 }
 
 export async function resendOtp(phone) {

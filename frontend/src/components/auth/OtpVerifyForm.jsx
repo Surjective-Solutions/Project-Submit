@@ -1,24 +1,51 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useSyncExternalStore } from 'react';
 import Link from 'next/link';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
-import { verifyOtp, resendOtp } from '@/lib/api-client';
+import { sendOtp, verifyOtp } from '@/lib/api-client';
 
 const OTP_LENGTH = 6;
-const RESEND_COOLDOWN = 60;
+const RESEND_COOLDOWN = 45;
+const IDENTIFIER_KEY = 'otp_identifier';
 
-// Masked phone display — shows last 3 digits
-const MASKED_PHONE = '+94 *** *** 789';
+function maskIdentifier(identifier) {
+  if (!identifier) return '';
 
-export default function OtpVerifyForm() {
+  if (identifier.includes('@')) {
+    const [name, domain] = identifier.split('@');
+    const first = name?.[0] ?? '';
+    return `Sent to ${first}${'•'.repeat(3)}@${domain}`;
+  }
+
+  const digits = identifier.replace(/\D/g, '');
+  const lastFour = digits.slice(-4);
+  const prefix = identifier.startsWith('+') ? identifier.slice(0, 3) : '';
+  return `Sent to ${prefix} •••• ${lastFour}`;
+}
+
+function subscribeToIdentifier(callback) {
+  window.addEventListener('storage', callback);
+  return () => window.removeEventListener('storage', callback);
+}
+
+function getStoredIdentifier() {
+  return sessionStorage.getItem(IDENTIFIER_KEY) ?? '';
+}
+
+export default function OtpVerifyForm({ role = 'student' }) {
+  const router = useRouter();
   const [digits, setDigits] = useState(Array(OTP_LENGTH).fill(''));
   const [isLoading, setIsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const [countdown, setCountdown] = useState(RESEND_COOLDOWN);
+  const [error, setError] = useState('');
   const inputRefs = useRef([]);
+  const identifier = useSyncExternalStore(subscribeToIdentifier, getStoredIdentifier, () => '');
 
   // Countdown timer
   useEffect(() => {
@@ -33,6 +60,7 @@ export default function OtpVerifyForm() {
 
   function handleChange(index, e) {
     const raw = e.target.value;
+    setError('');
     // Accept paste: fill from index forward
     if (raw.length > 1) {
       const pastedDigits = raw.replace(/\D/g, '').slice(0, OTP_LENGTH - index);
@@ -84,31 +112,41 @@ export default function OtpVerifyForm() {
 
   async function handleVerify() {
     const otp = digits.join('');
-    if (otp.length < OTP_LENGTH) {
-      toast.error('Please enter all 6 digits');
+    if (otp.length < OTP_LENGTH || !identifier) {
       return;
     }
     setIsLoading(true);
+    setError('');
     try {
-      const result = await verifyOtp(MASKED_PHONE, otp);
-      toast.success(result.message ?? 'Phone number verified!');
+      const result = await verifyOtp(otp, identifier);
+      if (!result?.success) {
+        setError('Invalid OTP. Please try again.');
+        return;
+      }
+
+      sessionStorage.removeItem(IDENTIFIER_KEY);
+      router.push(role === 'instructor' ? '/instructor/dashboard' : '/student/dashboard');
     } catch {
-      toast.error('Verification failed. Please try again.');
+      setError('Invalid OTP. Please try again.');
     } finally {
       setIsLoading(false);
     }
   }
 
   async function handleResend() {
-    if (countdown > 0) return;
+    if (countdown > 0 || !identifier || isResending) return;
+    setIsResending(true);
     try {
-      await resendOtp(MASKED_PHONE);
+      await sendOtp(identifier);
       toast.success('OTP resent successfully');
       setCountdown(RESEND_COOLDOWN);
       setDigits(Array(OTP_LENGTH).fill(''));
+      setError('');
       focusAt(0);
     } catch {
       toast.error('Could not resend OTP. Please try again.');
+    } finally {
+      setIsResending(false);
     }
   }
 
@@ -118,13 +156,19 @@ export default function OtpVerifyForm() {
   const minutes = Math.floor(countdown / 60);
   const seconds = countdown % 60;
   const countdownLabel = `${minutes}:${String(seconds).padStart(2, '0')}`;
+  const maskedIdentifier = maskIdentifier(identifier);
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-center">
+        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gray-100 text-gray-900">
+          <ShieldCheck className="h-5 w-5" />
+        </div>
+      </div>
+
       {/* Description */}
       <p className="text-sm text-gray-500">
-        We sent a 6-digit code to{' '}
-        <span className="font-medium text-gray-700">{MASKED_PHONE}</span>
+        {maskedIdentifier || 'Complete registration again to request a new verification code.'}
       </p>
 
       {/* OTP inputs */}
@@ -146,28 +190,47 @@ export default function OtpVerifyForm() {
             onChange={(e) => handleChange(i, e)}
             onKeyDown={(e) => handleKeyDown(i, e)}
             onFocus={(e) => e.target.select()}
+            disabled={!identifier || isLoading}
             className="w-11 h-12 rounded-xl border text-center text-lg font-semibold transition-all outline-none
               border-gray-200 bg-gray-50 text-gray-900
               focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 focus:bg-white
+              disabled:cursor-not-allowed disabled:opacity-60
               caret-transparent"
           />
         ))}
       </div>
 
+      {error && (
+        <p className="text-center text-sm text-destructive" role="alert">
+          {error}{' '}
+          {countdown <= 0 && (
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={isResending || !identifier}
+              className="font-medium underline disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Resend OTP
+            </button>
+          )}
+        </p>
+      )}
+
       {/* Resend */}
       <p className="text-center text-sm text-gray-500">
         {countdown > 0 ? (
           <>
-            Resend code in{' '}
+            Resend OTP in{' '}
             <span className="font-medium text-gray-700">{countdownLabel}</span>
           </>
         ) : (
           <button
             type="button"
             onClick={handleResend}
-            className="font-medium text-gray-900 hover:underline"
+            disabled={isResending || !identifier}
+            className="font-medium text-gray-900 hover:underline disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Resend code
+            {isResending ? 'Resending...' : 'Resend OTP'}
           </button>
         )}
       </p>
@@ -176,17 +239,17 @@ export default function OtpVerifyForm() {
       <Button
         type="button"
         onClick={handleVerify}
-        disabled={!isComplete || isLoading}
+        disabled={!isComplete || isLoading || !identifier}
         className="w-full h-9 bg-[#0f172a] text-white hover:bg-[#1e293b]"
       >
         {isLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-        Verify
+        {isLoading ? 'Verifying...' : 'Verify OTP'}
       </Button>
 
       {/* Back link */}
       <p className="text-center">
-        <Link href="/login" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
-          ← Back to login
+        <Link href={role === 'instructor' ? '/instructor/register' : '/register'} className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
+          ← Back to register
         </Link>
       </p>
     </div>

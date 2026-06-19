@@ -662,6 +662,22 @@ export const MOCK_INSTRUCTOR_TEACHERS = [
           { id: 'sub-math-003-05', student_name: 'Ravindu Fernando', student_number: 'SUBMITX-2026-000005', submitted_at: '2026-05-27T08:05:00.000Z', graded: true, graded_by: 'Instructor Chamara Perera', graded_at: '2026-05-28T09:10:00.000Z', grade: '90/100' },
         ],
       },
+      {
+        id: 'paper-math-004',
+        paper_name: 'April 2026 — Completed Mock',
+        class_name: 'Grade 13 Combined Revision',
+        class_id: 'class-002',
+        month_label: 'April 2026',
+        number_of_questions: 10,
+        uploaded_at: '2026-04-18T09:00:00.000Z',
+        submissions: [
+          { id: 'sub-math-004-01', student_name: 'Nethmi Silva', student_number: 'SUBMITX-2026-000006', submitted_at: '2026-04-23T10:15:00.000Z', graded: true, graded_by: 'Instructor Chamara Perera', graded_at: '2026-04-24T09:30:00.000Z', grade: '89/100' },
+          { id: 'sub-math-004-02', student_name: 'Kavindu Herath', student_number: 'SUBMITX-2026-000007', submitted_at: '2026-04-23T11:05:00.000Z', graded: true, graded_by: 'Instructor Nimal Silva', graded_at: '2026-04-24T13:20:00.000Z', grade: '83/100' },
+          { id: 'sub-math-004-03', student_name: 'Hiruni Abeysekara', student_number: 'SUBMITX-2026-000008', submitted_at: '2026-04-24T08:40:00.000Z', graded: true, graded_by: 'Instructor Chamara Perera', graded_at: '2026-04-25T10:10:00.000Z', grade: '91/100' },
+          { id: 'sub-math-004-04', student_name: 'Thisara Gunasekara', student_number: 'SUBMITX-2026-000009', submitted_at: '2026-04-24T14:25:00.000Z', graded: true, graded_by: 'Instructor Nimal Silva', graded_at: '2026-04-25T15:00:00.000Z', grade: '78/100' },
+          { id: 'sub-math-004-05', student_name: 'Minali Dias', student_number: 'SUBMITX-2026-000010', submitted_at: '2026-04-25T09:55:00.000Z', graded: true, graded_by: 'Instructor Chamara Perera', graded_at: '2026-04-26T08:45:00.000Z', grade: '95/100' },
+        ],
+      },
     ],
   },
   {

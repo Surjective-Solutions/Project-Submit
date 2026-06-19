@@ -32,6 +32,66 @@ function subjectBadgeClass(subject) {
   return colors[subject] ?? 'bg-gray-100 text-gray-600 border-gray-200';
 }
 
+function PapersTable({ papers, teacherId }) {
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Paper Name</TableHead>
+          <TableHead>Class</TableHead>
+          <TableHead>Month</TableHead>
+          <TableHead>Questions</TableHead>
+          <TableHead>Pending</TableHead>
+          <TableHead>Graded</TableHead>
+          <TableHead className="text-right">Action</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {papers.map((paper) => {
+          const pendingCount = paper.submissions.filter((submission) => !submission.graded).length;
+          const gradedCount = paper.submissions.filter((submission) => submission.graded).length;
+
+          return (
+            <TableRow key={paper.id}>
+              <TableCell className="min-w-52 font-semibold text-gray-900">{paper.paper_name}</TableCell>
+              <TableCell className="min-w-56 text-gray-500">{paper.class_name}</TableCell>
+              <TableCell>
+                <Badge variant="outline" className="border-indigo-100 bg-indigo-50 text-indigo-700">
+                  {paper.month_label}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-gray-500">{paper.number_of_questions} questions</TableCell>
+              <TableCell>
+                {pendingCount > 0 ? (
+                  <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
+                    {pendingCount} pending
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700">
+                    All graded
+                  </Badge>
+                )}
+              </TableCell>
+              <TableCell className="text-gray-500">{gradedCount} graded</TableCell>
+              <TableCell className="text-right">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  nativeButton={false}
+                  className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:text-indigo-800"
+                  render={<Link href={`/instructor/dashboard/teachers/${teacherId}/papers/${paper.id}`} />}
+                >
+                  View Submissions
+                </Button>
+              </TableCell>
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
+  );
+}
+
 export default function InstructorTeacherPapersPage() {
   const { teacherId } = useParams();
   const teacher = MOCK_INSTRUCTOR_TEACHERS.find((item) => item.id === teacherId);
@@ -54,6 +114,12 @@ export default function InstructorTeacherPapersPage() {
   }
 
   const papers = teacher.papers ?? [];
+  const papersWithPending = papers.filter((paper) =>
+    paper.submissions.some((submission) => !submission.graded)
+  );
+  const papersWithoutPending = papers.filter((paper) =>
+    paper.submissions.every((submission) => submission.graded)
+  );
 
   return (
     <div className="space-y-5">
@@ -95,61 +161,33 @@ export default function InstructorTeacherPapersPage() {
             <p className="text-sm text-gray-400">No papers uploaded by this teacher yet.</p>
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Paper Name</TableHead>
-                <TableHead>Class</TableHead>
-                <TableHead>Month</TableHead>
-                <TableHead>Questions</TableHead>
-                <TableHead>Pending</TableHead>
-                <TableHead>Graded</TableHead>
-                <TableHead className="text-right">Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {papers.map((paper) => {
-                const pendingCount = paper.submissions.filter((submission) => !submission.graded).length;
-                const gradedCount = paper.submissions.filter((submission) => submission.graded).length;
+          <div className="space-y-6 p-4">
+            <div className="overflow-hidden rounded-xl border border-amber-100">
+              <div className="border-l-4 border-amber-400 bg-amber-50/60 px-4 py-3">
+                <h4 className="text-sm font-semibold text-gray-900">
+                  Pending Submissions <span className="font-normal text-gray-500">•&nbsp;{papersWithPending.length}</span>
+                </h4>
+              </div>
+              {papersWithPending.length > 0 ? (
+                <PapersTable papers={papersWithPending} teacherId={teacher.id} />
+              ) : (
+                <div className="py-8 text-center text-sm text-gray-400">
+                  No papers have pending submissions.
+                </div>
+              )}
+            </div>
 
-                return (
-                  <TableRow key={paper.id}>
-                    <TableCell className="min-w-52 font-semibold text-gray-900">{paper.paper_name}</TableCell>
-                    <TableCell className="min-w-56 text-gray-500">{paper.class_name}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="border-indigo-100 bg-indigo-50 text-indigo-700">
-                        {paper.month_label}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-gray-500">{paper.number_of_questions} questions</TableCell>
-                    <TableCell>
-                      {pendingCount > 0 ? (
-                        <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
-                          {pendingCount} pending
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700">
-                          All graded
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-gray-500">{gradedCount} graded</TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        nativeButton={false}
-                        className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:text-indigo-800"
-                        render={<Link href={`/instructor/dashboard/teachers/${teacher.id}/papers/${paper.id}`} />}
-                      >
-                        View Submissions
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+            {papersWithoutPending.length > 0 && (
+              <div className="overflow-hidden rounded-xl border border-green-100">
+                <div className="border-l-4 border-green-500 bg-green-50/60 px-4 py-3">
+                  <h4 className="text-sm font-semibold text-gray-900">
+                    No Pending Submissions <span className="font-normal text-gray-500">•&nbsp;{papersWithoutPending.length}</span>
+                  </h4>
+                </div>
+                <PapersTable papers={papersWithoutPending} teacherId={teacher.id} />
+              </div>
+            )}
+          </div>
         )}
       </section>
     </div>

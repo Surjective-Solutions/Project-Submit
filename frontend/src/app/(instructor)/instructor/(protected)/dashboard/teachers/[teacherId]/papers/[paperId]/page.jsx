@@ -18,6 +18,10 @@ import {
 } from '@/components/ui/table';
 import { MOCK_INSTRUCTOR_TEACHERS } from '@/lib/mock-data';
 
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MOCK_NOW = new Date('2026-06-19T18:30:00.000Z');
+const SRI_LANKA_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+
 function initials(name) {
   const parts = (name ?? '').trim().split(/\s+/);
   if (parts.length >= 2) return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
@@ -26,8 +30,7 @@ function initials(name) {
 
 function formatRelativeDate(value) {
   const date = new Date(value);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
+  const diffMs = MOCK_NOW.getTime() - date.getTime();
   const diffDays = Math.floor(diffMs / 86400000);
   const diffHours = Math.floor(diffMs / 3600000);
 
@@ -37,10 +40,16 @@ function formatRelativeDate(value) {
 }
 
 function formatFullDate(value) {
-  return new Intl.DateTimeFormat('en-LK', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date(value));
+  const date = new Date(new Date(value).getTime() + SRI_LANKA_OFFSET_MS);
+  const month = MONTH_NAMES[date.getUTCMonth()];
+  const day = date.getUTCDate();
+  const year = date.getUTCFullYear();
+  const hour24 = date.getUTCHours();
+  const minute = String(date.getUTCMinutes()).padStart(2, '0');
+  const period = hour24 >= 12 ? 'PM' : 'AM';
+  const hour12 = hour24 % 12 || 12;
+
+  return `${month} ${day}, ${year}, ${hour12}:${minute} ${period}`;
 }
 
 function formatGrade(grade) {

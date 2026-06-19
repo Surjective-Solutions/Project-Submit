@@ -9,17 +9,13 @@ import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import AvatarUpload from '@/components/admin/AvatarUpload';
 import { teacherClassSchema } from '@/lib/validations/teacher';
-import { createClass } from '@/lib/api-client';
 
 function Field({ label, required, error, id, children }) {
   return (
@@ -40,30 +36,24 @@ function Field({ label, required, error, id, children }) {
 
 export default function AddClassDialog({ open, onOpenChange, onSuccess }) {
   const [isLoading, setIsLoading] = useState(false);
-  const [imageUrl, setImageUrl] = useState(null);
 
   const {
     register,
     handleSubmit,
-    watch,
     reset,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(teacherClassSchema),
-    defaultValues: { title: '', description: '', subject: '', grade: '', fee: '' },
+    defaultValues: { display_name: '', subject_name: '', description: '', monthly_fee: '' },
   });
-
-  const titleValue = watch('title', '');
 
   async function onSubmit(data) {
     setIsLoading(true);
     try {
-      await createClass({ ...data, imageUrl });
       toast.success('Class created successfully');
       reset();
-      setImageUrl(null);
       onOpenChange(false);
-      onSuccess({ ...data, imageUrl });
+      onSuccess(data);
     } catch {
       toast.error('Failed to create class. Please try again.');
     } finally {
@@ -98,29 +88,24 @@ export default function AddClassDialog({ open, onOpenChange, onSuccess }) {
           noValidate
           className="px-6 py-5 space-y-5 max-h-[70vh] overflow-y-auto"
         >
-          {/* Image upload */}
-          <div className="flex justify-center">
-            <AvatarUpload
-              name={titleValue}
-              initialUrl={null}
-              onChange={(_, url) => setImageUrl(url)}
-              size={80}
-            />
-          </div>
-
-          <Separator />
-
-          {/* Title */}
-          <Field label="Display Name" required id="title" error={errors.title?.message}>
+          <Field label="Display Name" required id="display_name" error={errors.display_name?.message}>
             <Input
-              id="title"
-              placeholder="e.g. Advanced Mathematics"
-              aria-invalid={!!errors.title}
-              {...register('title')}
+              id="display_name"
+              placeholder="e.g. 2026 A/L English Medium"
+              aria-invalid={!!errors.display_name}
+              {...register('display_name')}
             />
           </Field>
 
-          {/* Description */}
+          <Field label="Subject Name" required id="subject_name" error={errors.subject_name?.message}>
+            <Input
+              id="subject_name"
+              placeholder="e.g. Combined Mathematics"
+              aria-invalid={!!errors.subject_name}
+              {...register('subject_name')}
+            />
+          </Field>
+
           <Field label="Description" required id="description" error={errors.description?.message}>
             <textarea
               id="description"
@@ -132,35 +117,14 @@ export default function AddClassDialog({ open, onOpenChange, onSuccess }) {
             />
           </Field>
 
-          {/* Subject + Grade */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Subject" required id="subject" error={errors.subject?.message}>
-              <Input
-                id="subject"
-                placeholder="e.g. Mathematics"
-                aria-invalid={!!errors.subject}
-                {...register('subject')}
-              />
-            </Field>
-            <Field label="Grade" required id="grade" error={errors.grade?.message}>
-              <Input
-                id="grade"
-                placeholder="e.g. Grade 12"
-                aria-invalid={!!errors.grade}
-                {...register('grade')}
-              />
-            </Field>
-          </div>
-
-          {/* Fee */}
-          <Field label="Monthly Fee (LKR)" required id="fee" error={errors.fee?.message}>
+          <Field label="Monthly Fee (LKR)" required id="monthly_fee" error={errors.monthly_fee?.message}>
             <Input
-              id="fee"
+              id="monthly_fee"
               type="number"
               min="0"
-              placeholder="e.g. 2500"
-              aria-invalid={!!errors.fee}
-              {...register('fee')}
+              placeholder="e.g. 3500"
+              aria-invalid={!!errors.monthly_fee}
+              {...register('monthly_fee')}
             />
           </Field>
 

@@ -1,5 +1,5 @@
 // TODO: replace with actual microservice endpoint
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? '';
+const API_BASE = "";
 
 async function request(path, options = {}) {
   const { method = 'POST', body } = options;
@@ -14,7 +14,19 @@ export async function studentLogin(identifier, password) {
 }
 
 export async function studentRegister(data) {
-  return request('/auth/student/register', { body: data });
+  const response = await fetch('/api/test/hello', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP Error ${response.status}`);
+  }
+
+  return await response.json();
 }
 
 export async function sendOtp(identifier) {

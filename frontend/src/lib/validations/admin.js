@@ -37,6 +37,13 @@ export const teacherLoginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
+export const otpSchema = z.object({
+  otp: z
+    .string()
+    .length(6, 'OTP must be exactly 6 digits')
+    .regex(/^\d+$/, 'OTP can only contain numeric characters'),
+});
+
 export const createTutorSchema = z
   .object({
     displayName: z.string().min(1, 'Display name is required'),

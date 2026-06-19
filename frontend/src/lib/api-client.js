@@ -17,8 +17,16 @@ export async function studentRegister(data) {
   return request('/auth/student/register', { body: data });
 }
 
-export async function verifyOtp(phone, otp) {
-  return request('/auth/otp/verify', { body: { phone, otp } });
+export async function sendOtp(identifier) {
+  // TODO: POST /auth/otp/send  body: { identifier }
+  // Returns: { success: true, expires_in: 45 }
+  return { success: true, expires_in: 45 };
+}
+
+export async function verifyOtp(otp, identifier) {
+  // TODO: POST /auth/otp/verify  body: { otp, identifier }
+  // Returns: { success: true, token, user }
+  return { success: true };
 }
 
 export async function resendOtp(phone) {
@@ -76,6 +84,38 @@ export async function deleteClass(id) {
   return request(`/teacher/classes/${id}`, { method: 'DELETE', body: { id } });
 }
 
+// ── Teacher Papers ────────────────────────────────────────────────────────────
+
+// TODO: replace with actual microservice endpoint
+export async function getClassPapers(classId) {
+  return request(`/teacher/classes/${classId}/papers`, { method: 'GET' });
+}
+
+// TODO: replace with actual microservice endpoint
+export async function uploadPaper(classId, paperData) {
+  return request(`/teacher/classes/${classId}/papers`, { body: paperData });
+}
+
+// TODO: replace with actual microservice endpoint
+export async function updatePaper(paperId, paperData) {
+  return request(`/teacher/papers/${paperId}`, { method: 'PUT', body: paperData });
+}
+
+// TODO: replace with actual microservice endpoint
+export async function deletePaper(paperId) {
+  return request(`/teacher/papers/${paperId}`, { method: 'DELETE', body: { id: paperId } });
+}
+
+// TODO: replace with actual microservice endpoint
+export async function publishPaper(paperId) {
+  return request(`/teacher/papers/${paperId}/publish`, { body: {} });
+}
+
+// TODO: replace with actual microservice endpoint
+export async function unpublishPaper(paperId) {
+  return request(`/teacher/papers/${paperId}/unpublish`, { body: {} });
+}
+
 // ── Teacher Instructors ───────────────────────────────────────────────────────
 
 // TODO: replace with actual microservice endpoint
@@ -120,23 +160,6 @@ export async function getAdminInstructors() {
 // TODO: replace with actual microservice endpoint
 export async function updateAdminInstructor(id, data) {
   return request(`/admin/instructors/${id}`, { method: 'PUT', body: data });
-}
-
-// ── Student Profile ───────────────────────────────────────────────────────────
-
-// TODO: replace with actual microservice endpoint
-export async function getEnrolledClasses() {
-  return request('/student/classes', { method: 'GET' });
-}
-
-// TODO: replace with actual microservice endpoint
-export async function getStudentProfile() {
-  return request('/student/profile', { method: 'GET' });
-}
-
-// TODO: replace with actual microservice endpoint
-export async function updateStudentProfile(data) {
-  return request('/student/profile', { method: 'PUT', body: data });
 }
 
 // ── Payments ──────────────────────────────────────────────────────────────────

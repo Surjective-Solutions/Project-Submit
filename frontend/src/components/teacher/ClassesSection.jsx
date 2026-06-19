@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import ClassCard from './ClassCard';
 import AddClassDialog from './AddClassDialog';
 import EditClassDialog from './EditClassDialog';
-import ViewClassDialog from './ViewClassDialog';
 import { MOCK_TEACHER_CLASSES } from '@/lib/mock-data';
 
 let nextId = MOCK_TEACHER_CLASSES.length + 1;
@@ -15,7 +14,6 @@ let nextId = MOCK_TEACHER_CLASSES.length + 1;
 export default function ClassesSection() {
   const [classes, setClasses] = useState(MOCK_TEACHER_CLASSES);
   const [addOpen, setAddOpen] = useState(false);
-  const [viewItem, setViewItem] = useState(null);
   const [editItem, setEditItem] = useState(null);
 
   function handleAdd(data) {
@@ -23,19 +21,20 @@ export default function ClassesSection() {
       ...data,
       id: String(nextId++),
       status: 'ACTIVE',
-      fee: Number(data.fee),
+      monthly_fee: Number(data.monthly_fee),
+      papers: [],
     };
     setClasses((prev) => [newClass, ...prev]);
   }
 
   function handleSave(updated) {
-    setClasses((prev) => prev.map((c) => (c.id === updated.id ? { ...c, ...updated, fee: Number(updated.fee) } : c)));
+    setClasses((prev) => prev.map((c) => (c.id === updated.id ? { ...c, ...updated, monthly_fee: Number(updated.monthly_fee) } : c)));
   }
 
   function handleToggleStatus(classItem) {
     const next = classItem.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
     setClasses((prev) => prev.map((c) => (c.id === classItem.id ? { ...c, status: next } : c)));
-    toast.success(`${classItem.title} marked as ${next === 'ACTIVE' ? 'Active' : 'Inactive'}`);
+    toast.success(`${classItem.display_name} marked as ${next === 'ACTIVE' ? 'Active' : 'Inactive'}`);
   }
 
   return (
@@ -67,7 +66,6 @@ export default function ClassesSection() {
             <ClassCard
               key={classItem.id}
               classItem={classItem}
-              onView={setViewItem}
               onEdit={setEditItem}
               onToggleStatus={handleToggleStatus}
             />
@@ -77,11 +75,6 @@ export default function ClassesSection() {
 
       {/* Dialogs */}
       <AddClassDialog open={addOpen} onOpenChange={setAddOpen} onSuccess={handleAdd} />
-      <ViewClassDialog
-        open={!!viewItem}
-        onOpenChange={(v) => { if (!v) setViewItem(null); }}
-        classItem={viewItem}
-      />
       <EditClassDialog
         open={!!editItem}
         onOpenChange={(v) => { if (!v) setEditItem(null); }}

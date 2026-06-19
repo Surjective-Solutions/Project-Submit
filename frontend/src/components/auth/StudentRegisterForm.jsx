@@ -1,29 +1,40 @@
-'use client';
+"use client";
 
-import { useState, useRef } from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronDown, ChevronUp, Eye, EyeOff, Loader2, Upload, UserCircle } from 'lucide-react';
-import { toast } from 'sonner';
-import Link from 'next/link';
+import { useState, useRef } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  ChevronDown,
+  ChevronUp,
+  Eye,
+  EyeOff,
+  Loader2,
+  Upload,
+  UserCircle,
+} from "lucide-react";
+import { toast } from "sonner";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 
-import PasswordStrength from './PasswordStrength';
-import { studentStep1Schema, studentStep2Schema, SRI_LANKA_DISTRICTS } from '@/lib/validations/student';
-import { studentRegister } from '@/lib/api-client';
-import { redirect } from "next/dist/server/api-utils";
-import { navigate } from "next/dist/client/components/segment-cache/navigation";
+import PasswordStrength from "./PasswordStrength";
+import {
+  studentStep1Schema,
+  studentStep2Schema,
+  SRI_LANKA_DISTRICTS,
+} from "@/lib/validations/student";
+import { studentRegister } from "@/lib/api-client";
 
 // ─── Field wrapper ────────────────────────────────────────────────────────────
 
@@ -404,6 +415,7 @@ function Step1({ onNext }) {
 // ─── Step 2 ───────────────────────────────────────────────────────────────────
 
 function Step2({ onBack, step1Data }) {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -622,12 +634,12 @@ export default function StudentRegisterForm() {
     <div>
       <p className="text-xs text-gray-400 mb-4">Step {step} of 2</p>
       <h1 className="text-2xl font-bold text-gray-900 mb-1">
-        {step === 1 ? 'Personal Information' : 'Account Setup'}
+        {step === 1 ? "Personal Information" : "Account Setup"}
       </h1>
       <p className="text-sm text-gray-500 mb-6">
         {step === 1
-          ? 'Tell us about yourself to get started'
-          : 'Set a secure password for your account'}
+          ? "Tell us about yourself to get started"
+          : "Set a secure password for your account"}
       </p>
 
       {step === 1 ? (

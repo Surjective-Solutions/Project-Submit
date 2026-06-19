@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
@@ -13,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import PasswordStrength from './PasswordStrength';
 import { instructorRegisterSchema } from '@/lib/validations/instructor';
-import { instructorRegister } from '@/lib/api-client';
+import { instructorRegister, sendOtp } from '@/lib/api-client';
 
 function Field({ label, required, error, id, children }) {
   return (
@@ -60,6 +61,7 @@ function PhoneInput({ id, error, value, onChange, onBlur }) {
 }
 
 export default function InstructorRegisterForm() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -89,8 +91,11 @@ export default function InstructorRegisterForm() {
   async function onSubmit(data) {
     setIsLoading(true);
     try {
-      const result = await instructorRegister(data);
-      toast.success(result.message ?? 'Application submitted! We will review it shortly.');
+      await instructorRegister(data);
+      const identifier = data.contactNumber || data.email;
+      await sendOtp(identifier);
+      sessionStorage.setItem('otp_identifier', identifier);
+      router.push('/instructor/verify-otp');
     } catch {
       toast.error('Submission failed. Please try again.');
     } finally {

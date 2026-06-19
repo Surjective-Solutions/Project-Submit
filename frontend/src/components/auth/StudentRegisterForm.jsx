@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronDown, ChevronUp, Eye, EyeOff, Loader2, Upload, UserCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -404,6 +405,7 @@ function Step1({ onNext }) {
 // ─── Step 2 ───────────────────────────────────────────────────────────────────
 
 function Step2({ onBack, step1Data }) {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);

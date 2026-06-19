@@ -42,14 +42,13 @@ const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Se
 const MOCK_NOW = new Date('2026-06-19T18:30:00.000Z');
 const SRI_LANKA_OFFSET_MS = 5.5 * 60 * 60 * 1000;
 
+// Score ranges are percentage-based boundaries matching the grade cutoffs
 const SCORE_RANGES = [
-  { label: '0–24',   min: 0,  max: 24,  barColor: 'bg-red-500' },
-  { label: '25–49',  min: 25, max: 49,  barColor: 'bg-red-400' },
-  { label: '50–64',  min: 50, max: 64,  barColor: 'bg-amber-400' },
-  { label: '65–74',  min: 65, max: 74,  barColor: 'bg-amber-500' },
-  { label: '75–84',  min: 75, max: 84,  barColor: 'bg-indigo-500' },
-  { label: '85–94',  min: 85, max: 94,  barColor: 'bg-green-500' },
-  { label: '95–100', min: 95, max: 100, barColor: 'bg-green-600' },
+  { gradeLabel: 'F', rangeLabel: '0–34',   minPct: 0,  maxPct: 34.99, barColor: 'bg-red-500' },
+  { gradeLabel: 'S', rangeLabel: '35–49',  minPct: 35, maxPct: 49.99, barColor: 'bg-orange-400' },
+  { gradeLabel: 'C', rangeLabel: '50–64',  minPct: 50, maxPct: 64.99, barColor: 'bg-amber-400' },
+  { gradeLabel: 'B', rangeLabel: '65–74',  minPct: 65, maxPct: 74.99, barColor: 'bg-blue-500' },
+  { gradeLabel: 'A', rangeLabel: '75–100', minPct: 75, maxPct: 100,   barColor: 'bg-green-500' },
 ];
 
 function initials(name) {
@@ -92,6 +91,15 @@ function parseScore(grade) {
   const total = Number(parts[1]);
   if (isNaN(score) || isNaN(total)) return null;
   return { score, total };
+}
+
+function getGrade(score, totalMarks) {
+  const percentage = (score / totalMarks) * 100;
+  if (percentage >= 75) return { grade: 'A', color: 'green' };
+  if (percentage >= 65) return { grade: 'B', color: 'blue' };
+  if (percentage >= 50) return { grade: 'C', color: 'amber' };
+  if (percentage >= 35) return { grade: 'S', color: 'orange' };
+  return { grade: 'F', color: 'red' };
 }
 
 function StudentCell({ submission }) {
@@ -151,13 +159,19 @@ export default function TeacherPaperSubmissionsPage() {
       lowest  = { score: minScore, name: parsedScores.find((s) => s.score === minScore)?.student_name };
     }
 
-    const passThreshold = totalMarks * 0.5;
-    const passCount = scoreValues.filter((s) => s >= passThreshold).length;
-    const passRate = gradedCount > 0 ? Math.round((passCount / gradedCount) * 100) : 0;
+    // Grade distribution counts
+    const gradeDistribution = { A: 0, B: 0, C: 0, S: 0, F: 0 };
+    parsedScores.forEach(({ score }) => {
+      const { grade } = getGrade(score, totalMarks);
+      gradeDistribution[grade]++;
+    });
 
     const distribution = SCORE_RANGES.map((range) => ({
       ...range,
-      count: scoreValues.filter((s) => s >= range.min && s <= range.max).length,
+      count: parsedScores.filter(({ score }) => {
+        const pct = (score / totalMarks) * 100;
+        return pct >= range.minPct && pct <= range.maxPct;
+      }).length,
     }));
     const maxDistCount = Math.max(...distribution.map((d) => d.count), 1);
 
@@ -177,10 +191,11 @@ export default function TeacherPaperSubmissionsPage() {
       stdDev: gradedCount > 0 ? stdDev.toFixed(2) : 'N/A',
       highest,
       lowest,
-      passRate,
+      gradeDistribution,
       distribution,
       maxDistCount,
       sortedBreakdown,
+      totalMarks,
       hasGraded: gradedCount > 0,
     };
   }, [paper]);
@@ -204,12 +219,6 @@ export default function TeacherPaperSubmissionsPage() {
 
   const pendingSubmissions = (paper.submissions ?? []).filter((s) => !s.graded);
   const gradedSubmissions  = (paper.submissions ?? []).filter((s) => s.graded);
-
-  const passRateColor = stats?.passRate >= 60
-    ? 'text-green-600'
-    : stats?.passRate >= 40
-      ? 'text-amber-600'
-      : 'text-red-600';
 
   return (
     <div className="space-y-5">
@@ -434,7 +443,12 @@ export default function TeacherPaperSubmissionsPage() {
                       <p className="text-xs text-gray-500">Highest Score</p>
                       {stats?.highest ? (
                         <>
-                          <p className="text-xl font-bold text-yellow-600">{stats.highest.score}</p>
+                          <p className="text-xl font-bold text-yellow-600">
+                            {stats.highest.score}
+                            <span className="ml-1.5 text-sm font-semibold text-gray-500">
+                              ({getGrade(stats.highest.score, stats.totalMarks).grade})
+                            </span>
+                          </p>
                           <p className="truncate text-[11px] text-gray-400">{stats.highest.name}</p>
                         </>
                       ) : (
@@ -451,7 +465,12 @@ export default function TeacherPaperSubmissionsPage() {
                       <p className="text-xs text-gray-500">Lowest Score</p>
                       {stats?.lowest ? (
                         <>
-                          <p className="text-xl font-bold text-red-500">{stats.lowest.score}</p>
+                          <p className="text-xl font-bold text-red-500">
+                            {stats.lowest.score}
+                            <span className="ml-1.5 text-sm font-semibold text-gray-500">
+                              ({getGrade(stats.lowest.score, stats.totalMarks).grade})
+                            </span>
+                          </p>
                           <p className="truncate text-[11px] text-gray-400">{stats.lowest.name}</p>
                         </>
                       ) : (
@@ -481,14 +500,26 @@ export default function TeacherPaperSubmissionsPage() {
                   </div>
 
                   <div className="flex items-center gap-3 rounded-xl border border-border bg-gray-50 p-3">
-                    <div className="shrink-0 rounded-lg bg-green-100 p-2">
-                      <Award className="h-4 w-4 text-green-600" />
+                    <div className="shrink-0 rounded-lg bg-indigo-100 p-2">
+                      <Award className="h-4 w-4 text-indigo-600" />
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-500">Pass Rate</p>
-                      <p className={`text-xl font-bold ${stats?.hasGraded ? passRateColor : 'text-gray-400'}`}>
-                        {stats?.hasGraded ? `${stats.passRate}%` : 'N/A'}
-                      </p>
+                    <div className="min-w-0">
+                      <p className="text-xs text-gray-500">Grade Distribution</p>
+                      {stats?.hasGraded ? (
+                        <p className="mt-0.5 text-xs font-semibold text-gray-700 leading-relaxed">
+                          <span className="text-green-600">A: {stats.gradeDistribution.A}</span>
+                          {'  '}
+                          <span className="text-blue-600">B: {stats.gradeDistribution.B}</span>
+                          {'  '}
+                          <span className="text-amber-600">C: {stats.gradeDistribution.C}</span>
+                          {'  '}
+                          <span className="text-orange-500">S: {stats.gradeDistribution.S}</span>
+                          {'  '}
+                          <span className="text-red-600">F: {stats.gradeDistribution.F}</span>
+                        </p>
+                      ) : (
+                        <p className="text-xl font-bold text-gray-400">N/A</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -504,9 +535,11 @@ export default function TeacherPaperSubmissionsPage() {
                 ) : (
                   <div className="space-y-2">
                     {stats.distribution.map((range) => (
-                      <div key={range.label} className="flex items-center gap-3">
-                        <span className="w-16 shrink-0 text-right text-xs font-medium text-gray-600">
-                          {range.label}
+                      <div key={range.gradeLabel} className="flex items-center gap-3">
+                        <span className="w-20 shrink-0 text-right text-xs font-medium text-gray-600">
+                          <span className="font-bold">{range.gradeLabel}</span>
+                          {'  '}
+                          {range.rangeLabel}
                         </span>
                         <div className="h-6 flex-1 overflow-hidden rounded bg-gray-100">
                           <div
@@ -532,19 +565,29 @@ export default function TeacherPaperSubmissionsPage() {
                       <tr className="border-b border-border bg-gray-50">
                         <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500">Student</th>
                         <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500">Score</th>
+                        <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500">Grade</th>
                         <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500">Status</th>
                       </tr>
                     </thead>
                     <tbody>
                       {(stats?.sortedBreakdown ?? []).map((submission) => {
                         const parsed = parseScore(submission.grade);
-                        const scoreColor = !parsed
-                          ? 'text-gray-400'
-                          : parsed.score >= 75
-                            ? 'text-green-600'
-                            : parsed.score >= 50
-                              ? 'text-amber-600'
-                              : 'text-red-600';
+                        const gradeInfo = parsed ? getGrade(parsed.score, stats.totalMarks) : null;
+                        const scoreColorMap = {
+                          green:  'text-green-600',
+                          blue:   'text-blue-600',
+                          amber:  'text-amber-600',
+                          orange: 'text-orange-500',
+                          red:    'text-red-600',
+                        };
+                        const badgeBgMap = {
+                          green:  'bg-green-100 text-green-700',
+                          blue:   'bg-blue-100 text-blue-700',
+                          amber:  'bg-amber-100 text-amber-700',
+                          orange: 'bg-orange-100 text-orange-700',
+                          red:    'bg-red-100 text-red-700',
+                        };
+                        const scoreColor = gradeInfo ? scoreColorMap[gradeInfo.color] : 'text-gray-400';
                         return (
                           <tr
                             key={submission.id}
@@ -566,6 +609,15 @@ export default function TeacherPaperSubmissionsPage() {
                               <span className={`font-semibold ${scoreColor}`}>
                                 {parsed ? `${parsed.score} / ${parsed.total}` : '—'}
                               </span>
+                            </td>
+                            <td className="px-3 py-2">
+                              {gradeInfo ? (
+                                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold ${badgeBgMap[gradeInfo.color]}`}>
+                                  {gradeInfo.grade}
+                                </span>
+                              ) : (
+                                <span className="text-gray-400">—</span>
+                              )}
                             </td>
                             <td className="px-3 py-2">
                               {submission.graded ? (

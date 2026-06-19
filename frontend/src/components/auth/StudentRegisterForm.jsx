@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronDown, ChevronUp, Eye, EyeOff, Loader2, Upload, UserCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,9 +22,13 @@ import {
 
 import PasswordStrength from './PasswordStrength';
 import { studentStep1Schema, studentStep2Schema, SRI_LANKA_DISTRICTS } from '@/lib/validations/student';
+<<<<<<< HEAD
 import { studentRegister } from '@/lib/api-client';
 import { redirect } from "next/dist/server/api-utils";
 import { navigate } from "next/dist/client/components/segment-cache/navigation";
+=======
+import { sendOtp, studentRegister } from '@/lib/api-client';
+>>>>>>> main
 
 // ─── Field wrapper ────────────────────────────────────────────────────────────
 
@@ -404,6 +409,7 @@ function Step1({ onNext }) {
 // ─── Step 2 ───────────────────────────────────────────────────────────────────
 
 function Step2({ onBack, step1Data }) {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -428,10 +434,18 @@ function Step2({ onBack, step1Data }) {
     setIsLoading(true);
     try {
       const payload = { ...step1Data, ...data };
+<<<<<<< HEAD
       const result = await studentRegister(payload);
       toast.success(
         result.message ?? "Account created! Please verify your number.",
       );
+=======
+      await studentRegister(payload);
+      const identifier = payload.contactNumber || payload.email;
+      await sendOtp(identifier);
+      sessionStorage.setItem('otp_identifier', identifier);
+      router.push('/verify-otp');
+>>>>>>> main
     } catch {
       toast.error("Registration failed. Please try again.");
     } finally {

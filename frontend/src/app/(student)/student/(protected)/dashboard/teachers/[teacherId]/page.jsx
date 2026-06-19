@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import DeleteConfirmDialog from '@/components/admin/DeleteConfirmDialog';
 import { useEnrolledClasses } from '@/context/EnrolledClassesContext';
 import { MOCK_TUTORS } from '@/lib/mock-data';
+import { getLastPaidMonth } from '@/lib/billing-utils';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -51,7 +52,7 @@ function TeacherInitials({ name, size = 48 }) {
 function ClassCard({ cls, enrolledEntry, onAdd, onRemove }) {
   const subjectColor = SUBJECT_COLORS[cls.subject] ?? SUBJECT_COLORS.default;
   const isEnrolled = !!enrolledEntry;
-  const canRemove = enrolledEntry?.payment_status === 'NOT_PAID';
+  const canRemove = isEnrolled && getLastPaidMonth(enrolledEntry?.monthly_payments) === null;
 
   return (
     <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">
@@ -161,12 +162,11 @@ export default function TeacherClassesPage() {
       teacher_name: teacher.teacher_name,
       subject: cls.subject,
       image_url: cls.image_url,
-      payment_status: 'NOT_PAID',
       enrolled_at: new Date().toISOString(),
       monthly_fee: cls.monthly_fee,
       description: cls.description ?? '',
-      papers: [],
-      previous_papers: [],
+      monthly_payments: [],
+      papers_by_month: [],
     });
     toast.success('Added to My Classes! Complete your payment to get access.');
   }

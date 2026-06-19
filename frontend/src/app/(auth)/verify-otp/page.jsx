@@ -18,7 +18,7 @@ export default function VerifyOtpPage() {
   return (
     <AuthSplitLayout leftConfig={LEFT_CONFIG}>
       <h1 className="text-2xl font-bold text-gray-900 mb-1">Verify your number</h1>
-      <OtpVerifyForm />
+      <OtpVerifyForm role="student" />
     </AuthSplitLayout>
   );
 }

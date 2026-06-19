@@ -17,7 +17,7 @@ import { Label } from '@/components/ui/label';
 import AvatarUpload from '@/components/admin/AvatarUpload';
 import PasswordField from '@/components/admin/PasswordField';
 import PasswordStrengthIndicator from '@/components/admin/PasswordStrengthIndicator';
-import { studentSelfEditSchema } from '@/lib/validations/admin';
+import { studentEditSchema } from '@/lib/validations/admin';
 
 const SELECT_CLASS =
   'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring disabled:cursor-not-allowed disabled:opacity-50';
@@ -47,7 +47,7 @@ export default function EditProfileDialog({ open, onOpenChange, student, onSave,
   const [photoUrl, setPhotoUrl] = useState(null);
 
   const { register, handleSubmit, watch, reset, formState: { errors } } = useForm({
-    resolver: zodResolver(studentSelfEditSchema),
+    resolver: zodResolver(studentEditSchema),
   });
 
   const newPasswordValue = watch('new_password', '');

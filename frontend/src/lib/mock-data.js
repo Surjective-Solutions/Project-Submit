@@ -677,150 +677,183 @@ export const MOCK_LOGGED_IN_STUDENT = {
 };
 
 export const MOCK_STUDENT_ENROLLED_CLASSES = [
+  // ── Class 1: Grade 12 Combined Mathematics ──────────────────────────────────
+  // Jun (current month) = PAID → green badge; Jul = NOT_PAID
   {
     id: 'ec-001',
-    class_name: 'Grade 12 Advanced Mathematics',
-    class_year: '2026',
-    teacher_name: 'Dr. Anusha Perera',
-    subject: 'Mathematics',
-    image_url: 'https://placehold.co/400x200?text=Class+Image',
-    payment_status: 'PAID',
-    enrolled_at: '2026-01-15T08:00:00.000Z',
-    monthly_fee: 2500,
-    description: 'A comprehensive course covering calculus, algebra, and statistics for advanced students preparing for A/L examinations.',
-    papers: [
-      {
-        id: 'paper-001-1',
-        paper_name: 'Monthly Paper 01 – June 2026',
-        due_date: '2026-06-20T23:59:00.000Z',
-        submission_status: 'NOT_SUBMITTED',
-      },
-      {
-        id: 'paper-001-2',
-        paper_name: 'Revision Paper – Calculus',
-        due_date: '2026-06-28T23:59:00.000Z',
-        submission_status: 'SUBMITTED',
-      },
-    ],
-    previous_papers: [
-      {
-        id: 'prev-001-1',
-        paper_name: 'Monthly Paper 01 – April 2026',
-        due_date: '2026-04-20T23:59:00.000Z',
-        grade: '88/100',
-        status: 'GRADED',
-        exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper+PDF',
-        submission_url: 'https://placehold.co/600x800?text=My+Submission',
-        graded_pdf_url: 'https://placehold.co/600x800?text=Graded+Submission',
-      },
-      {
-        id: 'prev-001-2',
-        paper_name: 'Monthly Paper 02 – April 2026',
-        due_date: '2026-04-28T23:59:00.000Z',
-        grade: null,
-        status: 'SUBMITTED',
-        exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper+PDF',
-        submission_url: 'https://placehold.co/600x800?text=My+Submission',
-      },
-      {
-        id: 'prev-001-3',
-        paper_name: 'Monthly Paper 01 – March 2026',
-        due_date: '2026-03-20T23:59:00.000Z',
-        grade: '74/100',
-        status: 'GRADED',
-        exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper+PDF',
-        submission_url: 'https://placehold.co/600x800?text=My+Submission',
-        graded_pdf_url: 'https://placehold.co/600x800?text=Graded+Submission',
-      },
-      {
-        id: 'prev-001-4',
-        paper_name: 'Monthly Paper 02 – March 2026',
-        due_date: '2026-03-28T23:59:00.000Z',
-        grade: null,
-        status: 'NOT_SUBMITTED',
-        exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper+PDF',
-        submission_url: null,
-      },
-    ],
-  },
-  {
-    id: 'ec-002',
-    class_name: 'Grade 12 Physics',
-    class_year: '2026',
-    teacher_name: 'Mr. Rohan Fernando',
-    subject: 'Physics',
-    image_url: 'https://placehold.co/400x200?text=Class+Image',
-    payment_status: 'PENDING',
-    enrolled_at: '2026-01-20T09:00:00.000Z',
-    monthly_fee: 2800,
-    description: 'Advanced Physics covering mechanics, electromagnetism, waves, and modern physics with practical sessions.',
-    papers: [
-      {
-        id: 'paper-002-1',
-        paper_name: 'Monthly Paper 01 – June 2026',
-        due_date: '2026-06-18T23:59:00.000Z',
-        submission_status: 'SUBMITTED',
-      },
-    ],
-    previous_papers: [
-      {
-        id: 'prev-002-1',
-        paper_name: 'Monthly Paper 01 – May 2026',
-        due_date: '2026-05-18T23:59:00.000Z',
-        grade: '91/100',
-        status: 'GRADED',
-        exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper+PDF',
-        submission_url: 'https://placehold.co/600x800?text=My+Submission',
-        graded_pdf_url: 'https://placehold.co/600x800?text=Graded+Submission',
-      },
-      {
-        id: 'prev-002-2',
-        paper_name: 'Monthly Paper 02 – May 2026',
-        due_date: '2026-05-25T23:59:00.000Z',
-        grade: null,
-        status: 'NOT_SUBMITTED',
-        exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper+PDF',
-        submission_url: null,
-      },
-      {
-        id: 'prev-002-3',
-        paper_name: 'Monthly Paper 01 – April 2026',
-        due_date: '2026-04-18T23:59:00.000Z',
-        grade: '79/100',
-        status: 'GRADED',
-        exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper+PDF',
-        submission_url: 'https://placehold.co/600x800?text=My+Submission',
-        graded_pdf_url: 'https://placehold.co/600x800?text=Graded+Submission',
-      },
-    ],
-  },
-  {
-    id: 'ec-003',
     class_name: 'Grade 12 Combined Mathematics',
     class_year: '2026',
     teacher_name: 'Ms. Tharindi Wickrama',
     subject: 'Combined Mathematics',
     image_url: 'https://placehold.co/400x200?text=Class+Image',
-    payment_status: 'NOT_PAID',
-    enrolled_at: '2026-02-01T10:00:00.000Z',
+    enrolled_at: '2026-01-03T08:00:00.000Z',
     monthly_fee: 3000,
-    description: 'Pure and Applied Mathematics combined course for Physical Science stream students.',
-    papers: [],
-    previous_papers: [],
+    description: 'Pure and Applied Mathematics combined course for Physical Science stream students preparing for A/L examinations.',
+    monthly_payments: [
+      { id: 'mp-001-01', month: 1,  year: 2026, status: 'PAID',     reference_number: 'BOC-2026-CM-JAN', paid_at: '2026-01-05T09:00:00.000Z' },
+      { id: 'mp-001-02', month: 2,  year: 2026, status: 'PAID',     reference_number: 'BOC-2026-CM-FEB', paid_at: '2026-02-04T10:00:00.000Z' },
+      { id: 'mp-001-03', month: 3,  year: 2026, status: 'PAID',     reference_number: 'BOC-2026-CM-MAR', paid_at: '2026-03-06T09:30:00.000Z' },
+      { id: 'mp-001-04', month: 4,  year: 2026, status: 'PAID',     reference_number: 'BOC-2026-CM-APR', paid_at: '2026-04-05T08:45:00.000Z' },
+      { id: 'mp-001-05', month: 5,  year: 2026, status: 'PAID',     reference_number: 'BOC-2026-CM-MAY', paid_at: '2026-05-04T11:00:00.000Z' },
+      { id: 'mp-001-06', month: 6,  year: 2026, status: 'PAID',     reference_number: 'BOC-2026-CM-JUN', paid_at: '2026-06-03T09:15:00.000Z' },
+      { id: 'mp-001-07', month: 7,  year: 2026, status: 'NOT_PAID', reference_number: null,               paid_at: null },
+    ],
+    papers_by_month: [
+      {
+        month: 1, year: 2026, month_label: 'January 2026',
+        papers: [
+          { id: 'p-001-01-1', paper_name: 'January 2026 — Paper 01', due_date: '2026-01-15T23:59:00.000Z', submission_status: 'GRADED',        grade: '82/100', exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: 'https://placehold.co/600x800?text=Graded', is_current: false },
+          { id: 'p-001-01-2', paper_name: 'January 2026 — Paper 02', due_date: '2026-01-20T23:59:00.000Z', submission_status: 'GRADED',        grade: '76/100', exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: 'https://placehold.co/600x800?text=Graded', is_current: false },
+          { id: 'p-001-01-3', paper_name: 'January 2026 — Paper 03', due_date: '2026-01-25T23:59:00.000Z', submission_status: 'GRADED',        grade: '90/100', exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: 'https://placehold.co/600x800?text=Graded', is_current: false },
+          { id: 'p-001-01-4', paper_name: 'January 2026 — Paper 04', due_date: '2026-01-30T23:59:00.000Z', submission_status: 'NOT_SUBMITTED', grade: null,     exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: null,                                                         graded_pdf_url: null,                                              is_current: false },
+        ],
+      },
+      {
+        month: 2, year: 2026, month_label: 'February 2026',
+        papers: [
+          { id: 'p-001-02-1', paper_name: 'February 2026 — Paper 01', due_date: '2026-02-12T23:59:00.000Z', submission_status: 'GRADED',        grade: '88/100', exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: 'https://placehold.co/600x800?text=Graded', is_current: false },
+          { id: 'p-001-02-2', paper_name: 'February 2026 — Paper 02', due_date: '2026-02-17T23:59:00.000Z', submission_status: 'GRADED',        grade: '71/100', exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: 'https://placehold.co/600x800?text=Graded', is_current: false },
+          { id: 'p-001-02-3', paper_name: 'February 2026 — Paper 03', due_date: '2026-02-22T23:59:00.000Z', submission_status: 'SUBMITTED',     grade: null,     exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: null,                                              is_current: false },
+          { id: 'p-001-02-4', paper_name: 'February 2026 — Paper 04', due_date: '2026-02-26T23:59:00.000Z', submission_status: 'GRADED',        grade: '85/100', exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: 'https://placehold.co/600x800?text=Graded', is_current: false },
+        ],
+      },
+      {
+        month: 3, year: 2026, month_label: 'March 2026',
+        papers: [
+          { id: 'p-001-03-1', paper_name: 'March 2026 — Paper 01', due_date: '2026-03-13T23:59:00.000Z', submission_status: 'GRADED',        grade: '79/100', exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: 'https://placehold.co/600x800?text=Graded', is_current: false },
+          { id: 'p-001-03-2', paper_name: 'March 2026 — Paper 02', due_date: '2026-03-18T23:59:00.000Z', submission_status: 'GRADED',        grade: '93/100', exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: 'https://placehold.co/600x800?text=Graded', is_current: false },
+          { id: 'p-001-03-3', paper_name: 'March 2026 — Paper 03', due_date: '2026-03-23T23:59:00.000Z', submission_status: 'GRADED',        grade: '68/100', exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: 'https://placehold.co/600x800?text=Graded', is_current: false },
+          { id: 'p-001-03-4', paper_name: 'March 2026 — Paper 04', due_date: '2026-03-28T23:59:00.000Z', submission_status: 'NOT_SUBMITTED', grade: null,     exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: null,                                                         graded_pdf_url: null,                                              is_current: false },
+        ],
+      },
+      {
+        month: 4, year: 2026, month_label: 'April 2026',
+        papers: [
+          { id: 'p-001-04-1', paper_name: 'April 2026 — Paper 01', due_date: '2026-04-10T23:59:00.000Z', submission_status: 'GRADED',    grade: '86/100', exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: 'https://placehold.co/600x800?text=Graded', is_current: false },
+          { id: 'p-001-04-2', paper_name: 'April 2026 — Paper 02', due_date: '2026-04-15T23:59:00.000Z', submission_status: 'SUBMITTED', grade: null,     exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: null,                                              is_current: false },
+          { id: 'p-001-04-3', paper_name: 'April 2026 — Paper 03', due_date: '2026-04-20T23:59:00.000Z', submission_status: 'GRADED',    grade: '77/100', exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: 'https://placehold.co/600x800?text=Graded', is_current: false },
+          { id: 'p-001-04-4', paper_name: 'April 2026 — Paper 04', due_date: '2026-04-26T23:59:00.000Z', submission_status: 'GRADED',    grade: '91/100', exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: 'https://placehold.co/600x800?text=Graded', is_current: false },
+        ],
+      },
+      {
+        month: 5, year: 2026, month_label: 'May 2026',
+        papers: [
+          { id: 'p-001-05-1', paper_name: 'May 2026 — Paper 01', due_date: '2026-05-08T23:59:00.000Z', submission_status: 'GRADED',        grade: '83/100', exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: 'https://placehold.co/600x800?text=Graded', is_current: false },
+          { id: 'p-001-05-2', paper_name: 'May 2026 — Paper 02', due_date: '2026-05-14T23:59:00.000Z', submission_status: 'GRADED',        grade: '89/100', exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: 'https://placehold.co/600x800?text=Graded', is_current: false },
+          { id: 'p-001-05-3', paper_name: 'May 2026 — Paper 03', due_date: '2026-05-20T23:59:00.000Z', submission_status: 'NOT_SUBMITTED', grade: null,     exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: null,                                                         graded_pdf_url: null,                                              is_current: false },
+          { id: 'p-001-05-4', paper_name: 'May 2026 — Paper 04', due_date: '2026-05-27T23:59:00.000Z', submission_status: 'SUBMITTED',     grade: null,     exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: null,                                              is_current: false },
+        ],
+      },
+      {
+        month: 6, year: 2026, month_label: 'June 2026',
+        papers: [
+          { id: 'p-001-06-1', paper_name: 'June 2026 — Paper 01', due_date: '2026-06-12T23:59:00.000Z', submission_status: 'SUBMITTED',     grade: null, exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: null, is_current: true },
+          { id: 'p-001-06-2', paper_name: 'June 2026 — Paper 02', due_date: '2026-06-18T23:59:00.000Z', submission_status: 'NOT_SUBMITTED', grade: null, exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: null,                                                         graded_pdf_url: null, is_current: true },
+          { id: 'p-001-06-3', paper_name: 'June 2026 — Paper 03', due_date: '2026-06-22T23:59:00.000Z', submission_status: 'NOT_SUBMITTED', grade: null, exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: null,                                                         graded_pdf_url: null, is_current: true },
+          { id: 'p-001-06-4', paper_name: 'June 2026 — Paper 04', due_date: '2026-06-28T23:59:00.000Z', submission_status: 'SUBMITTED',     grade: null, exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: null, is_current: true },
+        ],
+      },
+    ],
   },
+
+  // ── Class 2: Grade 11 Biology ────────────────────────────────────────────────
+  // Jun (current month) = REJECTED → red badge; Jul = NOT_PAID
   {
-    id: 'ec-004',
-    class_name: 'Grade 12 Chemistry',
+    id: 'ec-002',
+    class_name: 'Grade 11 Biology',
     class_year: '2026',
-    teacher_name: 'Mr. Kasun Silva',
-    subject: 'Chemistry',
+    teacher_name: 'Dr. Kamala Dissanayake',
+    subject: 'Biology',
     image_url: 'https://placehold.co/400x200?text=Class+Image',
-    payment_status: 'REJECTED',
-    enrolled_at: '2026-02-05T11:00:00.000Z',
-    monthly_fee: 2600,
-    description: 'Comprehensive Chemistry course covering organic, inorganic, and physical chemistry with lab practicals.',
-    papers: [],
-    previous_papers: [],
+    enrolled_at: '2026-01-06T09:00:00.000Z',
+    monthly_fee: 2500,
+    description: 'Comprehensive Biology course covering cell biology, genetics, ecology, and human physiology for A/L students.',
+    monthly_payments: [
+      { id: 'mp-002-01', month: 1, year: 2026, status: 'PAID',     reference_number: 'BOC-2026-BIO-JAN', paid_at: '2026-01-07T10:00:00.000Z' },
+      { id: 'mp-002-02', month: 2, year: 2026, status: 'PAID',     reference_number: 'BOC-2026-BIO-FEB', paid_at: '2026-02-05T11:00:00.000Z' },
+      { id: 'mp-002-03', month: 3, year: 2026, status: 'PAID',     reference_number: 'BOC-2026-BIO-MAR', paid_at: '2026-03-07T09:00:00.000Z' },
+      { id: 'mp-002-04', month: 4, year: 2026, status: 'PAID',     reference_number: 'BOC-2026-BIO-APR', paid_at: '2026-04-06T08:30:00.000Z' },
+      { id: 'mp-002-05', month: 5, year: 2026, status: 'PAID',     reference_number: 'BOC-2026-BIO-MAY', paid_at: '2026-05-05T10:30:00.000Z' },
+      { id: 'mp-002-06', month: 6, year: 2026, status: 'REJECTED', reference_number: null,                paid_at: null },
+      { id: 'mp-002-07', month: 7, year: 2026, status: 'NOT_PAID', reference_number: null,                paid_at: null },
+    ],
+    papers_by_month: [
+      {
+        month: 1, year: 2026, month_label: 'January 2026',
+        papers: [
+          { id: 'p-002-01-1', paper_name: 'January 2026 — Paper 01', due_date: '2026-01-14T23:59:00.000Z', submission_status: 'GRADED',        grade: '74/100', exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: 'https://placehold.co/600x800?text=Graded', is_current: false },
+          { id: 'p-002-01-2', paper_name: 'January 2026 — Paper 02', due_date: '2026-01-19T23:59:00.000Z', submission_status: 'GRADED',        grade: '81/100', exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: 'https://placehold.co/600x800?text=Graded', is_current: false },
+          { id: 'p-002-01-3', paper_name: 'January 2026 — Paper 03', due_date: '2026-01-24T23:59:00.000Z', submission_status: 'GRADED',        grade: '69/100', exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: 'https://placehold.co/600x800?text=Graded', is_current: false },
+          { id: 'p-002-01-4', paper_name: 'January 2026 — Paper 04', due_date: '2026-01-29T23:59:00.000Z', submission_status: 'NOT_SUBMITTED', grade: null,     exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: null,                                                         graded_pdf_url: null,                                              is_current: false },
+        ],
+      },
+      {
+        month: 2, year: 2026, month_label: 'February 2026',
+        papers: [
+          { id: 'p-002-02-1', paper_name: 'February 2026 — Paper 01', due_date: '2026-02-11T23:59:00.000Z', submission_status: 'GRADED',    grade: '78/100', exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: 'https://placehold.co/600x800?text=Graded', is_current: false },
+          { id: 'p-002-02-2', paper_name: 'February 2026 — Paper 02', due_date: '2026-02-16T23:59:00.000Z', submission_status: 'GRADED',    grade: '85/100', exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: 'https://placehold.co/600x800?text=Graded', is_current: false },
+          { id: 'p-002-02-3', paper_name: 'February 2026 — Paper 03', due_date: '2026-02-21T23:59:00.000Z', submission_status: 'SUBMITTED', grade: null,     exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: null,                                              is_current: false },
+          { id: 'p-002-02-4', paper_name: 'February 2026 — Paper 04', due_date: '2026-02-25T23:59:00.000Z', submission_status: 'GRADED',    grade: '72/100', exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: 'https://placehold.co/600x800?text=Graded', is_current: false },
+        ],
+      },
+      {
+        month: 3, year: 2026, month_label: 'March 2026',
+        papers: [
+          { id: 'p-002-03-1', paper_name: 'March 2026 — Paper 01', due_date: '2026-03-12T23:59:00.000Z', submission_status: 'GRADED',        grade: '91/100', exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: 'https://placehold.co/600x800?text=Graded', is_current: false },
+          { id: 'p-002-03-2', paper_name: 'March 2026 — Paper 02', due_date: '2026-03-17T23:59:00.000Z', submission_status: 'GRADED',        grade: '83/100', exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: 'https://placehold.co/600x800?text=Graded', is_current: false },
+          { id: 'p-002-03-3', paper_name: 'March 2026 — Paper 03', due_date: '2026-03-22T23:59:00.000Z', submission_status: 'NOT_SUBMITTED', grade: null,     exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: null,                                                         graded_pdf_url: null,                                              is_current: false },
+          { id: 'p-002-03-4', paper_name: 'March 2026 — Paper 04', due_date: '2026-03-27T23:59:00.000Z', submission_status: 'GRADED',        grade: '88/100', exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: 'https://placehold.co/600x800?text=Graded', is_current: false },
+        ],
+      },
+      {
+        month: 4, year: 2026, month_label: 'April 2026',
+        papers: [
+          { id: 'p-002-04-1', paper_name: 'April 2026 — Paper 01', due_date: '2026-04-09T23:59:00.000Z', submission_status: 'GRADED',    grade: '76/100', exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: 'https://placehold.co/600x800?text=Graded', is_current: false },
+          { id: 'p-002-04-2', paper_name: 'April 2026 — Paper 02', due_date: '2026-04-14T23:59:00.000Z', submission_status: 'SUBMITTED', grade: null,     exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: null,                                              is_current: false },
+          { id: 'p-002-04-3', paper_name: 'April 2026 — Paper 03', due_date: '2026-04-19T23:59:00.000Z', submission_status: 'GRADED',    grade: '92/100', exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: 'https://placehold.co/600x800?text=Graded', is_current: false },
+          { id: 'p-002-04-4', paper_name: 'April 2026 — Paper 04', due_date: '2026-04-24T23:59:00.000Z', submission_status: 'GRADED',    grade: '79/100', exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: 'https://placehold.co/600x800?text=Graded', is_current: false },
+        ],
+      },
+      {
+        month: 5, year: 2026, month_label: 'May 2026',
+        papers: [
+          { id: 'p-002-05-1', paper_name: 'May 2026 — Paper 01', due_date: '2026-05-09T23:59:00.000Z', submission_status: 'GRADED',        grade: '87/100', exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: 'https://placehold.co/600x800?text=Graded', is_current: false },
+          { id: 'p-002-05-2', paper_name: 'May 2026 — Paper 02', due_date: '2026-05-14T23:59:00.000Z', submission_status: 'GRADED',        grade: '73/100', exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: 'https://placehold.co/600x800?text=Graded', is_current: false },
+          { id: 'p-002-05-3', paper_name: 'May 2026 — Paper 03', due_date: '2026-05-19T23:59:00.000Z', submission_status: 'SUBMITTED',     grade: null,     exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: null,                                              is_current: false },
+          { id: 'p-002-05-4', paper_name: 'May 2026 — Paper 04', due_date: '2026-05-25T23:59:00.000Z', submission_status: 'NOT_SUBMITTED', grade: null,     exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: null,                                                         graded_pdf_url: null,                                              is_current: false },
+        ],
+      },
+    ],
+  },
+
+  // ── Class 3: Grade 10 Physics ────────────────────────────────────────────────
+  // Jun (current month) = NOT_PAID (no entry); last paid = January → gray badge
+  {
+    id: 'ec-003',
+    class_name: 'Grade 10 Physics',
+    class_year: '2026',
+    teacher_name: 'Mr. Rohan Fernando',
+    subject: 'Physics',
+    image_url: 'https://placehold.co/400x200?text=Class+Image',
+    enrolled_at: '2026-01-10T10:00:00.000Z',
+    monthly_fee: 2800,
+    description: 'Foundational Physics covering mechanics, heat, light, and electricity for Grade 10 students.',
+    monthly_payments: [
+      { id: 'mp-003-01', month: 1, year: 2026, status: 'PAID',     reference_number: 'BOC-2026-PHY-JAN', paid_at: '2026-01-12T08:00:00.000Z' },
+      { id: 'mp-003-02', month: 2, year: 2026, status: 'NOT_PAID', reference_number: null,                paid_at: null },
+      { id: 'mp-003-03', month: 3, year: 2026, status: 'NOT_PAID', reference_number: null,                paid_at: null },
+    ],
+    papers_by_month: [
+      {
+        month: 1, year: 2026, month_label: 'January 2026',
+        papers: [
+          { id: 'p-003-01-1', paper_name: 'January 2026 — Paper 01', due_date: '2026-01-16T23:59:00.000Z', submission_status: 'GRADED',        grade: '65/100', exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: 'https://placehold.co/600x800?text=Graded', is_current: false },
+          { id: 'p-003-01-2', paper_name: 'January 2026 — Paper 02', due_date: '2026-01-21T23:59:00.000Z', submission_status: 'GRADED',        grade: '72/100', exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: 'https://placehold.co/600x800?text=Graded', is_current: false },
+          { id: 'p-003-01-3', paper_name: 'January 2026 — Paper 03', due_date: '2026-01-26T23:59:00.000Z', submission_status: 'NOT_SUBMITTED', grade: null,     exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: null,                                                         graded_pdf_url: null,                                              is_current: false },
+          { id: 'p-003-01-4', paper_name: 'January 2026 — Paper 04', due_date: '2026-01-30T23:59:00.000Z', submission_status: 'SUBMITTED',     grade: null,     exam_pdf_url: 'https://placehold.co/600x800?text=Exam+Paper', submission_url: 'https://placehold.co/600x800?text=Submission', graded_pdf_url: null,                                              is_current: false },
+        ],
+      },
+    ],
   },
 ];
 

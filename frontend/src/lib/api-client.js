@@ -37,8 +37,8 @@ export async function studentRegister(data) {
   return actualRequest("/api/test/hello", { body: data });
 }
 
-export async function verifyOtp(phone, otp) {
-  return request("/auth/otp/verify", { body: { phone, otp } });
+export async function verifyOtp(otp, identifier) {
+  return actualRequest("/api/test/otp/verify", { body: { otp, identifier } });
 }
 
 export async function resendOtp(phone) {
@@ -50,7 +50,8 @@ export async function instructorLogin(email, password) {
 }
 
 export async function instructorRegister(data) {
-  return request("/auth/instructor/register", { body: data });
+  console.log("Registering instructor with data:", data);
+  return actualRequest("/api/test/instructor/register", { body: data });
 }
 
 // ── Admin ─────────────────────────────────────────────────────────────────────

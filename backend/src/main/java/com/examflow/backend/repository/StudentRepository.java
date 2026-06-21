@@ -12,4 +12,9 @@ public interface StudentRepository extends JpaRepository<Student, Integer> {
     List<Student> findByContactNumber(String contactNumber);
 
     List<Student> findByEmail(String email);
+
+    Student findByContactNumberAndStatus(String contactNumber, Integer status);
+
+    Student findByEmailAndStatus(String email, Integer status);
+
 }

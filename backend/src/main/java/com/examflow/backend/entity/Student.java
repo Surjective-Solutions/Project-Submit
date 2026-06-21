@@ -1,5 +1,9 @@
 package com.examflow.backend.entity;
 
+import java.time.LocalDateTime;
+
+import org.hibernate.validator.constraints.UniqueElements;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -30,6 +34,8 @@ public class Student {
     private Boolean marketingConsent;
     private Boolean termsAccepted;
     private Integer status;
+
+    private LocalDateTime registerDateTime;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -211,6 +217,14 @@ public class Student {
 
     public void setStatus(Integer status) {
         this.status = status;
+    }
+
+    public LocalDateTime getRegisterDateTime() {
+        return registerDateTime;
+    }
+
+    public void setRegisterDateTime(LocalDateTime registerDateTime) {
+        this.registerDateTime = registerDateTime;
     }
 
 }

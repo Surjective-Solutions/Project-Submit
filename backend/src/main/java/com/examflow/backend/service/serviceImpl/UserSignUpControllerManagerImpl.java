@@ -126,13 +126,13 @@ public class UserSignUpControllerManagerImpl implements UserSignUpControllermana
             Instructor instructor = new Instructor();
 
             instructor.setAddress(instructorSignUpRequest.getAddress());
-            instructor.setConfirmPassword(instructorSignUpRequest.getConfirmPassword());
-            instructor.setPassword(instructorSignUpRequest.getPassword());
+            instructor.setConfirmPassword(passwordEncoder.encode(instructorSignUpRequest.getConfirmPassword()));
+            instructor.setPassword(passwordEncoder.encode(instructorSignUpRequest.getPassword()));
             instructor.setEmail(instructorSignUpRequest.getEmail());
             instructor.setContactNumber(instructorSignUpRequest.getContactNumber());
             instructor.setNicNumber(instructorSignUpRequest.getNicNumber());
             instructor.setTermsAccepted(instructorSignUpRequest.getTermsAccepted());
-            instructor.setFinalPassword(instructorSignUpRequest.getConfirmPassword());
+            instructor.setFinalPassword(passwordEncoder.encode(instructorSignUpRequest.getConfirmPassword()));
             instructor.setStatus(2);
             instructor.setIsOtpVerified(false);
             instructor.setFullName(instructorSignUpRequest.getFullName());

@@ -48,7 +48,8 @@ export async function sendOtp(identifier) {
 export async function verifyOtp(otp, identifier) {
   // TODO: POST /auth/otp/verify  body: { otp, identifier }
   // Returns: { success: true, token, user }
-  return { success: true };
+  // return { success: true };
+  return actualRequest("/api/test/otp/verify", { body: { otp, identifier } });
 }
 
 export async function resendOtp(phone) {

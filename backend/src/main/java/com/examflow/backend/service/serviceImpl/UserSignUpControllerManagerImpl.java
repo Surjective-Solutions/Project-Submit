@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.examflow.backend.dto.InstructorSignUpRequest;
@@ -25,11 +26,15 @@ public class UserSignUpControllerManagerImpl implements UserSignUpControllermana
     private final StudentRepository studentRepository;
     private final InstructorRepository instructorRepository;
     private final OtpConfigurationRepository otpConfigurationRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     @Autowired
     public UserSignUpControllerManagerImpl(StudentRepository studentRepository,
-            InstructorRepository instructorRepository, OtpConfigurationRepository otpConfigurationRepository) {
+            InstructorRepository instructorRepository,
+            OtpConfigurationRepository otpConfigurationRepository,
+            BCryptPasswordEncoder passwordEncoder) {
         this.studentRepository = studentRepository;
+        this.passwordEncoder = passwordEncoder;
         this.instructorRepository = instructorRepository;
         this.otpConfigurationRepository = otpConfigurationRepository;
     }
@@ -58,25 +63,26 @@ public class UserSignUpControllerManagerImpl implements UserSignUpControllermana
         } else {
             System.out.println("impl reached");
 
+
             Student student = new Student();
             student.setFirstName(userSignUpRequest.getFirstName());
             student.setLastName(userSignUpRequest.getLastName());
             student.setEmail(userSignUpRequest.getEmail());
-            student.setPassword(userSignUpRequest.getPassword());
+            student.setPassword(passwordEncoder.encode(userSignUpRequest.getPassword()));
             student.setAddress(userSignUpRequest.getAddress());
             student.setContactNumber(userSignUpRequest.getContactNumber());
             student.setGuardianContactNumber(userSignUpRequest.getGuardianContactNumber());
             student.setSubjectStream(userSignUpRequest.getSubjectStream());
             student.setDistrict(userSignUpRequest.getDistrict());
             student.setGrade(userSignUpRequest.getGrade());
-            student.setConfirmPassword(userSignUpRequest.getConfirmPassword());
+            student.setConfirmPassword(passwordEncoder.encode(userSignUpRequest.getConfirmPassword()));
             student.setGender(userSignUpRequest.getGender());
             student.setGuardianName(userSignUpRequest.getGuardianName());
             student.setSchoolName(userSignUpRequest.getSchoolName());
             student.setWhatsappNumber(userSignUpRequest.getWhatsappNumber());
             student.setMarketingConsent(userSignUpRequest.getMarketingConsent());
             student.setTermsAccepted(userSignUpRequest.getTermsAccepted());
-            student.setFinalPassword(userSignUpRequest.getConfirmPassword());
+            student.setFinalPassword(passwordEncoder.encode(userSignUpRequest.getConfirmPassword()));
             student.setStatus(2);// set status to approved status
 
             studentRepository.save(student);

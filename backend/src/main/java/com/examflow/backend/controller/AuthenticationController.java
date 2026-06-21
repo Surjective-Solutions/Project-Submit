@@ -47,4 +47,20 @@ public class AuthenticationController {
         return loginResponse;
     }
 
+    @PostMapping("/instructor-login")
+    public LoginResponse loginInstrutor(@RequestBody LoginRequest request) {
+        System.out.println("reached to controller");
+        LoginResponse loginResponse = authenticateControllerManager.loginInstrutor(request.getEmail(),
+                request.getPassword());
+        return loginResponse;
+    }
+
+    @PostMapping("/admin-login")
+    public LoginResponse loginAdmin(@RequestBody LoginRequest request) {
+        System.out.println("reached to controller");
+        LoginResponse loginResponse = authenticateControllerManager.loginAdmin(request.getUsername(),
+                request.getPassword());
+        return loginResponse;
+    }
+
 }

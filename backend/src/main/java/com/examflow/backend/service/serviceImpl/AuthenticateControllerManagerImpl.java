@@ -1,6 +1,7 @@
 package com.examflow.backend.service.serviceImpl;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.examflow.backend.config.JwtUtil;
@@ -12,13 +13,16 @@ import com.examflow.backend.service.AuthenticateControllerManager;
 @Service
 public class AuthenticateControllerManagerImpl implements AuthenticateControllerManager {
 
+    private final BCryptPasswordEncoder passwordEncoder;
     private final StudentRepository studentRepository;
     private final JwtUtil jwtUtil;
 
     @Autowired
-    public AuthenticateControllerManagerImpl(StudentRepository studentRepository, JwtUtil jwtUtil) {
+    public AuthenticateControllerManagerImpl(StudentRepository studentRepository, JwtUtil jwtUtil,
+            BCryptPasswordEncoder passwordEncoder) {
         this.studentRepository = studentRepository;
         this.jwtUtil = jwtUtil;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -27,7 +31,7 @@ public class AuthenticateControllerManagerImpl implements AuthenticateController
         String role = "student";
         Student student = studentRepository.findByContactNumberAndStatus(identifier, 2);
         if (student != null) {
-            if (student.getFinalPassword().equals(password)) {
+            if (passwordEncoder.matches(student.getFinalPassword(), password)) {
                 String token = jwtUtil.generateToken(student.getContactNumber(), role, student.getStudentSeq());
                 System.out.println("Login successful");
                 loginResponse.setToken(token);
@@ -44,7 +48,7 @@ public class AuthenticateControllerManagerImpl implements AuthenticateController
         } else {
             student = studentRepository.findByEmailAndStatus(identifier, 2);
             if (student != null) {
-                if (student.getFinalPassword().equals(password)) {
+                if (passwordEncoder.matches(student.getFinalPassword(), password)) {
                     String token = jwtUtil.generateToken(student.getEmail(), role, student.getStudentSeq());
                     System.out.println("Login successful");
                     loginResponse.setToken(token);

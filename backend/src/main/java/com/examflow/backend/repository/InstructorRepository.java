@@ -9,6 +9,10 @@ public interface InstructorRepository extends JpaRepository<Instructor, Integer>
 
     List<Instructor> findByContactNumber(String contactNumber);
 
+    Instructor findByContactNumberAndStatus(String contactNumber, Integer status);
+
+    Instructor findByEmailAndStatus(String contactNumber, Integer status);
+
     List<Instructor> findByEmail(String email);
 
     Instructor findByInstructorSeq(Integer instructorSeq);

@@ -8,4 +8,8 @@ import com.examflow.backend.dto.LoginResponse;
 public interface AuthenticateControllerManager {
 
     LoginResponse login(String username, String password);
+
+    LoginResponse loginInstrutor(String username, String password);
+
+    LoginResponse loginAdmin(String username, String password);
 }

@@ -29,7 +29,9 @@ async function actualRequest(path, options = {}) {
 }
 
 export async function studentLogin(identifier, password) {
-  return request("/auth/student/login", { body: { identifier, password } });
+  return actualRequest("/api/auth/student-login", {
+    body: { identifier, password },
+  });
 }
 
 export async function studentRegister(data) {

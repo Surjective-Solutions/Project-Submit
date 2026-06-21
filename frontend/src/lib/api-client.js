@@ -39,8 +39,21 @@ export async function studentRegister(data) {
   return actualRequest("/api/test/hello", { body: data });
 }
 
+<<<<<<<<< Temporary merge branch 1
+export async function verifyOtp(phone, otp) {
+  return request("/auth/otp/verify", { body: { phone, otp } });
+=========
+export async function sendOtp(identifier) {
+  // TODO: POST /auth/otp/send  body: { identifier }
+  // Returns: { success: true, expires_in: 45 }
+  return { success: true, expires_in: 45 };
+}
+
 export async function verifyOtp(otp, identifier) {
-  return actualRequest("/api/test/otp/verify", { body: { otp, identifier } });
+  // TODO: POST /auth/otp/verify  body: { otp, identifier }
+  // Returns: { success: true, token, user }
+  return { success: true };
+>>>>>>>>> Temporary merge branch 2
 }
 
 export async function resendOtp(phone) {

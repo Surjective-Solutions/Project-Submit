@@ -28,13 +28,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import PasswordStrength from "./PasswordStrength";
-import {
-  studentStep1Schema,
-  studentStep2Schema,
-  SRI_LANKA_DISTRICTS,
-} from "@/lib/validations/student";
-import { studentRegister } from "@/lib/api-client";
+import PasswordStrength from './PasswordStrength';
+import { studentStep1Schema, studentStep2Schema, SRI_LANKA_DISTRICTS } from '@/lib/validations/student';
+<<<<<<<<< Temporary merge branch 1
+import { studentRegister } from '@/lib/api-client';
+import { redirect } from "next/dist/server/api-utils";
+import { navigate } from "next/dist/client/components/segment-cache/navigation";
+=========
+import { sendOtp, studentRegister } from '@/lib/api-client';
+>>>>>>>>> Temporary merge branch 2
 
 // ─── Field wrapper ────────────────────────────────────────────────────────────
 

@@ -48,7 +48,9 @@ export async function resendOtp(phone) {
 }
 
 export async function instructorLogin(email, password) {
-  return request("/auth/instructor/login", { body: { email, password } });
+  return actualRequest("/api/auth/instructor-login", {
+    body: { email, password },
+  });
 }
 
 export async function instructorRegister(data) {
@@ -60,7 +62,9 @@ export async function instructorRegister(data) {
 
 // TODO: replace with actual microservice endpoint
 export async function adminLogin(username, password) {
-  return request("/auth/admin/login", { body: { username, password } });
+  return actualRequest("/api/auth/admin-login", {
+    body: { username, password },
+  });
 }
 
 // ── Cashier ───────────────────────────────────────────────────────────────────

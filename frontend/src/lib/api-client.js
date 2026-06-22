@@ -28,6 +28,30 @@ async function actualRequest(path, options = {}) {
   return await response.json();
 }
 
+
+//this is for protected apis
+async function protectedRequest(path, options = {}) {
+  const token = localStorage.getItem("token");
+
+  const { method = "POST", body } = options;
+
+  const response = await fetch(`${API_BASE}${path}`, {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP Error ${response.status}`);
+  }
+
+  return await response.json();
+}
+
+
 export async function studentLogin(identifier, password) {
   return actualRequest("/api/auth/student-login", {
     body: { identifier, password },
@@ -251,7 +275,7 @@ export async function getTutors() {
 
 // TODO: replace with actual microservice endpoint
 export async function createTutor(data) {
-  return request("/admin/tutors", { body: data });
+  return protectedRequest("/api/tutor/create", { body: data });
 }
 
 // TODO: replace with actual microservice endpoint
@@ -273,7 +297,7 @@ export async function getCashiers() {
 
 // TODO: replace with actual microservice endpoint
 export async function createCashier(data) {
-  return request("/admin/cashiers", { body: data });
+  return protectedRequest("/api/cashier/create", { body: data });
 }
 
 // TODO: replace with actual microservice endpoint

@@ -30,7 +30,8 @@ export default function AdminLoginForm() {
     setIsLoading(true);
     try {
       const result = await adminLogin(data.username, data.password);
-      toast.success(result.message ?? 'Logged in successfully');
+      localStorage.setItem("token", result.token); //adding tokn  to localstorage
+      toast.success(result.message ?? "Logged in successfully");
     } catch {
       toast.error('Login failed. Please check your credentials.');
     } finally {

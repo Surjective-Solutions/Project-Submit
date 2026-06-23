@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, PlusCircle, Upload, EyeOff, Pencil, Trash2, FileText } from 'lucide-react';
+import { ArrowLeft, PlusCircle, Upload, EyeOff, Pencil, Trash2, FileText, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -228,6 +228,24 @@ export default function ClassDetailPage() {
                   <TableCell className="text-right pr-4">
                     <TooltipProvider>
                       <div className="flex items-center justify-end gap-0.5">
+                        {/* View Submissions */}
+                        <Tooltip>
+                          <TooltipTrigger
+                            render={
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  window.location.href = `/teacher/dashboard/classes/${classId}/papers/${paper.id}`;
+                                }}
+                                className="p-1.5 rounded-md hover:bg-gray-100 transition-colors"
+                              />
+                            }
+                          >
+                            <Users className="h-3.5 w-3.5 text-indigo-600" />
+                          </TooltipTrigger>
+                          <TooltipContent>View Submissions</TooltipContent>
+                        </Tooltip>
+
                         {/* View PDF */}
                         <Tooltip>
                           <TooltipTrigger

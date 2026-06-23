@@ -281,3 +281,13 @@ export async function getPaperSubmissions(paperId) {
   // TODO: GET /instructor/papers/:paperId/submissions
   return [];
 }
+
+export async function getTeacherPaperSubmissions(classId, paperId) {
+  // TODO: GET /teacher/classes/:classId/papers/:paperId/submissions
+  return [];
+}
+
+export async function teacherGradeSubmission(submissionId, gradeData) {
+  // TODO: POST /teacher/submissions/:submissionId/grade
+  return {};
+}

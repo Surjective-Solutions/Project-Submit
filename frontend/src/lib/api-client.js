@@ -1,5 +1,5 @@
 // TODO: replace with actual microservice endpoint
-const API_BASE = "http://localhost:8080";
+const API_BASE = "";
 
 async function request(path, options = {}) {
   const { method = "POST", body } = options;

@@ -92,7 +92,7 @@ export default function InstructorRegisterForm() {
     setIsLoading(true);
     try {
       const response = await instructorRegister(data);
-      const identifier = response.studentSeq;
+      const identifier = response.instructorSeq;
       await resendOtp(identifier);
       sessionStorage.setItem("otp_identifier", identifier);
       // router.push("/instructor/verify-otp");

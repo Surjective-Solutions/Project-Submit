@@ -92,10 +92,16 @@ export async function sendOtp(identifier) {
 }
 
 export async function verifyOtp(otp, identifier) {
-  // TODO: POST /auth/otp/verify  body: { otp, identifier }
-  // Returns: { success: true, token, user }
-  // return { success: true };
-  return actualRequest("/api/test/otp/verify", { body: { otp, identifier } });
+  const response = await fetch('/api/test/otp/verify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ 
+      otp: parseInt(otp), 
+      identifier: parseInt(identifier) 
+    }),
+  });
+  if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
+  return await response.json();
 }
 
 export async function resendOtp(phone) {

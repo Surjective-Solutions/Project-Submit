@@ -1,5 +1,5 @@
 // TODO: replace with actual microservice endpoint
-const API_BASE = "";
+const API_BASE = "http://localhost:8080";
 
 async function request(path, options = {}) {
   const { method = "POST", body } = options;
@@ -28,16 +28,12 @@ async function actualRequest(path, options = {}) {
   return await response.json();
 }
 
-
 //this is api endpoint calling  with method
 
 export async function protectedRequestPath(path, options = {}) {
   const token = localStorage.getItem("token");
 
-  const {
-    method = "GET",
-    body = null,
-  } = options;
+  const { method = "GET", body = null } = options;
 
   const response = await fetch(`${API_BASE}${path}`, {
     method,
@@ -56,7 +52,6 @@ export async function protectedRequestPath(path, options = {}) {
   return response.json();
 }
 
-
 //this is for protected apis
 async function protectedRequest(path, options = {}) {
   const token = localStorage.getItem("token");
@@ -67,7 +62,7 @@ async function protectedRequest(path, options = {}) {
     method,
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
     body: body ? JSON.stringify(body) : undefined,
   });
@@ -78,7 +73,6 @@ async function protectedRequest(path, options = {}) {
 
   return await response.json();
 }
-
 
 export async function studentLogin(identifier, password) {
   return actualRequest("/api/auth/student-login", {
@@ -155,7 +149,8 @@ export async function getClasses() {
 
 // TODO: replace with actual microservice endpoint
 export async function createClass(data) {
-  return request("/teacher/classes", { body: data });
+  console.log("Creating class with data:", data);
+  return protectedRequest("/api/class/create", { body: data });
 }
 
 // TODO: replace with actual microservice endpoint

@@ -15,6 +15,12 @@ public class TutorRequest {
 
     private String confirmPassword;
 
+    private String confirmNewPassword;
+
+    private String newPassword;
+
+    private String newUsername;
+
     public String getDisplayName() {
         return displayName;
     }
@@ -69,6 +75,30 @@ public class TutorRequest {
 
     public void setConfirmPassword(String confirmPassword) {
         this.confirmPassword = confirmPassword;
+    }
+
+    public String getConfirmNewPassword() {
+        return confirmNewPassword;
+    }
+
+    public void setConfirmNewPassword(String confirmNewPassword) {
+        this.confirmNewPassword = confirmNewPassword;
+    }
+
+    public String getNewPassword() {
+        return newPassword;
+    }
+
+    public void setNewPassword(String newPassword) {
+        this.newPassword = newPassword;
+    }
+
+    public String getNewUsername() {
+        return newUsername;
+    }
+
+    public void setNewUsername(String newUsername) {
+        this.newUsername = newUsername;
     }
 
 }

@@ -123,7 +123,7 @@ export default function OtpVerifyForm({ role = "student" }) {
     setError("");
     try {
       const result = await verifyOtp(otp, identifier);
-      if (!result?.success) {
+      if (!result?.isSuccess) {
         setError("Invalid OTP. Please try again.");
         return;
       }

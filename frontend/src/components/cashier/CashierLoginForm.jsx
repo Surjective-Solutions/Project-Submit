@@ -32,6 +32,7 @@ export default function CashierLoginForm() {
     setIsLoading(true);
     try {
       const result = await cashierLogin(data.username, data.password);
+      localStorage.setItem("token", result.token);
       toast.success(result.message ?? 'Logged in successfully');
       router.push('/cashier/dashboard');
     } catch {

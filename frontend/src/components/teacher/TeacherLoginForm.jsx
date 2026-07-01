@@ -32,6 +32,7 @@ export default function TeacherLoginForm() {
     setIsLoading(true);
     try {
       const result = await teacherLogin(data.username, data.password);
+      localStorage.setItem("token", result.token);
       toast.success(result.message ?? 'Logged in successfully');
       router.push('/teacher/dashboard');
     } catch {

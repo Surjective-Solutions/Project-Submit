@@ -12,6 +12,12 @@ public class CashierRequest {
 
     private String confirmPassword;
 
+    private String newPassword;
+
+    private String newUsername;
+
+    private String confirmNewPassword;
+
     public String getEmail() {
         return email;
     }
@@ -50,6 +56,30 @@ public class CashierRequest {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public String getNewPassword() {
+        return newPassword;
+    }
+
+    public void setNewPassword(String newPassword) {
+        this.newPassword = newPassword;
+    }
+
+    public String getNewUsername() {
+        return newUsername;
+    }
+
+    public void setNewUsername(String newUsername) {
+        this.newUsername = newUsername;
+    }
+
+    public String getConfirmNewPassword() {
+        return confirmNewPassword;
+    }
+
+    public void setConfirmNewPassword(String confirmNewPassword) {
+        this.confirmNewPassword = confirmNewPassword;
     }
 
 }

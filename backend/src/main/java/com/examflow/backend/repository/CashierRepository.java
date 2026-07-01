@@ -7,5 +7,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.examflow.backend.entity.Cashier;
 
 public interface CashierRepository extends JpaRepository<Cashier, Integer> {
-    List<Cashier> findByUserNameAndStatus(String userName, Integer statusSeq);
+
+    Cashier findByUserNameAndStatus(String userName, Integer statusSeq);
+
+    List<Cashier> findByUserName(String userName);
+
+    List<Cashier> findByStatus(Integer statusSeq);
+
+    Cashier findByCashierSeq(Integer cashierSeq);
 }

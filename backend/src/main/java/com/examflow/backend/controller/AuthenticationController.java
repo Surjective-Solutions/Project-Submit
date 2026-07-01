@@ -63,4 +63,20 @@ public class AuthenticationController {
         return loginResponse;
     }
 
+    @PostMapping("/cashier-login")
+    public LoginResponse loginCashier(@RequestBody LoginRequest request) {
+        System.out.println("reached to controller");
+        LoginResponse loginResponse = authenticateControllerManager.loginCashier(request.getUsername(),
+                request.getPassword());
+        return loginResponse;
+    }
+
+    @PostMapping("/tutor-login")
+    public LoginResponse loginTutor(@RequestBody LoginRequest request) {
+        System.out.println("reached to controller");
+        LoginResponse loginResponse = authenticateControllerManager.loginTutor(request.getUsername(),
+                request.getPassword());
+        return loginResponse;
+    }
+
 }

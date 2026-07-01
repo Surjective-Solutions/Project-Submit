@@ -12,4 +12,8 @@ public interface AuthenticateControllerManager {
     LoginResponse loginInstrutor(String username, String password);
 
     LoginResponse loginAdmin(String username, String password);
+
+    LoginResponse loginTutor(String username, String password);
+
+    LoginResponse loginCashier(String username, String password);
 }

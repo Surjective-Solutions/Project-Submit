@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +17,7 @@ import { instructorLogin } from '@/lib/api-client';
 export default function InstructorLoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const {
     register,
@@ -30,7 +32,14 @@ export default function InstructorLoginForm() {
     setIsLoading(true);
     try {
       const result = await instructorLogin(data.email, data.password);
-      toast.success(result.message ?? 'Logged in successfully');
+      if (result.isSuccess) {
+        localStorage.setItem('token', result.token);
+        localStorage.setItem('role', result.role);
+        toast.success(result.message ?? 'Logged in successfully');
+        router.push('/instructor/dashboard');
+      } else {
+        toast.error(result.message ?? 'Invalid credentials');
+      }
     } catch {
       toast.error('Login failed. Please check your credentials.');
     } finally {

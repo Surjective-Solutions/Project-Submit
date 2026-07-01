@@ -82,6 +82,7 @@ public class UserSignUpControllerManagerImpl implements UserSignUpControllermana
             student.setWhatsappNumber(userSignUpRequest.getWhatsappNumber());
             student.setMarketingConsent(userSignUpRequest.getMarketingConsent());
             student.setRegisterDateTime(LocalDateTime.now());
+            student.setDob(userSignUpRequest.getDateOfBirth());
             student.setTermsAccepted(userSignUpRequest.getTermsAccepted());
             student.setFinalPassword(passwordEncoder.encode(userSignUpRequest.getConfirmPassword()));
             student.setStatus(2);// set status to approved status

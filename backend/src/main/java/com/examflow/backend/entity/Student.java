@@ -1,5 +1,6 @@
 package com.examflow.backend.entity;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import org.hibernate.validator.constraints.UniqueElements;
@@ -28,6 +29,7 @@ public class Student {
     private String confirmPassword;
     private String finalPassword;
     private String email;
+    private LocalDate dob;
     private String grade;
     private String schoolName;
     private String whatsappNumber;
@@ -225,6 +227,15 @@ public class Student {
 
     public void setRegisterDateTime(LocalDateTime registerDateTime) {
         this.registerDateTime = registerDateTime;
+    }
+
+    @Column(name = "date_of_birth")
+    public LocalDate getDob() {
+        return dob;
+    }
+
+    public void setDob(LocalDate dob) {
+        this.dob = dob;
     }
 
 }

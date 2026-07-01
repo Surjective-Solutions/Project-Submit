@@ -1,5 +1,7 @@
 package com.examflow.backend.dto;
 
+import java.time.LocalDate;
+
 public class UserSignUpRequest {
 
     private String firstName;
@@ -19,6 +21,7 @@ public class UserSignUpRequest {
     private String whatsappNumber;
     private Boolean marketingConsent;
     private Boolean termsAccepted;
+    private LocalDate dateOfBirth;
 
     public String getFirstName() {
         return firstName;
@@ -155,4 +158,13 @@ public class UserSignUpRequest {
     public void setTermsAccepted(Boolean termsAccepted) {
         this.termsAccepted = termsAccepted;
     }
+
+    public LocalDate getDateOfBirth() {
+        return dateOfBirth;
+    }
+
+    public void setDateOfBirth(LocalDate dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
+    }
+
 }

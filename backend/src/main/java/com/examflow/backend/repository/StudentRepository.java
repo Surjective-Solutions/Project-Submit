@@ -17,4 +17,6 @@ public interface StudentRepository extends JpaRepository<Student, Integer> {
 
     Student findByEmailAndStatus(String email, Integer status);
 
+    List<Student> findByStatus(Integer status);
+
 }

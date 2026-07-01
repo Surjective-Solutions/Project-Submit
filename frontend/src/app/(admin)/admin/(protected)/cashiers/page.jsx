@@ -1,23 +1,28 @@
 'use client';
 
-import { useState } from 'react';
-import { Plus } from 'lucide-react';
-import { toast } from 'sonner';
+import { useState, useEffect } from "react";
+import { Plus } from "lucide-react";
+import { toast } from "sonner";
 
-import { Button } from '@/components/ui/button';
-import StaffCard from '@/components/admin/StaffCard';
-import AddCashierDialog from '@/components/admin/AddCashierDialog';
-import ViewStaffDialog from '@/components/admin/ViewStaffDialog';
-import EditStaffDialog from '@/components/admin/EditStaffDialog';
-import { MOCK_CASHIERS } from '@/lib/mock-data';
-import { updateCashier } from '@/lib/api-client';
+import { Button } from "@/components/ui/button";
+import StaffCard from "@/components/admin/StaffCard";
+import AddCashierDialog from "@/components/admin/AddCashierDialog";
+import ViewStaffDialog from "@/components/admin/ViewStaffDialog";
+import EditStaffDialog from "@/components/admin/EditStaffDialog";
+import { MOCK_CASHIERS } from "@/lib/mock-data";
+import { deleteCashier, getCashiers, updateCashier } from "@/lib/api-client";
 
 export default function CashiersPage() {
-  const [cashiers, setCashiers] = useState(MOCK_CASHIERS);
+  // const [cashiers, setCashiers] = useState(MOCK_CASHIERS);
+  const [cashiers, setCashiers] = useState([]);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [viewPerson, setViewPerson] = useState(null);
   const [editPerson, setEditPerson] = useState(null);
   const [editLoading, setEditLoading] = useState(false);
+
+  useEffect(() => {
+    loadCashiers();
+  }, []);
 
   function handleAddSuccess(data) {
     const newCashier = {
@@ -27,9 +32,9 @@ export default function CashiersPage() {
     setCashiers((prev) => [newCashier, ...prev]);
   }
 
-  function handleDelete(id) {
-    setCashiers((prev) => prev.filter((c) => c.id !== id));
-    toast.success('Cashier deleted');
+  async function handleDelete(id) {
+    const data = await deleteCashier(id);
+    toast.success("Cashier deleted");
   }
 
   async function handleEdit(data) {
@@ -47,15 +52,24 @@ export default function CashiersPage() {
                 ...(data.newUsername ? { username: data.newUsername } : {}),
                 ...(data.newPassword ? { password: data.newPassword } : {}),
               }
-            : c
-        )
+            : c,
+        ),
       );
-      toast.success('Cashier updated successfully');
+      toast.success("Cashier updated successfully");
       setEditPerson(null);
     } catch {
-      toast.error('Failed to update cashier.');
+      toast.error("Failed to update cashier.");
     } finally {
       setEditLoading(false);
+    }
+  }
+
+  async function loadCashiers() {
+    try {
+      const data = await getCashiers();
+      setCashiers(data);
+    } catch (error) {
+      toast.error("Failed to load cashiers");
     }
   }
 
@@ -65,11 +79,13 @@ export default function CashiersPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Cashiers</h2>
-          <p className="text-sm text-gray-500 mt-0.5">Manage payment desk staff</p>
+          <p className="text-sm text-gray-500 mt-0.5">
+            Manage payment desk staff
+          </p>
         </div>
         <Button
           className="gap-2 text-white shrink-0"
-          style={{ backgroundColor: '#3940A0' }}
+          style={{ backgroundColor: "#3940A0" }}
           onClick={() => setAddDialogOpen(true)}
         >
           <Plus className="h-4 w-4" />

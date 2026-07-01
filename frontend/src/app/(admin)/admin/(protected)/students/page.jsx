@@ -1,11 +1,15 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Search, Eye, Pencil } from 'lucide-react';
-import { toast } from 'sonner';
+import { useState, useMemo, useEffect } from "react";
+import { Search, Eye, Pencil } from "lucide-react";
+import { toast } from "sonner";
 
-import { Input } from '@/components/ui/input';
-import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { Input } from "@/components/ui/input";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
 import {
   Table,
   TableHeader,
@@ -13,36 +17,40 @@ import {
   TableRow,
   TableHead,
   TableCell,
-} from '@/components/ui/table';
-import ViewStudentDialog from '@/components/admin/ViewStudentDialog';
-import EditStudentDialog from '@/components/admin/EditStudentDialog';
-import { MOCK_STUDENTS } from '@/lib/mock-data';
+} from "@/components/ui/table";
+import ViewStudentDialog from "@/components/admin/ViewStudentDialog";
+import EditStudentDialog from "@/components/admin/EditStudentDialog";
+import { MOCK_STUDENTS } from "@/lib/mock-data";
+import { getStudents } from "@/lib/api-client";
 
 const STATUS_STYLES = {
-  ACTIVE: 'bg-green-100 text-green-700',
-  INACTIVE: 'bg-gray-100 text-gray-600',
-  SUSPENDED: 'bg-red-100 text-red-700',
-  GRADUATED: 'bg-blue-100 text-blue-700',
+  ACTIVE: "bg-green-100 text-green-700",
+  INACTIVE: "bg-gray-100 text-gray-600",
+  SUSPENDED: "bg-red-100 text-red-700",
+  GRADUATED: "bg-blue-100 text-blue-700",
 };
 
 const STREAM_COLORS = {
-  'Physical Science': 'bg-blue-50 text-blue-700',
-  'Biological Science': 'bg-green-50 text-green-700',
-  Commerce: 'bg-amber-50 text-amber-700',
-  Arts: 'bg-pink-50 text-pink-700',
-  Technology: 'bg-violet-50 text-violet-700',
-  'Combined Mathematics': 'bg-cyan-50 text-cyan-700',
-  default: 'bg-gray-100 text-gray-600',
+  "Physical Science": "bg-blue-50 text-blue-700",
+  "Biological Science": "bg-green-50 text-green-700",
+  Commerce: "bg-amber-50 text-amber-700",
+  Arts: "bg-pink-50 text-pink-700",
+  Technology: "bg-violet-50 text-violet-700",
+  "Combined Mathematics": "bg-cyan-50 text-cyan-700",
+  default: "bg-gray-100 text-gray-600",
 };
 
 function Avatar({ firstName, lastName }) {
-  const f = (firstName || '').trim();
-  const l = (lastName || '').trim();
-  const initials = f && l ? (f[0] + l[0]).toUpperCase() : (f.slice(0, 2) || '?').toUpperCase();
+  const f = (firstName || "").trim();
+  const l = (lastName || "").trim();
+  const initials =
+    f && l ? (f[0] + l[0]).toUpperCase() : (f.slice(0, 2) || "?").toUpperCase();
   return (
     <div
       className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0"
-      style={{ background: 'linear-gradient(135deg, #3940A0 0%, #34A0C5 100%)' }}
+      style={{
+        background: "linear-gradient(135deg, #3940A0 0%, #34A0C5 100%)",
+      }}
       aria-hidden="true"
     >
       {initials}
@@ -51,11 +59,16 @@ function Avatar({ firstName, lastName }) {
 }
 
 export default function StudentsPage() {
-  const [students, setStudents] = useState(MOCK_STUDENTS);
-  const [search, setSearch] = useState('');
+  // const [students, setStudents] = useState(MOCK_STUDENTS);
+  const [students, setStudents] = useState([]);
+  const [search, setSearch] = useState("");
   const [viewStudent, setViewStudent] = useState(null);
   const [editStudent, setEditStudent] = useState(null);
   const [editLoading, setEditLoading] = useState(false);
+
+  useEffect(() => {
+    loadStudents();
+  }, []);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -65,7 +78,7 @@ export default function StudentsPage() {
       return (
         fullName.includes(q) ||
         s.student_number.toLowerCase().includes(q) ||
-        (s.email ?? '').toLowerCase().includes(q) ||
+        (s.email ?? "").toLowerCase().includes(q) ||
         s.contact_number.includes(q)
       );
     });
@@ -78,14 +91,28 @@ export default function StudentsPage() {
       setStudents((prev) =>
         prev.map((s) =>
           s.id === editStudent.id
-            ? { ...s, ...data, profile_photo_url: data.profile_photo_url ?? s.profile_photo_url ?? null }
-            : s
-        )
+            ? {
+                ...s,
+                ...data,
+                profile_photo_url:
+                  data.profile_photo_url ?? s.profile_photo_url ?? null,
+              }
+            : s,
+        ),
       );
-      toast.success('Student updated successfully');
+      toast.success("Student updated successfully");
       setEditStudent(null);
     } finally {
       setEditLoading(false);
+    }
+  }
+
+  async function loadStudents() {
+    try {
+      const data = await getStudents();
+      setStudents(data);
+    } catch (error) {
+      toast.error("Failed to load cashiers");
     }
   }
 
@@ -129,16 +156,21 @@ export default function StudentsPage() {
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow className="odd:bg-white even:bg-white hover:bg-white">
-                <TableCell colSpan={8} className="py-14 text-center text-gray-400 text-sm">
+                <TableCell
+                  colSpan={8}
+                  className="py-14 text-center text-gray-400 text-sm"
+                >
                   {search
                     ? `No results found for "${search}"`
-                    : 'No students yet.'}
+                    : "No students yet."}
                 </TableCell>
               </TableRow>
             ) : (
               filtered.map((s) => {
-                const statusClass = STATUS_STYLES[s.status] ?? STATUS_STYLES.INACTIVE;
-                const streamColor = STREAM_COLORS[s.subject_stream] ?? STREAM_COLORS.default;
+                const statusClass =
+                  STATUS_STYLES[s.status] ?? STATUS_STYLES.INACTIVE;
+                const streamColor =
+                  STREAM_COLORS[s.subject_stream] ?? STREAM_COLORS.default;
                 return (
                   <TableRow key={s.id}>
                     <TableCell className="pl-4">
@@ -156,11 +188,13 @@ export default function StudentsPage() {
                     </TableCell>
                     <TableCell>
                       <span className="text-gray-500 text-sm max-w-[160px] truncate block">
-                        {s.email ?? '—'}
+                        {s.email ?? "—"}
                       </span>
                     </TableCell>
                     <TableCell>
-                      <span className="text-gray-700 text-sm whitespace-nowrap">{s.contact_number}</span>
+                      <span className="text-gray-700 text-sm whitespace-nowrap">
+                        {s.contact_number}
+                      </span>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-1">
@@ -170,14 +204,18 @@ export default function StudentsPage() {
                           </span>
                         )}
                         {s.subject_stream && (
-                          <span className={`text-[11px] px-1.5 py-0.5 rounded-full font-medium w-fit ${streamColor}`}>
+                          <span
+                            className={`text-[11px] px-1.5 py-0.5 rounded-full font-medium w-fit ${streamColor}`}
+                          >
                             {s.subject_stream}
                           </span>
                         )}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${statusClass}`}>
+                      <span
+                        className={`text-[11px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${statusClass}`}
+                      >
                         {s.status}
                       </span>
                     </TableCell>

@@ -1,23 +1,28 @@
 'use client';
 
-import { useState } from 'react';
-import { Plus } from 'lucide-react';
-import { toast } from 'sonner';
+import { useState, useEffect } from "react";
+import { Plus } from "lucide-react";
+import { toast } from "sonner";
 
-import { Button } from '@/components/ui/button';
-import StaffCard from '@/components/admin/StaffCard';
-import AddTutorDialog from '@/components/admin/AddTutorDialog';
-import ViewStaffDialog from '@/components/admin/ViewStaffDialog';
-import EditStaffDialog from '@/components/admin/EditStaffDialog';
-import { MOCK_TUTORS } from '@/lib/mock-data';
-import { updateTutor } from '@/lib/api-client';
+import { Button } from "@/components/ui/button";
+import StaffCard from "@/components/admin/StaffCard";
+import AddTutorDialog from "@/components/admin/AddTutorDialog";
+import ViewStaffDialog from "@/components/admin/ViewStaffDialog";
+import EditStaffDialog from "@/components/admin/EditStaffDialog";
+import { MOCK_TUTORS } from "@/lib/mock-data";
+import { deleteTutor, getTutors, updateTutor } from "@/lib/api-client";
 
 export default function AcademicStaffPage() {
-  const [tutors, setTutors] = useState(MOCK_TUTORS);
+  // const [tutors, setTutors] = useState(MOCK_TUTORS);
+  const [tutors, setTutors] = useState([]);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [viewPerson, setViewPerson] = useState(null);
   const [editPerson, setEditPerson] = useState(null);
   const [editLoading, setEditLoading] = useState(false);
+
+  useEffect(() => {
+    loadTutors();
+  }, []);
 
   function handleAddSuccess(data) {
     const newTutor = {
@@ -27,9 +32,18 @@ export default function AcademicStaffPage() {
     setTutors((prev) => [newTutor, ...prev]);
   }
 
-  function handleDelete(id) {
-    setTutors((prev) => prev.filter((t) => t.id !== id));
-    toast.success('Tutor deleted');
+  async function handleDelete(id) {
+    const data = await deleteTutor(id);
+    toast.success("Tutor deleted");
+  }
+
+  async function loadTutors() {
+    try {
+      const data = await getTutors();
+      setTutors(data);
+    } catch (error) {
+      toast.error("Failed to load cashiers");
+    }
   }
 
   async function handleEdit(data) {
@@ -46,17 +60,18 @@ export default function AcademicStaffPage() {
                 email: data.email,
                 contactNumber: data.contactNumber,
                 subject: data.subject,
-                profilePhotoUrl: data.profilePhotoUrl ?? t.profilePhotoUrl ?? null,
+                profilePhotoUrl:
+                  data.profilePhotoUrl ?? t.profilePhotoUrl ?? null,
                 ...(data.newUsername ? { username: data.newUsername } : {}),
                 ...(data.newPassword ? { password: data.newPassword } : {}),
               }
-            : t
-        )
+            : t,
+        ),
       );
-      toast.success('Tutor updated successfully');
+      toast.success("Tutor updated successfully");
       setEditPerson(null);
     } catch {
-      toast.error('Failed to update tutor.');
+      toast.error("Failed to update tutor.");
     } finally {
       setEditLoading(false);
     }
@@ -67,12 +82,16 @@ export default function AcademicStaffPage() {
       {/* Page header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">Academic Staff</h2>
-          <p className="text-sm text-gray-500 mt-0.5">Manage your tutors and instructors</p>
+          <h2 className="text-xl font-semibold text-gray-900">
+            Academic Staff
+          </h2>
+          <p className="text-sm text-gray-500 mt-0.5">
+            Manage your tutors and instructors
+          </p>
         </div>
         <Button
           className="gap-2 text-white shrink-0"
-          style={{ backgroundColor: '#3940A0' }}
+          style={{ backgroundColor: "#3940A0" }}
           onClick={() => setAddDialogOpen(true)}
         >
           <Plus className="h-4 w-4" />

@@ -16,4 +16,6 @@ public interface InstructorRepository extends JpaRepository<Instructor, Integer>
     List<Instructor> findByEmail(String email);
 
     Instructor findByInstructorSeq(Integer instructorSeq);
+
+    List<Instructor> findByStatus(Integer status);
 }

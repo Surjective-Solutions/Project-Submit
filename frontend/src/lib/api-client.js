@@ -29,6 +29,34 @@ async function actualRequest(path, options = {}) {
 }
 
 
+//this is api endpoint calling  with method
+
+export async function protectedRequestPath(path, options = {}) {
+  const token = localStorage.getItem("token");
+
+  const {
+    method = "GET",
+    body = null,
+  } = options;
+
+  const response = await fetch(`${API_BASE}${path}`, {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || `HTTP Error ${response.status}`);
+  }
+
+  return response.json();
+}
+
+
 //this is for protected apis
 async function protectedRequest(path, options = {}) {
   const token = localStorage.getItem("token");
@@ -104,14 +132,18 @@ export async function adminLogin(username, password) {
 
 // TODO: replace with actual microservice endpoint
 export async function cashierLogin(username, password) {
-  return request("/auth/cashier/login", { body: { username, password } });
+  return actualRequest("/api/auth/cashier-login", {
+    body: { username, password },
+  });
 }
 
 // ── Teacher ───────────────────────────────────────────────────────────────────
 
 // TODO: replace with actual microservice endpoint
 export async function teacherLogin(username, password) {
-  return request("/auth/teacher/login", { body: { username, password } });
+  return actualRequest("/api/auth/tutor-login", {
+    body: { username, password },
+  });
 }
 
 // ── Teacher Classes ───────────────────────────────────────────────────────────
@@ -178,7 +210,7 @@ export async function unpublishPaper(paperId) {
 
 // TODO: replace with actual microservice endpoint
 export async function getInstructors() {
-  return request("/teacher/instructors", { method: "GET" });
+  return protectedRequest("/api/instructor/get-all-instructors", { method: "GET" });
 }
 
 // TODO: replace with actual microservice endpoint
@@ -203,7 +235,7 @@ export async function deleteInstructor(id) {
 
 // TODO: replace with actual microservice endpoint
 export async function getStudents() {
-  return request("/admin/students", { method: "GET" });
+  return protectedRequest("/api/student/get-all-students", { method: "GET" });
 }
 
 // TODO: replace with actual microservice endpoint
@@ -270,7 +302,7 @@ export async function createStudent(data) {
 
 // TODO: replace with actual microservice endpoint
 export async function getTutors() {
-  return request("/admin/tutors", { method: "GET" });
+  return protectedRequest("/api/tutor/get-all-tutors", { method: "GET" });
 }
 
 // TODO: replace with actual microservice endpoint
@@ -280,19 +312,19 @@ export async function createTutor(data) {
 
 // TODO: replace with actual microservice endpoint
 export async function updateTutor(id, data) {
-  return request(`/admin/tutors/${id}`, { method: "PUT", body: data });
+  return protectedRequestPath(`/api/tutor/update/${id}`, { method: "PUT", body: data });
 }
 
 // TODO: replace with actual microservice endpoint
 export async function deleteTutor(id) {
-  return request(`/admin/tutors/${id}`, { method: "DELETE", body: { id } });
+  return protectedRequestPath(`/api/tutor/delete/${id}`, { method: "DELETE", body: { id } });
 }
 
 // ── Cashiers ──────────────────────────────────────────────────────────────────
 
 // TODO: replace with actual microservice endpoint
 export async function getCashiers() {
-  return request("/admin/cashiers", { method: "GET" });
+  return protectedRequestPath("/api/cashier/get-all-cashiers", { method: "GET" });
 }
 
 // TODO: replace with actual microservice endpoint
@@ -302,12 +334,12 @@ export async function createCashier(data) {
 
 // TODO: replace with actual microservice endpoint
 export async function updateCashier(id, data) {
-  return request(`/admin/cashiers/${id}`, { method: "PUT", body: data });
+  return protectedRequestPath(`/api/cashier/update/${id}`, { method: "PUT", body: data });
 }
 
 // TODO: replace with actual microservice endpoint
 export async function deleteCashier(id) {
-  return request(`/admin/cashiers/${id}`, { method: "DELETE", body: { id } });
+  return protectedRequestPath(`/api/cashier/delete/${id}`, { method: "DELETE", body: { id } });
 }
 
 export async function getTeacherPapers(teacherId) {

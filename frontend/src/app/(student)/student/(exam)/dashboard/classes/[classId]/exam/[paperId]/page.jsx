@@ -178,7 +178,11 @@ export default function ExamViewingPage() {
           }}
         >
           <Document
-            file={`http://localhost:8080${paper.exam_pdf_url}`}
+            file={
+              paper.exam_pdf_url?.startsWith('http')
+                ? paper.exam_pdf_url
+                : `http://localhost:8080${paper.exam_pdf_url}`
+            }
             onLoadSuccess={({ numPages }) => {
               setTotalPages(numPages);
               setCurrentPage(1);

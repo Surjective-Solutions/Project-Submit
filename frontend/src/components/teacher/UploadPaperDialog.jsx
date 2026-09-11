@@ -91,6 +91,8 @@ export default function UploadPaperDialog({
       year: 2026,
       status: "DRAFT",
       starting_question_number: 1,
+      due_date: "",
+      duration_minutes: 120,
     },
   });
 
@@ -134,6 +136,8 @@ export default function UploadPaperDialog({
     formData.append("starting_question_number", data.starting_question_number || 1);
     formData.append("number_of_questions", data.number_of_questions);
     formData.append("status", data.status);
+    formData.append("due_date", data.due_date);
+    formData.append("duration_minutes", data.duration_minutes);
     formData.append("questions", JSON.stringify(qb.questions));
 
     formData.append("pdf_file", data.pdf_file[0]);
@@ -235,6 +239,35 @@ export default function UploadPaperDialog({
                     max="2030"
                     placeholder="2026"
                     {...register("year")}
+                  />
+                </Field>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <Field
+                  label="Due Date"
+                  required
+                  id="due_date"
+                  error={errors.due_date?.message}
+                >
+                  <Input
+                    id="due_date"
+                    type="date"
+                    {...register("due_date")}
+                  />
+                </Field>
+                <Field
+                  label="Duration (minutes)"
+                  required
+                  id="duration_minutes"
+                  error={errors.duration_minutes?.message}
+                >
+                  <Input
+                    id="duration_minutes"
+                    type="number"
+                    min="1"
+                    placeholder="e.g. 120"
+                    {...register("duration_minutes", { valueAsNumber: true })}
                   />
                 </Field>
               </div>

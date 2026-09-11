@@ -16,3 +16,13 @@ export function findPaperInClass(cls, paperId) {
   }
   return null;
 }
+
+// Fallback for legacy papers uploaded before per-paper duration existed —
+// duration_minutes will be null on those rows until a tutor edits them.
+export const DEFAULT_EXAM_DURATION_MINUTES = 120;
+
+export function getExamDurationSeconds(paper) {
+  const minutes = paper?.duration_minutes ?? DEFAULT_EXAM_DURATION_MINUTES;
+  return minutes * 60;
+  
+}

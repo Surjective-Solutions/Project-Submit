@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import DeleteConfirmDialog from '@/components/admin/DeleteConfirmDialog';
 import { useEnrolledClasses } from '@/context/EnrolledClassesContext';
 import { useCountdownTimer } from '@/hooks/use-countdown-timer';
-import { EXAM_DURATION_SECONDS, EXAM_MOCK_PAGE_COUNT, findPaperInClass } from '@/lib/exam-utils';
+import { EXAM_MOCK_PAGE_COUNT, findPaperInClass, getExamDurationSeconds } from '@/lib/exam-utils';
 
 import { Document, Page, pdfjs } from "react-pdf";
 
@@ -23,23 +23,10 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 
 export default function ExamViewingPage() {
   const { classId, paperId } = useParams();
-  const router = useRouter();
   const { classes } = useEnrolledClasses();
-  const [currentPage, setCurrentPage] = useState(1);
-  const [endExamOpen, setEndExamOpen] = useState(false);
-  const [totalPages, setTotalPages] = useState(0);
 
   const cls = classes.find((c) => c.id === Number(classId));
   const paper = findPaperInClass(cls, paperId);
-
-  const timer = useCountdownTimer(EXAM_DURATION_SECONDS, {
-    onExpire: () => {
-      toast.warning("Time's up! Submitting you to the answer upload page.");
-      router.push(
-        `/student/dashboard/classes/${classId}/exam/${paperId}/upload`,
-      );
-    },
-  });
 
   if (!cls || !paper) {
     return (
@@ -58,6 +45,22 @@ export default function ExamViewingPage() {
       </div>
     );
   }
+
+  return <ExamViewingPageContent classId={classId} paperId={paperId} cls={cls} paper={paper} />;
+}
+
+function ExamViewingPageContent({ classId, paperId, cls, paper }) {
+  const router = useRouter();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [endExamOpen, setEndExamOpen] = useState(false);
+  const [totalPages, setTotalPages] = useState(0);
+
+  const timer = useCountdownTimer(getExamDurationSeconds(paper), {
+    onExpire: () => {
+      toast.warning("Time's up! Submitting you to the answer upload page.");
+      router.push(`/student/dashboard/classes/${classId}/exam/${paperId}/upload`);
+    },
+  });
 
   function handleEndExamConfirmed() {
     timer.pause();

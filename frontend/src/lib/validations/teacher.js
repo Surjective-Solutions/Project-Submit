@@ -60,6 +60,8 @@ export const paperUploadSchema = z.object({
   pdf_file: z.any().refine((val) => val && val.length > 0, 'Please select a PDF file'),
   status: z.enum(['DRAFT', 'PUBLISHED']),
   starting_question_number: z.coerce.number().int().min(1, 'Must be at least 1').optional(),
+  due_date: z.string().min(1, 'Due date is required'),
+  duration_minutes: z.coerce.number().int().positive('Duration must be a positive number of minutes'),
 });
 
 export const paperEditSchema = z.object({
@@ -68,4 +70,6 @@ export const paperEditSchema = z.object({
   year: z.coerce.number().int().min(2020, 'Year must be 2020 or later').max(2030, 'Year must be 2030 or earlier'),
   status: z.enum(['DRAFT', 'PUBLISHED']),
   pdf_file: z.any().optional(),
+  due_date: z.string().min(1, 'Due date is required'),
+  duration_minutes: z.coerce.number().int().positive('Duration must be a positive number of minutes'),
 });

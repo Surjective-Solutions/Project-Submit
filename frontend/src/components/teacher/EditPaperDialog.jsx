@@ -23,6 +23,11 @@ const MONTHS = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
 
+function toDateInputValue(dueDate) {
+  if (!dueDate) return '';
+  return String(dueDate).slice(0, 10);
+}
+
 const SELECT_CLASS = 'h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm transition-colors outline-none focus:border-ring focus:ring-3 focus:ring-ring/50 disabled:opacity-50';
 
 function Field({ label, required, error, id, children }) {
@@ -68,6 +73,8 @@ export default function EditPaperDialog({ open, onOpenChange, paper, onSave }) {
         month:      String(paper.month),
         year:       paper.year,
         status:     paper.status,
+        due_date:   toDateInputValue(paper.due_date),
+        duration_minutes: paper.duration_minutes ?? 120,
       });
       qb.reset(paper.questions);
       setShowReplacePdf(false);
@@ -150,6 +157,25 @@ export default function EditPaperDialog({ open, onOpenChange, paper, onSave }) {
                     max="2030"
                     placeholder="2026"
                     {...register('year')}
+                  />
+                </Field>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Due Date" required id="due_date" error={errors.due_date?.message}>
+                  <Input
+                    id="due_date"
+                    type="date"
+                    {...register('due_date')}
+                  />
+                </Field>
+                <Field label="Duration (minutes)" required id="duration_minutes" error={errors.duration_minutes?.message}>
+                  <Input
+                    id="duration_minutes"
+                    type="number"
+                    min="1"
+                    placeholder="e.g. 120"
+                    {...register('duration_minutes', { valueAsNumber: true })}
                   />
                 </Field>
               </div>

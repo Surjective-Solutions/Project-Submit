@@ -47,6 +47,10 @@ public class UplaodPaper {
 
     private String lastModifiedBy;
 
+    private LocalDateTime dueDate;
+
+    private Integer durationMinutes;
+
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     @Column(name = "upload_paper_seq")
@@ -195,6 +199,24 @@ public class UplaodPaper {
 
     public void setClassPaymentRecord(ClassPaymentRecord classPaymentRecord) {
         this.classPaymentRecord = classPaymentRecord;
+    }
+
+    @Column(name = "dueDate")
+    public LocalDateTime getDueDate(){
+        return dueDate;
+    }
+
+    public void setDueDate(LocalDateTime dueDate){
+        this.dueDate = dueDate;
+    }
+
+    @Column(name = "durationMinutes")
+    public Integer getDurationMinutes(){
+        return durationMinutes;
+    }
+
+    public void setDurationMinutes(Integer durationMinutes){
+        this.durationMinutes = durationMinutes;
     }
 
 }

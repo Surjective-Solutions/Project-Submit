@@ -121,6 +121,17 @@ public class ClassControllerManagerImpl implements ClassControllerManager {
         }
     }
 
+    // Due date arrives from the frontend as a plain "yyyy-MM-dd" date-picker value
+    // with no time component. Treat the paper as due through end-of-day on that date
+    // rather than the instant midnight begins, so a student submitting later that
+    // same day isn't treated as already overdue.
+    private LocalDateTime parseDueDate(String dueDateStr) {
+        if (dueDateStr == null || dueDateStr.isBlank()) {
+            return null;
+        }
+        return java.time.LocalDate.parse(dueDateStr).atTime(23, 59, 59);
+    }
+
     @Override
     public GeneralResponse createClass(ClassRequest classRequest) {
         System.out.println("reached to impl");
@@ -209,7 +220,14 @@ public class ClassControllerManagerImpl implements ClassControllerManager {
                 paperResponse.setMonth_label(buildMonthLabel(paper.getMonth(), paper.getYear()));
                 paperResponse.setNumber_of_questions(paper.getNoOfQuestions());
                 paperResponse.setUploaded_at(paper.getCreatedDateTime());
-                paperResponse.setPdf_url(paper.getFilePath() != null ? FILE_SERVER_BASE_URL + "/uploads/" + paper.getFilePath() : null);
+                paperResponse.setDue_date(paper.getDueDate());
+                paperResponse.setDuration_minutes(paper.getDurationMinutes());
+                String paperFilePath = paper.getFilePath();
+                paperResponse.setPdf_url(paperFilePath == null
+                        ? null
+                        : paperFilePath.startsWith("http")
+                                ? paperFilePath
+                                : FILE_SERVER_BASE_URL + "/uploads/" + paperFilePath);
 
                 if (paper.getIsPublished() == true) {
                     paperResponse.setStatus("PUBLISHED");
@@ -334,7 +352,8 @@ public class ClassControllerManagerImpl implements ClassControllerManager {
 
         uploadPaper.setLastModifiedDateTime(LocalDateTime.now());
         uploadPaper.setStatus(2);
-            System.out.println(paperUploadRequest.getStatus() == "DRAFT");
+        uploadPaper.setIsPublished(!"DRAFT".equals(paperUploadRequest.getStatus()));
+    
         if (paperUploadRequest.getStatus() == "DRAFT") {
 
             uploadPaper.setIsPublished(false);
@@ -343,6 +362,10 @@ public class ClassControllerManagerImpl implements ClassControllerManager {
 
             uploadPaper.setIsPublished(true);
         }
+
+        uploadPaper.setDueDate(parseDueDate(paperUploadRequest.getDue_date()));
+        uploadPaper.setDurationMinutes(paperUploadRequest.getDuration_minutes());
+
         uploadPaper.setClasses(classes);
         uploadPaper.setClassPaymentRecord(classPaymentRecord);
 
@@ -463,6 +486,8 @@ public class ClassControllerManagerImpl implements ClassControllerManager {
         paper.setIsPublished(!"DRAFT".equals(paperUploadRequest.getStatus()));
         paper.setLastModifiedBy(username);
         paper.setLastModifiedDateTime(LocalDateTime.now());
+        paper.setDueDate(parseDueDate(paperUploadRequest.getDue_date()));
+        paper.setDurationMinutes(paperUploadRequest.getDuration_minutes());
 
         if (pdf_file != null && !pdf_file.isEmpty()) {
             String fileName = fileStorageService.savePaperFile(pdf_file);

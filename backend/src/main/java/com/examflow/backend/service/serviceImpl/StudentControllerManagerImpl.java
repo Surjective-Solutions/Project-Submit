@@ -320,7 +320,8 @@ public class StudentControllerManagerImpl implements StudentControllerManager {
                     PaperResponse paperResponse = new PaperResponse();
                     paperResponse.setId(String.valueOf(monthUploadPaper.getUploadPaperSeq()));
                     paperResponse.setPaper_name(monthUploadPaper.getPaperName());
-                    paperResponse.setDue_date(LocalDateTime.now());
+                    paperResponse.setDue_date(monthUploadPaper.getDueDate());
+                    paperResponse.setDuration_minutes(monthUploadPaper.getDurationMinutes());
 
                     PaperSubmission paperSubmission = paperSubmissionRepository
                             .findByStudentAndUplaodpaperAndStatusSeq(student, monthUploadPaper, 2);
@@ -352,7 +353,10 @@ public class StudentControllerManagerImpl implements StudentControllerManager {
                         paperResponse.setGrade(null);
                         paperResponse.setGraded_pdf_url(null);
                     }
-                    String pdfUrl = FILE_SERVER_BASE_URL + "/uploads/" + monthUploadPaper.getFilePath();
+                    String examFilePath = monthUploadPaper.getFilePath();
+                    String pdfUrl = examFilePath != null && examFilePath.startsWith("http")
+                            ? examFilePath
+                            : FILE_SERVER_BASE_URL + "/uploads/" + examFilePath;
                     paperResponse.setExam_pdf_url(pdfUrl);
                     paperResponse.setIs_current(null);
 

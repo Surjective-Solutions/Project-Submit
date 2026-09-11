@@ -18,6 +18,10 @@ public class PaperUploadRequest {
 
     private Integer starting_question_number;
 
+    private String due_date;
+
+    private Integer duration_minutes;
+
     public String getPaper_name() {
         return paper_name;
     }
@@ -80,6 +84,22 @@ public class PaperUploadRequest {
 
     public void setStarting_question_number(Integer starting_question_number) {
         this.starting_question_number = starting_question_number;
+    }
+
+    public String getDue_date(){
+        return due_date;
+    }
+
+    public void setDue_date(String due_date){
+        this.due_date = due_date;
+    }
+
+    public Integer getDuration_minutes(){
+        return duration_minutes;
+    }
+
+    public void setDuration_minutes(Integer duration_minutes){
+        this.duration_minutes = duration_minutes;
     }
 
 }

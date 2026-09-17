@@ -57,7 +57,7 @@ const MONTHS = [
 ];
 
 function formatRelativeDate(dateStr) {
-  const now = new Date("2026-06-15T00:00:00.000Z");
+  const now = new Date();
   const date = new Date(dateStr);
   const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
   if (diffDays === 0) return "Today";

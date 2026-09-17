@@ -32,15 +32,6 @@ function formatDate(iso) {
   });
 }
 
-function formatQuestionLabel(questionId) {
-  const [parentId, subId] = String(questionId).split('-');
-  if (!subId) return `Q${parentId}`;
-  const subLetter = /^\d+$/.test(subId)
-    ? String.fromCharCode(96 + Number(subId))
-    : subId;
-  return `Q${parentId} (${subLetter})`;
-}
-
 // Parses a "98/100"-style fraction out of a grade string like "A (98/100)"
 // so we can drive the score ring + performance message.
 function parseScoreFromGrade(gradeStr) {
@@ -219,7 +210,7 @@ function GradeBreakdownSection({ classId, paperId, isGraded }) {
             {gradeDetails.map((detail) => (
               <tr key={detail.question_id} className="border-b border-gray-50 last:border-0">
                 <td className="py-3 pr-4 font-medium text-gray-900 align-top whitespace-nowrap">
-                  {formatQuestionLabel(detail.question_id)}
+                  {detail.question_id}
                 </td>
                 <td className="py-3 align-top whitespace-nowrap">
                   <span className="font-semibold text-green-700">{detail.marks_awarded}</span>

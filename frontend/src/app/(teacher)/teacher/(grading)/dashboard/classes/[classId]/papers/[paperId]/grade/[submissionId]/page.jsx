@@ -50,6 +50,15 @@ function buildInitialGradeState(submission) {
   return { marks, comments, commentOpen };
 }
 
+// Labels come from the backend as "7", "7(a)", or "7(a)(i)" — deterministic
+// enough to rebuild the 3-level tree by parsing the string itself.
+function parseQuestionLabel(label) {
+  const match = String(label).match(/^(\d+)(?:\(([a-z]+)\))?(?:\(([ivxlcdm]+)\))?$/i);
+  if (!match) return null;
+  const [, qNum, letter, roman] = match;
+  return { qNum, letter: letter || null, roman: roman || null };
+}
+
 function getGrade(score, totalMarks) {
   const percentage = (score / totalMarks) * 100;
   if (percentage >= 75) return { grade: 'A', color: 'green' };
@@ -199,18 +208,52 @@ const [regradeRequest, setRegradeRequest] = useState(null);
   );
 
   const groups = useMemo(() => {
-    const list = [];
+    const order = [];
     const map = new Map();
+
     for (const q of questions) {
-      const key = q.parent_label ?? q.question_label;
-      if (!map.has(key)) {
-        const group = { key, questions: [] };
-        map.set(key, group);
-        list.push(group);
+      const parsed = parseQuestionLabel(q.question_label);
+      if (!parsed) continue;
+      const { qNum, letter, roman } = parsed;
+
+      if (!map.has(qNum)) {
+        map.set(qNum, { key: qNum, self: null, max: 0, subOrder: [], subMap: new Map() });
+        order.push(qNum);
       }
-      map.get(key).questions.push(q);
+      const qEntry = map.get(qNum);
+      qEntry.max += q.max_marks;
+
+      if (!letter) {
+        qEntry.self = q;
+        continue;
+      }
+
+      if (!qEntry.subMap.has(letter)) {
+        qEntry.subMap.set(letter, { key: `${qNum}(${letter})`, self: null, max: 0, subsubparts: [] });
+        qEntry.subOrder.push(letter);
+      }
+      const spEntry = qEntry.subMap.get(letter);
+      spEntry.max += q.max_marks;
+
+      if (!roman) {
+        spEntry.self = q;
+      } else {
+        spEntry.subsubparts.push(q);
+      }
     }
-    return list;
+
+    return order.map((qNum) => {
+      const qEntry = map.get(qNum);
+      return {
+        key: qEntry.key,
+        self: qEntry.self,
+        max: qEntry.max,
+        subparts: qEntry.subOrder.map((letter) => {
+          const sp = qEntry.subMap.get(letter);
+          return { key: sp.key, self: sp.self, max: sp.max, subsubparts: sp.subsubparts };
+        }),
+      };
+    });
   }, [questions]);
 
   const [marks, setMarks] = useState({});
@@ -279,14 +322,20 @@ const [regradeRequest, setRegradeRequest] = useState(null);
       maxMarks: totalMax,
       grade: gradeInfo.grade,
       gradedAt: new Date().toISOString(),
-      questions: questions.map((q) => ({
-        questionId: q.id,
-        marksAwarded: Number(marks[q.id]),
-        subquestionSeq: Number(q.subQuestionSeq),
-        mainQuestionSeq: Number(q.mainQuestionSeq),
-        isSubQuestion: q.parent_label ? true : false,
-        comment: comments[q.id] || '',
-      })),
+      questions: questions.map((q) => {
+        const isSubSubQuestion = q.subSubQuestionSeq != null;
+        const isSubQuestion = !isSubSubQuestion && q.subQuestionSeq != null;
+        return {
+          questionId: q.id,
+          marksAwarded: Number(marks[q.id]),
+          subquestionSeq: q.subQuestionSeq != null ? Number(q.subQuestionSeq) : null,
+          subsubquestionSeq: q.subSubQuestionSeq != null ? Number(q.subSubQuestionSeq) : null,
+          mainQuestionSeq: Number(q.mainQuestionSeq),
+          isSubQuestion,
+          isSubSubQuestion,
+          comment: comments[q.id] || '',
+        };
+      }),
     };
 
     const isEditingGradedSubmission = submission.graded;
@@ -441,49 +490,80 @@ const [regradeRequest, setRegradeRequest] = useState(null);
           <ScrollArea className="min-h-0 flex-1">
             <div className="space-y-4 p-4">
               {groups.map((group) => {
-                if (group.questions.length > 1) {
-                  const groupMax = group.questions.reduce((s, q) => s + q.max_marks, 0);
+                if (group.subparts.length === 0 && group.self) {
+                  const q = group.self;
                   return (
-                    <div key={group.key} className="space-y-3">
-                      <div className="-mx-1 rounded-md bg-gray-50 px-3 py-1.5">
-                        <span className="text-sm font-semibold text-gray-600">{group.key}</span>
-                        <span className="ml-1.5 text-xs text-gray-400">/ {groupMax}</span>
-                      </div>
-                      <div className="ml-2 space-y-3 border-l border-border pl-3">
-                        {group.questions.map((q) => (
-                          <QuestionRow
-                            key={q.id}
-                            question={q}
-                            value={marks[q.id] ?? ''}
-                            comment={comments[q.id] ?? ''}
-                            commentOpen={!!commentOpen[q.id]}
-                            exceeded={isExceeded(q)}
-                            showEmptyError={attemptedSubmit && isEmpty(q)}
-                            onMarksChange={handleMarksChange}
-                            onCommentChange={handleCommentChange}
-                            onToggleComment={toggleComment}
-                          />
-                        ))}
-                      </div>
-                    </div>
+                    <QuestionRow
+                      key={q.id}
+                      question={q}
+                      value={marks[q.id] ?? ''}
+                      comment={comments[q.id] ?? ''}
+                      commentOpen={!!commentOpen[q.id]}
+                      exceeded={isExceeded(q)}
+                      showEmptyError={attemptedSubmit && isEmpty(q)}
+                      onMarksChange={handleMarksChange}
+                      onCommentChange={handleCommentChange}
+                      onToggleComment={toggleComment}
+                    />
                   );
                 }
-                const q = group.questions[0];
+
                 return (
-                  <QuestionRow
-                    key={q.id}
-                    question={q}
-                    value={marks[q.id] ?? ''}
-                    comment={comments[q.id] ?? ''}
-                    commentOpen={!!commentOpen[q.id]}
-                    exceeded={isExceeded(q)}
-                    showEmptyError={attemptedSubmit && isEmpty(q)}
-                    onMarksChange={handleMarksChange}
-                    onCommentChange={handleCommentChange}
-                    onToggleComment={toggleComment}
-                  />
+                  <div key={group.key} className="space-y-3">
+                    <div className="-mx-1 rounded-md bg-gray-50 px-3 py-1.5">
+                      <span className="text-sm font-semibold text-gray-600">{group.key}</span>
+                      <span className="ml-1.5 text-xs text-gray-400">/ {group.max}</span>
+                    </div>
+                    <div className="ml-2 space-y-3 border-l border-border pl-3">
+                      {group.subparts.map((sp) => {
+                        if (sp.subsubparts.length === 0 && sp.self) {
+                          const q = sp.self;
+                          return (
+                            <QuestionRow
+                              key={q.id}
+                              question={q}
+                              value={marks[q.id] ?? ''}
+                              comment={comments[q.id] ?? ''}
+                              commentOpen={!!commentOpen[q.id]}
+                              exceeded={isExceeded(q)}
+                              showEmptyError={attemptedSubmit && isEmpty(q)}
+                              onMarksChange={handleMarksChange}
+                              onCommentChange={handleCommentChange}
+                              onToggleComment={toggleComment}
+                            />
+                          );
+                        }
+
+                        return (
+                          <div key={sp.key} className="space-y-2">
+                            <div className="-mx-1 rounded-md bg-gray-50/70 px-3 py-1">
+                              <span className="text-xs font-semibold text-gray-500">{sp.key}</span>
+                              <span className="ml-1.5 text-[11px] text-gray-400">/ {sp.max}</span>
+                            </div>
+                            <div className="ml-2 space-y-3 border-l border-border pl-3">
+                              {sp.subsubparts.map((q) => (
+                                <QuestionRow
+                                  key={q.id}
+                                  question={q}
+                                  value={marks[q.id] ?? ''}
+                                  comment={comments[q.id] ?? ''}
+                                  commentOpen={!!commentOpen[q.id]}
+                                  exceeded={isExceeded(q)}
+                                  showEmptyError={attemptedSubmit && isEmpty(q)}
+                                  onMarksChange={handleMarksChange}
+                                  onCommentChange={handleCommentChange}
+                                  onToggleComment={toggleComment}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 );
               })}
+              
             </div>
           </ScrollArea>
 

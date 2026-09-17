@@ -342,6 +342,9 @@ export default function UploadPaperDialog({
                 onAddSubpart={qb.addSubpart}
                 onRemoveSubpart={qb.removeSubpart}
                 onSubpartMarksChange={qb.changeSubpartMarks}
+                onAddSubSubpart={qb.addSubSubpart}
+                onRemoveSubSubpart={qb.removeSubSubpart}
+                onSubSubpartMarksChange={qb.changeSubSubpartMarks}
               />
 
               <SectionDivider label="Status" />

@@ -27,12 +27,15 @@ public class GradeSubmissionQuestion {
 
     private UploadPaperQuestionSubQuestion uploadPaperQuestionSubQuestion;
 
+    private UploadPaperQuestionSubSubQuestion uploadPaperQuestionSubSubQuestion;
+
     private String comment;
 
     private Integer status;
 
     private Boolean isSubQuestion;
 
+    private Boolean isSubSubQuestion;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -86,7 +89,15 @@ public class GradeSubmissionQuestion {
         this.uploadPaperQuestionSubQuestion = uploadPaperQuestionSubQuestion;
     }
 
+        @ManyToOne
+    @JoinColumn(name = "uploadPaperQuestionSubSubQuestionSeq", nullable = true)
+    public UploadPaperQuestionSubSubQuestion getUploadPaperQuestionSubSubQuestion() {
+        return uploadPaperQuestionSubSubQuestion;
+    }
 
+    public void setUploadPaperQuestionSubSubQuestion(UploadPaperQuestionSubSubQuestion uploadPaperQuestionSubSubQuestion) {
+        this.uploadPaperQuestionSubSubQuestion = uploadPaperQuestionSubSubQuestion;
+    }
 
      @Column(name = "comment")
     public String getComment() {
@@ -117,5 +128,13 @@ public class GradeSubmissionQuestion {
         this.isSubQuestion = isSubQuestion;
     }
 
+        @Column(name = "isSubSubQuestion")
+    public Boolean getIsSubSubQuestion() {
+        return isSubSubQuestion;
+    }
+
+    public void setIsSubSubQuestion(Boolean isSubSubQuestion) {
+        this.isSubSubQuestion = isSubSubQuestion;
+    }
     
 }

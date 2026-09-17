@@ -9,6 +9,8 @@ public class QuestionPaperInstructorTutorResponse {
 
     private Integer mainQuestionSeq;
 
+    private Integer subSubQuestionSeq;
+
     private String question_label;
 
     private String parent_label;
@@ -63,6 +65,14 @@ public class QuestionPaperInstructorTutorResponse {
 
     public void setSubQuestionSeq(Integer subQuestionSeq) {
         this.subQuestionSeq = subQuestionSeq;
+    }
+
+    public Integer getSubSubQuestionSeq() {
+        return subSubQuestionSeq;
+    }
+
+    public void setSubSubQuestionSeq(Integer subSubQuestionSeq) {
+        this.subSubQuestionSeq = subSubQuestionSeq;
     }
 
     public Integer getMainQuestionSeq() {

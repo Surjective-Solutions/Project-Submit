@@ -17,12 +17,14 @@ import com.examflow.backend.entity.PaperSubmission;
 import com.examflow.backend.entity.RegradeRequest;
 import com.examflow.backend.entity.UploadPaperQuestion;
 import com.examflow.backend.entity.UploadPaperQuestionSubQuestion;
+import com.examflow.backend.entity.UploadPaperQuestionSubSubQuestion;
 import com.examflow.backend.repository.GradeSubmissionQuestionRepository;
 import com.examflow.backend.repository.GradeSubmissionRepository;
 import com.examflow.backend.repository.PaperSubmissionRepository;
 import com.examflow.backend.repository.RegradeRequestRepository;
 import com.examflow.backend.repository.UploadPaperQuestionRepository;
 import com.examflow.backend.repository.UploadPaperQuestionSubQuestionRepository;
+import com.examflow.backend.repository.UploadPaperQuestionSubSubQuestionRepository;
 import com.examflow.backend.scheduller.EmailService;
 
 // Shared by both the teacher (ClassControllerManagerImpl) and instructor
@@ -36,6 +38,7 @@ public class GradeEditService {
     private final GradeSubmissionQuestionRepository gradeSubmissionQuestionRepository;
     private final UploadPaperQuestionRepository uploadPaperQuestionRepository;
     private final UploadPaperQuestionSubQuestionRepository uploadPaperQuestionSubQuestionRepository;
+    private final UploadPaperQuestionSubSubQuestionRepository uploadPaperQuestionSubSubQuestionRepository;
     private final PaperSubmissionRepository paperSubmissionRepository;
     private final RegradeRequestRepository regradeRequestRepository;
     private final EmailService emailService;
@@ -45,6 +48,7 @@ public class GradeEditService {
             GradeSubmissionQuestionRepository gradeSubmissionQuestionRepository,
             UploadPaperQuestionRepository uploadPaperQuestionRepository,
             UploadPaperQuestionSubQuestionRepository uploadPaperQuestionSubQuestionRepository,
+            UploadPaperQuestionSubSubQuestionRepository uploadPaperQuestionSubSubQuestionRepository,
             PaperSubmissionRepository paperSubmissionRepository,
             RegradeRequestRepository regradeRequestRepository,
             EmailService emailService) {
@@ -52,6 +56,7 @@ public class GradeEditService {
         this.gradeSubmissionQuestionRepository = gradeSubmissionQuestionRepository;
         this.uploadPaperQuestionRepository = uploadPaperQuestionRepository;
         this.uploadPaperQuestionSubQuestionRepository = uploadPaperQuestionSubQuestionRepository;
+        this.uploadPaperQuestionSubSubQuestionRepository = uploadPaperQuestionSubSubQuestionRepository;
         this.paperSubmissionRepository = paperSubmissionRepository;
         this.regradeRequestRepository = regradeRequestRepository;
         this.emailService = emailService;
@@ -150,7 +155,21 @@ public class GradeEditService {
         gradeSubmissionQuestion.setMarksAwarded(submitGradeQuestionsResponse.getMarksAwarded());
         gradeSubmissionQuestion.setStatus(2); // make the record Approved status
 
-        if (Boolean.TRUE.equals(submitGradeQuestionsResponse.getIsSubQuestion())) {
+        if (Boolean.TRUE.equals(submitGradeQuestionsResponse.getIsSubSubQuestion())) {
+            UploadPaperQuestionSubSubQuestion subSubQuestion = uploadPaperQuestionSubSubQuestionRepository
+                    .findByUploadPaperQuestionSubSubQuestionSeq(submitGradeQuestionsResponse.getSubsubquestionSeq());
+            if (subSubQuestion == null) {
+                return null;
+            }
+
+            UploadPaperQuestionSubQuestion parentSubQuestion = subSubQuestion.getUploadPaperQuestionSubQuestion();
+
+            gradeSubmissionQuestion.setIsSubQuestion(false);
+            gradeSubmissionQuestion.setIsSubSubQuestion(true);
+            gradeSubmissionQuestion.setUploadPaperQuestionSubSubQuestion(subSubQuestion);
+            gradeSubmissionQuestion.setUploadPaperQuestionSubQuestion(parentSubQuestion);
+            gradeSubmissionQuestion.setUploadPaperQuestion(parentSubQuestion.getUploadPaperQuestion());
+        } else if (Boolean.TRUE.equals(submitGradeQuestionsResponse.getIsSubQuestion())) {
             UploadPaperQuestionSubQuestion subQuestion = uploadPaperQuestionSubQuestionRepository
                     .findByUploadPaperQuestionSubQuestionSeq(submitGradeQuestionsResponse.getSubquestionSeq());
             if (subQuestion == null) {
@@ -158,6 +177,7 @@ public class GradeEditService {
             }
 
             gradeSubmissionQuestion.setIsSubQuestion(true);
+            gradeSubmissionQuestion.setIsSubSubQuestion(false);
             gradeSubmissionQuestion.setUploadPaperQuestionSubQuestion(subQuestion);
             gradeSubmissionQuestion.setUploadPaperQuestion(subQuestion.getUploadPaperQuestion());
         } else {
@@ -169,6 +189,7 @@ public class GradeEditService {
 
             gradeSubmissionQuestion.setUploadPaperQuestion(question);
             gradeSubmissionQuestion.setIsSubQuestion(false);
+            gradeSubmissionQuestion.setIsSubSubQuestion(false);
         }
 
         return gradeSubmissionQuestion;

@@ -11,7 +11,11 @@ public class SubmitGradeQuestionsResponse {
 
     private Boolean isSubQuestion;
 
+    private Boolean isSubSubQuestion;
+
     private Integer subquestionSeq;
+
+    private Integer subsubquestionSeq;
 
     private Integer mainQuestionSeq;
 
@@ -53,6 +57,22 @@ public class SubmitGradeQuestionsResponse {
 
     public void setSubquestionSeq(Integer subquestionSeq) {
         this.subquestionSeq = subquestionSeq;
+    }
+    
+    public Boolean getIsSubSubQuestion() {
+        return isSubSubQuestion;
+    }
+
+    public void setIsSubSubQuestion(Boolean isSubSubQuestion) {
+        this.isSubSubQuestion = isSubSubQuestion;
+    }
+
+    public Integer getSubsubquestionSeq() {
+        return subsubquestionSeq;
+    }
+
+    public void setSubsubquestionSeq(Integer subsubquestionSeq) {
+        this.subsubquestionSeq = subsubquestionSeq;
     }
 
     public Integer getMainQuestionSeq() {

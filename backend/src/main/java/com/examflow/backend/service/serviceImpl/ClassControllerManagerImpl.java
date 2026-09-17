@@ -22,6 +22,7 @@ import com.examflow.backend.dto.QuestionPaperInstructorTutorResponse;
 import com.examflow.backend.dto.QuestionRequestDTO;
 import com.examflow.backend.dto.RegradeRequestResponse;
 import com.examflow.backend.dto.SubQuestionRequestDTO;
+import com.examflow.backend.dto.SubSubQuestionRequestDTO;
 import com.examflow.backend.dto.SubmissionPaperInstructorTutorResponse;
 import com.examflow.backend.dto.SubmitGradeQuestionsResponse;
 import com.examflow.backend.dto.SubmitGradeResponse;
@@ -37,6 +38,7 @@ import com.examflow.backend.entity.Tutor;
 import com.examflow.backend.entity.UplaodPaper;
 import com.examflow.backend.entity.UploadPaperQuestion;
 import com.examflow.backend.entity.UploadPaperQuestionSubQuestion;
+import com.examflow.backend.entity.UploadPaperQuestionSubSubQuestion;
 import com.examflow.backend.repository.ClassPaymentRecordRepository;
 import com.examflow.backend.repository.ClassesRepository;
 import com.examflow.backend.repository.GradeSubmissionQuestionRepository;
@@ -45,6 +47,7 @@ import com.examflow.backend.repository.PaperSubmissionRepository;
 import com.examflow.backend.repository.TutorRepository;
 import com.examflow.backend.repository.UploadPaperQuestionRepository;
 import com.examflow.backend.repository.UploadPaperQuestionSubQuestionRepository;
+import com.examflow.backend.repository.UploadPaperQuestionSubSubQuestionRepository;
 import com.examflow.backend.repository.UploadPaperRepository;
 import com.examflow.backend.service.ClassControllerManager;
 import com.examflow.backend.service.FileStorageService;
@@ -68,6 +71,7 @@ public class ClassControllerManagerImpl implements ClassControllerManager {
     private final ClassPaymentRecordRepository classPaymentRecordRepository;
     private final UploadPaperQuestionRepository uploadPaperQuestionRepository;
     private final UploadPaperQuestionSubQuestionRepository uploadPaperQuestionSubQuestionRepository;
+    private final UploadPaperQuestionSubSubQuestionRepository uploadPaperQuestionSubSubQuestionRepository;
     private final MonthlyPaymentService monthlyPaymentService;
     private final GradeEditService gradeEditService;
     private final RegradeRequestQueryService regradeRequestQueryService;
@@ -81,6 +85,7 @@ public class ClassControllerManagerImpl implements ClassControllerManager {
             UploadPaperQuestionRepository uploadPaperQuestionRepository,
             GradeSubmissionRepository gradeSubmissionRepository,
             UploadPaperQuestionSubQuestionRepository uploadPaperQuestionSubQuestionRepository,
+            UploadPaperQuestionSubSubQuestionRepository uploadPaperQuestionSubSubQuestionRepository,
             FileStorageService fileStorageService,
             ClassPaymentRecordRepository classPaymentRecordRepository,
             ClassesRepository classesRepository,
@@ -102,6 +107,7 @@ public class ClassControllerManagerImpl implements ClassControllerManager {
         this.regradeRequestQueryService = regradeRequestQueryService;
         this.submissionGradeSummaryService = submissionGradeSummaryService;
         this.uploadPaperQuestionSubQuestionRepository = uploadPaperQuestionSubQuestionRepository;
+        this.uploadPaperQuestionSubSubQuestionRepository = uploadPaperQuestionSubSubQuestionRepository;
         this.uploadPaperRepository = uploadPaperRepository;
         this.monthlyPaymentService = monthlyPaymentService;
     }
@@ -111,6 +117,25 @@ public class ClassControllerManagerImpl implements ClassControllerManager {
     // files are only served by this backend at /uploads/** (port 8080). A root-relative
     // path like "/uploads/..." would resolve against the wrong origin in an <iframe src>.
     private static final String FILE_SERVER_BASE_URL = "http://localhost:8080";
+
+    private static final String QUESTION_LETTERS = "abcdefghijklmnopqrstuvwxyz";
+
+    // Lowercase roman numerals for the third question level (i, ii, iii, ...),
+    // mirroring the frontend's toRoman() in use-question-builder.js so both
+    // sides produce identical labels.
+    private String toRoman(int number) {
+        int[] values = {1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1};
+        String[] symbols = {"m", "cm", "d", "cd", "c", "xc", "l", "xl", "x", "ix", "v", "iv", "i"};
+        StringBuilder sb = new StringBuilder();
+        int n = number;
+        for (int i = 0; i < values.length; i++) {
+            while (n >= values[i]) {
+                sb.append(symbols[i]);
+                n -= values[i];
+            }
+        }
+        return sb.toString();
+    }
 
     private String buildMonthLabel(String month, String year) {
         try {
@@ -243,14 +268,15 @@ public class ClassControllerManagerImpl implements ClassControllerManager {
                 Integer startingNumber = paper.getStartingQuestionNumber() != null ? paper.getStartingQuestionNumber() : 1;
                 Integer questionCount = startingNumber - 1;
                 for(UploadPaperQuestion paperQuestion : paperQuestions){
-                    QuestionPaperInstructorTutorResponse questionResponse = new QuestionPaperInstructorTutorResponse();
                     List<UploadPaperQuestionSubQuestion> subQuestions = uploadPaperQuestionSubQuestionRepository.findByUploadPaperQuestionAndStatusOrderByQuestionKeyAsc(paperQuestion, 2);
                     questionCount++;
+                    String questionLabel = questionCount.toString();
+
                     if (subQuestions.size()==0) {
-                        
+                        QuestionPaperInstructorTutorResponse questionResponse = new QuestionPaperInstructorTutorResponse();
                         questionResponse.setId(paperQuestion.getUploadPaperQuestionSeq().toString());
                         questionResponse.setMainQuestionSeq(paperQuestion.getUploadPaperQuestionSeq());
-                        questionResponse.setQuestion_label("Q" + questionCount.toString());
+                        questionResponse.setQuestion_label(questionLabel);
                         questionResponse.setParent_label(null);
                         questionResponse.setMax_marks(paperQuestion.getMarks());
                         questionResponse.setDisplay_order(paperQuestion.getQuestionKey());
@@ -258,21 +284,45 @@ public class ClassControllerManagerImpl implements ClassControllerManager {
                     }else{
                         Integer subQuestionCount = 0;
                         for(UploadPaperQuestionSubQuestion subQuestion : subQuestions){
-                            QuestionPaperInstructorTutorResponse subQuestionResponse = new QuestionPaperInstructorTutorResponse();
                             subQuestionCount++;
-                            subQuestionResponse.setId(paperQuestion.getUploadPaperQuestionSeq().toString() + "-" + subQuestion.getUploadPaperQuestionSubQuestionSeq().toString());
-                            subQuestionResponse.setSubQuestionSeq(subQuestion.getUploadPaperQuestionSubQuestionSeq());
-                            subQuestionResponse.setMainQuestionSeq(paperQuestion.getUploadPaperQuestionSeq());
-                            subQuestionResponse.setQuestion_label("Q" + questionCount.toString()+"(" + subQuestionCount.toString() + ")");
-                            subQuestionResponse.setParent_label("Q" + questionCount.toString());
-                            subQuestionResponse.setMax_marks(subQuestion.getMark());
-                            subQuestionResponse.setDisplay_order(subQuestion.getQuestionKey());
-                            questionResponses.add(subQuestionResponse);
+                            String subLetter = String.valueOf(QUESTION_LETTERS.charAt(subQuestionCount - 1));
+                            String subQuestionLabel = questionLabel + "(" + subLetter + ")";
+
+                            List<UploadPaperQuestionSubSubQuestion> subSubQuestions = uploadPaperQuestionSubSubQuestionRepository
+                                    .findByUploadPaperQuestionSubQuestionAndStatusOrderByQuestionKeyAsc(subQuestion, 2);
+
+                            if (subSubQuestions.size() == 0) {
+                                QuestionPaperInstructorTutorResponse subQuestionResponse = new QuestionPaperInstructorTutorResponse();
+                                subQuestionResponse.setId(paperQuestion.getUploadPaperQuestionSeq().toString() + "-" + subQuestion.getUploadPaperQuestionSubQuestionSeq().toString());
+                                subQuestionResponse.setSubQuestionSeq(subQuestion.getUploadPaperQuestionSubQuestionSeq());
+                                subQuestionResponse.setMainQuestionSeq(paperQuestion.getUploadPaperQuestionSeq());
+                                subQuestionResponse.setQuestion_label(subQuestionLabel);
+                                subQuestionResponse.setParent_label(questionLabel);
+                                subQuestionResponse.setMax_marks(subQuestion.getMark());
+                                subQuestionResponse.setDisplay_order(subQuestion.getQuestionKey());
+                                questionResponses.add(subQuestionResponse);
+                            } else {
+                                Integer subSubQuestionCount = 0;
+                                for (UploadPaperQuestionSubSubQuestion subSubQuestion : subSubQuestions) {
+                                    subSubQuestionCount++;
+                                    String subSubLabel = subQuestionLabel + "(" + toRoman(subSubQuestionCount) + ")";
+
+                                    QuestionPaperInstructorTutorResponse subSubQuestionResponse = new QuestionPaperInstructorTutorResponse();
+                                    subSubQuestionResponse.setId(paperQuestion.getUploadPaperQuestionSeq().toString()
+                                            + "-" + subQuestion.getUploadPaperQuestionSubQuestionSeq().toString()
+                                            + "-" + subSubQuestion.getUploadPaperQuestionSubSubQuestionSeq().toString());
+                                    subSubQuestionResponse.setSubQuestionSeq(subQuestion.getUploadPaperQuestionSubQuestionSeq());
+                                    subSubQuestionResponse.setSubSubQuestionSeq(subSubQuestion.getUploadPaperQuestionSubSubQuestionSeq());
+                                    subSubQuestionResponse.setMainQuestionSeq(paperQuestion.getUploadPaperQuestionSeq());
+                                    subSubQuestionResponse.setQuestion_label(subSubLabel);
+                                    subSubQuestionResponse.setParent_label(subQuestionLabel);
+                                    subSubQuestionResponse.setMax_marks(subSubQuestion.getMark());
+                                    subSubQuestionResponse.setDisplay_order(subSubQuestion.getQuestionKey());
+                                    questionResponses.add(subSubQuestionResponse);
+                                }
+                            }
                         }
                     }
-
-
-                    
                 }
                 paperResponse.setQuestions(questionResponses);
 
@@ -410,12 +460,14 @@ public class ClassControllerManagerImpl implements ClassControllerManager {
 
             uploadPaperQuestionRepository.save(uploadPaperQuestion);
 
-            Integer totalSubQuestionMarks = 0;
+                        Integer totalSubQuestionMarks = 0;
             for (SubQuestionRequestDTO subpart : question.getSubparts()) {
                 UploadPaperQuestionSubQuestion uploadPaperQuestionSubQuestion = new UploadPaperQuestionSubQuestion();
 
+                // A subpart's own mark can be null if it has sub-subparts instead (mutually
+                // exclusive, matching how a top-level question either has its own marks or
+                // subparts, never both) — leave it unset here and roll the sum up below.
                 uploadPaperQuestionSubQuestion.setMark(subpart.getMarks());
-                totalSubQuestionMarks = totalSubQuestionMarks + subpart.getMarks();
                 uploadPaperQuestionSubQuestion.setQuestionKey(subpart.getKey());
                 uploadPaperQuestionSubQuestion.setUploadPaperQuestion(uploadPaperQuestion);
                 uploadPaperQuestionSubQuestion.setStatus(2);
@@ -425,6 +477,32 @@ public class ClassControllerManagerImpl implements ClassControllerManager {
                 uploadPaperQuestionSubQuestion.setLastModifiedBy(username);
 
                 uploadPaperQuestionSubQuestionRepository.save(uploadPaperQuestionSubQuestion);
+
+                Integer totalSubSubQuestionMarks = 0;
+                List<SubSubQuestionRequestDTO> subsubparts = subpart.getSubsubparts();
+                if (subsubparts != null) {
+                    for (SubSubQuestionRequestDTO subsubpart : subsubparts) {
+                        UploadPaperQuestionSubSubQuestion uploadPaperQuestionSubSubQuestion = new UploadPaperQuestionSubSubQuestion();
+
+                        uploadPaperQuestionSubSubQuestion.setMark(subsubpart.getMarks());
+                        totalSubSubQuestionMarks = totalSubSubQuestionMarks + subsubpart.getMarks();
+                        uploadPaperQuestionSubSubQuestion.setQuestionKey(subsubpart.getKey());
+                        uploadPaperQuestionSubSubQuestion.setUploadPaperQuestionSubQuestion(uploadPaperQuestionSubQuestion);
+                        uploadPaperQuestionSubSubQuestion.setStatus(2);
+                        uploadPaperQuestionSubSubQuestion.setCreatedDateTime(LocalDateTime.now());
+                        uploadPaperQuestionSubSubQuestion.setLastModifiedDateTime(LocalDateTime.now());
+                        uploadPaperQuestionSubSubQuestion.setCreatedBy(username);
+                        uploadPaperQuestionSubSubQuestion.setLastModifiedBy(username);
+
+                        uploadPaperQuestionSubSubQuestionRepository.save(uploadPaperQuestionSubSubQuestion);
+                    }
+                }
+                if (uploadPaperQuestionSubQuestion.getMark() == null) {
+                    uploadPaperQuestionSubQuestion.setMark(totalSubSubQuestionMarks);
+                    uploadPaperQuestionSubQuestionRepository.save(uploadPaperQuestionSubQuestion);
+                }
+
+                totalSubQuestionMarks = totalSubQuestionMarks + uploadPaperQuestionSubQuestion.getMark();
             }
             if (uploadPaperQuestion.getMarks() == null) {
                 uploadPaperQuestion.setMarks(totalSubQuestionMarks);
@@ -761,7 +839,21 @@ public class ClassControllerManagerImpl implements ClassControllerManager {
         gradeSubmissionQuestion.setMarksAwarded(submitGradeQuestionsResponse.getMarksAwarded());
         gradeSubmissionQuestion.setStatus(2); // make the record Approved status
 
-        if (Boolean.TRUE.equals(submitGradeQuestionsResponse.getIsSubQuestion())) {
+        if (Boolean.TRUE.equals(submitGradeQuestionsResponse.getIsSubSubQuestion())) {
+            UploadPaperQuestionSubSubQuestion subSubQuestion = uploadPaperQuestionSubSubQuestionRepository
+                    .findByUploadPaperQuestionSubSubQuestionSeq(submitGradeQuestionsResponse.getSubsubquestionSeq());
+            if (subSubQuestion == null) {
+                return null;
+            }
+
+            UploadPaperQuestionSubQuestion parentSubQuestion = subSubQuestion.getUploadPaperQuestionSubQuestion();
+
+            gradeSubmissionQuestion.setIsSubQuestion(false);
+            gradeSubmissionQuestion.setIsSubSubQuestion(true);
+            gradeSubmissionQuestion.setUploadPaperQuestionSubSubQuestion(subSubQuestion);
+            gradeSubmissionQuestion.setUploadPaperQuestionSubQuestion(parentSubQuestion);
+            gradeSubmissionQuestion.setUploadPaperQuestion(parentSubQuestion.getUploadPaperQuestion());
+        } else if (Boolean.TRUE.equals(submitGradeQuestionsResponse.getIsSubQuestion())) {
             UploadPaperQuestionSubQuestion subQuestion = uploadPaperQuestionSubQuestionRepository
                     .findByUploadPaperQuestionSubQuestionSeq(submitGradeQuestionsResponse.getSubquestionSeq());
             if (subQuestion == null) {
@@ -769,6 +861,7 @@ public class ClassControllerManagerImpl implements ClassControllerManager {
             }
 
             gradeSubmissionQuestion.setIsSubQuestion(true);
+            gradeSubmissionQuestion.setIsSubSubQuestion(false);
             gradeSubmissionQuestion.setUploadPaperQuestionSubQuestion(subQuestion);
             gradeSubmissionQuestion.setUploadPaperQuestion(subQuestion.getUploadPaperQuestion());
         } else {
@@ -780,6 +873,7 @@ public class ClassControllerManagerImpl implements ClassControllerManager {
 
             gradeSubmissionQuestion.setUploadPaperQuestion(question);
             gradeSubmissionQuestion.setIsSubQuestion(false);
+            gradeSubmissionQuestion.setIsSubSubQuestion(false);
         }
 
         return gradeSubmissionQuestion;

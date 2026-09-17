@@ -38,6 +38,7 @@ import com.examflow.backend.entity.StudentSubmissionPaperSubQuestion;
 import com.examflow.backend.entity.UplaodPaper;
 import com.examflow.backend.entity.UploadPaperQuestion;
 import com.examflow.backend.entity.UploadPaperQuestionSubQuestion;
+import com.examflow.backend.entity.UploadPaperQuestionSubSubQuestion;
 import com.examflow.backend.entity.GradeSubmissionQuestion;
 import com.examflow.backend.enums.paymentStatus;
 import com.examflow.backend.repository.ClassPaymentRecordRepository;
@@ -52,6 +53,7 @@ import com.examflow.backend.repository.StudentSubmissionPaperQuestionRepository;
 import com.examflow.backend.repository.StudentSubmissionPaperQuestionSubQuestionRepository;
 import com.examflow.backend.repository.UploadPaperQuestionRepository;
 import com.examflow.backend.repository.UploadPaperQuestionSubQuestionRepository;
+import com.examflow.backend.repository.UploadPaperQuestionSubSubQuestionRepository;
 import com.examflow.backend.repository.UploadPaperRepository;
 import com.examflow.backend.service.FileStorageService;
 import com.examflow.backend.service.StudentControllerManager;
@@ -62,6 +64,22 @@ import jakarta.servlet.http.HttpServletRequest;
 public class StudentControllerManagerImpl implements StudentControllerManager {
 
     private static final String FILE_SERVER_BASE_URL = "http://localhost:8080";
+    private static final String QUESTION_LETTERS = "abcdefghijklmnopqrstuvwxyz";
+
+    private String toRoman(int number) {
+        int[] values = {1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1};
+        String[] symbols = {"m", "cm", "d", "cd", "c", "xc", "l", "xl", "x", "ix", "v", "iv", "i"};
+        StringBuilder sb = new StringBuilder();
+        int n = number;
+        for (int i = 0; i < values.length; i++) {
+            while (n >= values[i]) {
+                sb.append(symbols[i]);
+                n -= values[i];
+            }
+        }
+        return sb.toString();
+    }
+
     private final StudentClassesRepository studentClassesRepository;
     private final StudentSubmissionPaperQuestionSubQuestionRepository studentSubmissionPaperQuestionSubQuestionRepository;
     private final UploadPaperQuestionRepository uploadPaperQuestionRepository;
@@ -72,6 +90,7 @@ public class StudentControllerManagerImpl implements StudentControllerManager {
     private final StudentRepository studentRepository;
     private final UploadPaperRepository uploadPaperRepository;
     private final UploadPaperQuestionSubQuestionRepository uploadPaperQuestionSubQuestionRepository;
+    private final UploadPaperQuestionSubSubQuestionRepository uploadPaperQuestionSubSubQuestionRepository;
     private final ClassesRepository classesRepository;
     private final ClassPaymentRecordRepository classPaymentRecordRepository;
     private final GradeSubmissionRepository gradeSubmissionRepository;
@@ -88,6 +107,7 @@ public class StudentControllerManagerImpl implements StudentControllerManager {
             StudentSubmissionPaperQuestionRepository studentSubmissionPaperQuestionRepository,
             PaperSubmissionRepository paperSubmissionRepository,
             UploadPaperQuestionSubQuestionRepository uploadPaperQuestionSubQuestionRepository,
+            UploadPaperQuestionSubSubQuestionRepository uploadPaperQuestionSubSubQuestionRepository,
             FileStorageService fileStorageService,
             UploadPaperRepository uploadPaperRepository,
             StudentClassPaymentRecordsRepository studentClassPaymentRecordsRepository,
@@ -105,6 +125,7 @@ public class StudentControllerManagerImpl implements StudentControllerManager {
         this.uploadPaperQuestionRepository = uploadPaperQuestionRepository;
         this.paperSubmissionRepository = paperSubmissionRepository;
         this.uploadPaperQuestionSubQuestionRepository = uploadPaperQuestionSubQuestionRepository;
+        this.uploadPaperQuestionSubSubQuestionRepository = uploadPaperQuestionSubSubQuestionRepository;
         this.fileStorageService = fileStorageService;
         this.monthlyPaymentService = monthlyPaymentService;
         this.uploadPaperRepository = uploadPaperRepository;
@@ -562,6 +583,26 @@ public class StudentControllerManagerImpl implements StudentControllerManager {
             runningNumber++;
         }
 
+        Map<Integer, Integer> subQuestionPositionBySeq = new HashMap<>();
+        Map<Integer, Integer> subSubQuestionPositionBySeq = new HashMap<>();
+        for (UploadPaperQuestion q : allPaperQuestions) {
+            List<UploadPaperQuestionSubQuestion> subQuestionsForQ = uploadPaperQuestionSubQuestionRepository
+                    .findByUploadPaperQuestionAndStatusOrderByQuestionKeyAsc(q, 2);
+            Integer position = 0;
+            for (UploadPaperQuestionSubQuestion sub : subQuestionsForQ) {
+                position++;
+                subQuestionPositionBySeq.put(sub.getUploadPaperQuestionSubQuestionSeq(), position);
+
+                List<UploadPaperQuestionSubSubQuestion> subSubQuestionsForSub = uploadPaperQuestionSubSubQuestionRepository
+                        .findByUploadPaperQuestionSubQuestionAndStatusOrderByQuestionKeyAsc(sub, 2);
+                Integer subSubPosition = 0;
+                for (UploadPaperQuestionSubSubQuestion subSub : subSubQuestionsForSub) {
+                    subSubPosition++;
+                    subSubQuestionPositionBySeq.put(subSub.getUploadPaperQuestionSubSubQuestionSeq(), subSubPosition);
+                }
+            }
+        }
+
         List<GradeSubmissionQuestion> gradeSubmissionQuestions = gradeSubmissionQuestionRepository
                 .findByGradeSubmissionAndStatus(gradeSubmission, 2);
 
@@ -571,15 +612,29 @@ public class StudentControllerManagerImpl implements StudentControllerManager {
             questionResponse.setComment(gradedQuestion.getComment());
 
             Integer questionNumber = questionNumberByKey.get(gradedQuestion.getUploadPaperQuestion().getUploadPaperQuestionSeq());
+            String questionLabel = String.valueOf(questionNumber);
 
-            boolean isSubQuestion = Boolean.TRUE.equals(gradedQuestion.getIsSubQuestion())
+            boolean isSubSubQuestion = Boolean.TRUE.equals(gradedQuestion.getIsSubSubQuestion())
+                    && gradedQuestion.getUploadPaperQuestionSubSubQuestion() != null;
+            boolean isSubQuestion = !isSubSubQuestion && Boolean.TRUE.equals(gradedQuestion.getIsSubQuestion())
                     && gradedQuestion.getUploadPaperQuestionSubQuestion() != null;
-            if (isSubQuestion) {
-                questionResponse.setQuestion_id("Q" + questionNumber
-                        + "-" + gradedQuestion.getUploadPaperQuestionSubQuestion().getUploadPaperQuestionSubQuestionSeq().toString());
+
+            if (isSubSubQuestion) {
+                Integer subPosition = subQuestionPositionBySeq.get(
+                        gradedQuestion.getUploadPaperQuestionSubQuestion().getUploadPaperQuestionSubQuestionSeq());
+                String subLetter = String.valueOf(QUESTION_LETTERS.charAt(subPosition - 1));
+                Integer subSubPosition = subSubQuestionPositionBySeq.get(
+                        gradedQuestion.getUploadPaperQuestionSubSubQuestion().getUploadPaperQuestionSubSubQuestionSeq());
+                questionResponse.setQuestion_id(questionLabel + "(" + subLetter + ")(" + toRoman(subSubPosition) + ")");
+                questionResponse.setMax_marks(gradedQuestion.getUploadPaperQuestionSubSubQuestion().getMark());
+            } else if (isSubQuestion) {
+                Integer subPosition = subQuestionPositionBySeq.get(
+                        gradedQuestion.getUploadPaperQuestionSubQuestion().getUploadPaperQuestionSubQuestionSeq());
+                String subLetter = String.valueOf(QUESTION_LETTERS.charAt(subPosition - 1));
+                questionResponse.setQuestion_id(questionLabel + "(" + subLetter + ")");
                 questionResponse.setMax_marks(gradedQuestion.getUploadPaperQuestionSubQuestion().getMark());
             } else {
-                questionResponse.setQuestion_id("Q" + questionNumber);
+                questionResponse.setQuestion_id(questionLabel);
                 questionResponse.setMax_marks(gradedQuestion.getUploadPaperQuestion().getMarks());
             }
 

@@ -1,13 +1,10 @@
 package com.examflow.backend.dto;
-import java.util.List;
 
-public class SubQuestionRequestDTO {
+public class SubSubQuestionRequestDTO {
 
     private Integer key;
 
     private Integer marks;
-
-    private List<SubSubQuestionRequestDTO> subsubparts;
 
     public Integer getKey() {
         return key;
@@ -23,13 +20,6 @@ public class SubQuestionRequestDTO {
 
     public void setMarks(Integer marks) {
         this.marks = marks;
-    }
-
-    public List<SubSubQuestionRequestDTO>getSubsubparts(){
-        return subsubparts;
-    }
-    public void setSubsubparts(List<SubSubQuestionRequestDTO> subsubparts){
-        this.subsubparts = subsubparts;
     }
 
 }

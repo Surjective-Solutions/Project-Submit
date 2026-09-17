@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { toast } from 'sonner';
@@ -22,6 +22,7 @@ import { useEnrolledClasses } from '@/context/EnrolledClassesContext';
 import { findPaperInClass } from '@/lib/exam-utils';
 import { toMonthYearSlug } from '@/lib/billing-utils';
 import { getGradeDetailsForPaper } from '@/lib/api-client';
+import {groupQuestionRows, sumQuestion, sumSubpart} from '@/lib/question-grouping';
 
 function formatDate(iso) {
   if (!iso) return '—';
@@ -202,22 +203,96 @@ function GradeBreakdownSection({ classId, paperId, isGraded }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider border-b border-gray-100">
-              <th className="py-2 pr-4 font-semibold">Question</th>
-              <th className="py-2 font-semibold">Marks</th>
+              <th className="py-2 pr-2 font-semibold">Question</th>
+              <th className="py-2 px-2 font-semibold text-right w-20">Sub-sub</th>
+              <th className="py-2 px-2 font-semibold text-right w-20">Subpart</th>
+              <th className="py-2 pl-2 font-semibold text-right w-20">Question</th>
             </tr>
           </thead>
           <tbody>
-            {gradeDetails.map((detail) => (
-              <tr key={detail.question_id} className="border-b border-gray-50 last:border-0">
-                <td className="py-3 pr-4 font-medium text-gray-900 align-top whitespace-nowrap">
-                  {detail.question_id}
-                </td>
-                <td className="py-3 align-top whitespace-nowrap">
-                  <span className="font-semibold text-green-700">{detail.marks_awarded}</span>
-                  <span className="text-gray-400"> / {detail.max_marks}</span>
-                </td>
-              </tr>
-            ))}
+            {groupQuestionRows(gradeDetails).map((q, qi) => {
+              const hasSubparts = q.subparts.length > 0;
+              const qTotal = sumQuestion(q);
+
+              return (
+                <Fragment key={q.key}>
+                  {qi > 0 && (
+                    <tr aria-hidden="true">
+                      <td colSpan={4} className="h-4" />
+                    </tr>
+                  )}
+
+                  <tr className="border-b border-gray-50">
+                    <td className="py-3 pr-2 font-bold text-gray-900 align-top whitespace-nowrap">
+                      {q.key}
+                    </td>
+                    <td className="py-3 px-2 align-top whitespace-nowrap text-right tabular-nums" />
+                    <td className="py-3 px-2 align-top whitespace-nowrap text-right tabular-nums" />
+                    <td className="py-3 pl-2 align-top whitespace-nowrap text-right tabular-nums">
+                      {q.self ? (
+                        <>
+                          <span className="font-semibold text-green-700">{q.self.marks_awarded}</span>
+                          <span className="text-gray-400"> / {q.self.max_marks}</span>
+                        </>
+                      ) : hasSubparts ? (
+                        <>
+                          <span className="font-semibold text-green-700">{qTotal.awarded}</span>
+                          <span className="text-gray-400"> / {qTotal.max}</span>
+                        </>
+                      ) : null}
+                    </td>
+                  </tr>
+
+                  {q.subparts.map((sp) => {
+                    const hasSubsubparts = sp.subsubparts.length > 0;
+                    const spTotal = sumSubpart(sp);
+                    const letter = sp.key.match(/\(([a-z]+)\)$/i)?.[1] ?? '';
+
+                    return (
+                      <Fragment key={sp.key}>
+                        <tr className="border-b border-gray-50">
+                          <td className="py-2 pr-2 pl-6 font-medium text-gray-600 align-top whitespace-nowrap">
+                            ({letter})
+                          </td>
+                          <td className="py-2 px-2 align-top whitespace-nowrap text-right tabular-nums" />
+                          <td className="py-2 px-2 align-top whitespace-nowrap text-right tabular-nums">
+                            {sp.self ? (
+                              <>
+                                <span className="font-semibold text-green-700">{sp.self.marks_awarded}</span>
+                                <span className="text-gray-400"> / {sp.self.max_marks}</span>
+                              </>
+                            ) : hasSubsubparts ? (
+                              <>
+                                <span className="font-semibold text-green-700">{spTotal.awarded}</span>
+                                <span className="text-gray-400"> / {spTotal.max}</span>
+                              </>
+                            ) : null}
+                          </td>
+                          <td className="py-2 pl-2 align-top whitespace-nowrap text-right tabular-nums" />
+                        </tr>
+
+                        {sp.subsubparts.map((ssp) => {
+                          const roman = String(ssp.question_id).match(/\(([ivxlcdm]+)\)$/i)?.[1] ?? '';
+                          return (
+                            <tr key={ssp.question_id} className="border-b border-gray-50">
+                              <td className="py-2 pr-2 pl-12 text-gray-500 align-top whitespace-nowrap">
+                                ({roman})
+                              </td>
+                              <td className="py-2 px-2 align-top whitespace-nowrap text-right tabular-nums">
+                                <span className="font-semibold text-green-700">{ssp.marks_awarded}</span>
+                                <span className="text-gray-400"> / {ssp.max_marks}</span>
+                              </td>
+                              <td className="py-2 px-2 align-top whitespace-nowrap text-right tabular-nums" />
+                              <td className="py-2 pl-2 align-top whitespace-nowrap text-right tabular-nums" />
+                            </tr>
+                          );
+                        })}
+                      </Fragment>
+                    );
+                  })}
+                </Fragment>
+              );
+            })}
           </tbody>
         </table>
       </div>

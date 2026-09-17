@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { toast } from 'sonner';
@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { useEnrolledClasses } from '@/context/EnrolledClassesContext';
 import { findPaperInClass } from '@/lib/exam-utils';
 import { getGradeDetailsForPaper, createRegradeRequest, getRegradeRequestForPaper } from '@/lib/api-client';
+import { groupQuestionRows, sumQuestion, sumSubpart } from '@/lib/question-grouping';
 
 const GRADE_TEXT_COLOR = {
   green: 'text-green-600',
@@ -38,15 +39,6 @@ function getGrade(score, totalMarks) {
   if (percentage >= 50) return { grade: 'C', color: 'amber' };
   if (percentage >= 35) return { grade: 'S', color: 'orange' };
   return { grade: 'F', color: 'red' };
-}
-
-function formatQuestionLabel(questionId) {
-  const [parentId, subId] = String(questionId).split('-');
-  if (!subId) return `Q${parentId}`;
-  const subLetter = /^\d+$/.test(subId)
-    ? String.fromCharCode(96 + Number(subId))
-    : subId;
-  return `Q${parentId} (${subLetter})`;
 }
 
 // ── Request Recorrection Dialog ──────────────────────────────────────────────
@@ -126,22 +118,121 @@ function RequestRecorrectionDialog({ open, onOpenChange, paperId, paperName, onR
   );
 }
 
-function FeedbackRow({ detail }) {
+function FeedbackCommentRow({ comment, indentClass }) {
   return (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-semibold text-gray-900">
-          {formatQuestionLabel(detail.question_id)}
-        </span>
-        <span className="text-sm font-semibold text-gray-900">
-          {detail.marks_awarded}
-          <span className="text-xs font-normal text-gray-400"> / {detail.max_marks}</span>
-        </span>
-      </div>
-      <div className="rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-600">
-        {detail.comment ? detail.comment : <span className="text-gray-400">No comment</span>}
-      </div>
-    </div>
+    <tr>
+      <td colSpan={4} className={cn('pb-2', indentClass)}>
+        <div className="rounded-md bg-gray-50 px-2.5 py-1.5 text-[11px] text-gray-600">
+          {comment ? comment : <span className="text-gray-400 italic">No comment</span>}
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+function FeedbackGradeTable({ gradeDetails }) {
+  return (
+    <table className="w-full text-xs">
+      <thead>
+        <tr className="text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wider border-b border-gray-100">
+          <th className="py-1.5 pr-1 font-semibold">Question</th>
+          <th className="py-1.5 px-1 font-semibold text-right w-12">Sub-sub</th>
+          <th className="py-1.5 px-1 font-semibold text-right w-12">Subpart</th>
+          <th className="py-1.5 pl-1 font-semibold text-right w-12">Question</th>
+        </tr>
+      </thead>
+      <tbody>
+        {groupQuestionRows(gradeDetails).map((q, qi) => {
+          const hasSubparts = q.subparts.length > 0;
+          const qTotal = sumQuestion(q);
+
+          return (
+            <Fragment key={q.key}>
+              {qi > 0 && (
+                <tr aria-hidden="true">
+                  <td colSpan={4} className="h-3" />
+                </tr>
+              )}
+
+              <tr className="border-b border-gray-50">
+                <td className="py-2 pr-1 font-bold text-gray-900 align-top whitespace-nowrap">{q.key}</td>
+                <td className="py-2 px-1 align-top whitespace-nowrap text-right tabular-nums" />
+                <td className="py-2 px-1 align-top whitespace-nowrap text-right tabular-nums" />
+                <td className="py-2 pl-1 align-top whitespace-nowrap text-right tabular-nums">
+                  {q.self ? (
+                    <>
+                      <span className="font-semibold text-green-700">{q.self.marks_awarded}</span>
+                      <span className="text-gray-400"> / {q.self.max_marks}</span>
+                    </>
+                  ) : hasSubparts ? (
+                    <>
+                      <span className="font-semibold text-green-700">{qTotal.awarded}</span>
+                      <span className="text-gray-400"> / {qTotal.max}</span>
+                    </>
+                  ) : null}
+                </td>
+              </tr>
+
+              {q.self && <FeedbackCommentRow comment={q.self.comment} />}
+
+              {q.subparts.map((sp) => {
+                const hasSubsubparts = sp.subsubparts.length > 0;
+                const spTotal = sumSubpart(sp);
+                const letter = sp.key.match(/\(([a-z]+)\)$/i)?.[1] ?? '';
+
+                return (
+                  <Fragment key={sp.key}>
+                    <tr className="border-b border-gray-50">
+                      <td className="py-1.5 pr-1 pl-6 font-medium text-gray-600 align-top whitespace-nowrap">
+                        ({letter})
+                      </td>
+                      <td className="py-1.5 px-1 align-top whitespace-nowrap text-right tabular-nums" />
+                      <td className="py-1.5 px-1 align-top whitespace-nowrap text-right tabular-nums">
+                        {sp.self ? (
+                          <>
+                            <span className="font-semibold text-green-700">{sp.self.marks_awarded}</span>
+                            <span className="text-gray-400"> / {sp.self.max_marks}</span>
+                          </>
+                        ) : hasSubsubparts ? (
+                          <>
+                            <span className="font-semibold text-green-700">{spTotal.awarded}</span>
+                            <span className="text-gray-400"> / {spTotal.max}</span>
+                          </>
+                        ) : null}
+                      </td>
+                      <td className="py-1.5 pl-1 align-top whitespace-nowrap text-right tabular-nums" />
+                    </tr>
+
+                    {sp.self && <FeedbackCommentRow comment={sp.self.comment} indentClass="pl-6" />}
+
+                    {sp.subsubparts.map((ssp) => {
+                      const roman = String(ssp.question_id).match(/\(([ivxlcdm]+)\)$/i)?.[1] ?? '';
+                      return (
+                        <Fragment key={ssp.question_id}>
+                          <tr className="border-b border-gray-50">
+                            <td className="py-1.5 pr-1 pl-12 text-gray-500 align-top whitespace-nowrap">
+                              ({roman})
+                            </td>
+                            <td className="py-1.5 px-1 align-top whitespace-nowrap text-right tabular-nums">
+                              <span className="font-semibold text-green-700">{ssp.marks_awarded}</span>
+                              <span className="text-gray-400"> / {ssp.max_marks}</span>
+                            </td>
+                            <td className="py-1.5 px-1 align-top whitespace-nowrap text-right tabular-nums" />
+                            <td className="py-1.5 pl-1 align-top whitespace-nowrap text-right tabular-nums" />
+                          </tr>
+
+                          <FeedbackCommentRow comment={ssp.comment} indentClass="pl-12" />
+                        </Fragment>
+                      );
+                    })}
+                  </Fragment>
+                );
+              })}
+            </Fragment>
+          );
+        })}
+      </tbody>
+    </table>
   );
 }
 
@@ -280,7 +371,9 @@ export default function StudentFeedbackPage() {
               ) : gradeDetails.length === 0 ? (
                 <p className="text-sm text-gray-400">No feedback available yet.</p>
               ) : (
-                gradeDetails.map((detail) => <FeedbackRow key={detail.question_id} detail={detail} />)
+                <div className="overflow-x-auto">
+                  <FeedbackGradeTable gradeDetails={gradeDetails} />
+                </div>
               )}
 
               {regradePending ? (

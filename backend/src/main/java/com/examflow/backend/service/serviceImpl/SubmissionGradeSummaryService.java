@@ -46,9 +46,20 @@ public class SubmissionGradeSummaryService {
                 questionResponse.setMarks_awarded(gradedQuestion.getMarksAwarded());
                 questionResponse.setComment(gradedQuestion.getComment());
 
-                boolean isSubQuestion = Boolean.TRUE.equals(gradedQuestion.getIsSubQuestion())
+                boolean isSubSubQuestion = Boolean.TRUE.equals(gradedQuestion.getIsSubSubQuestion())
+                        && gradedQuestion.getUploadPaperQuestionSubSubQuestion() != null;
+                boolean isSubQuestion = !isSubSubQuestion && Boolean.TRUE.equals(gradedQuestion.getIsSubQuestion())
                         && gradedQuestion.getUploadPaperQuestionSubQuestion() != null;
-                if (isSubQuestion) {
+
+                if (isSubSubQuestion) {
+                    // Must match QuestionPaperInstructorTutorResponse.id exactly
+                    // (getAllClasses), since the Mark Entry page joins awarded marks
+                    // back onto paper.questions by this id.
+                    questionResponse.setQuestion_id(gradedQuestion.getUploadPaperQuestion().getUploadPaperQuestionSeq().toString()
+                            + "-" + gradedQuestion.getUploadPaperQuestionSubQuestion().getUploadPaperQuestionSubQuestionSeq().toString()
+                            + "-" + gradedQuestion.getUploadPaperQuestionSubSubQuestion().getUploadPaperQuestionSubSubQuestionSeq().toString());
+                    questionResponse.setMax_marks(gradedQuestion.getUploadPaperQuestionSubSubQuestion().getMark());
+                } else if (isSubQuestion) {
                     questionResponse.setQuestion_id(gradedQuestion.getUploadPaperQuestion().getUploadPaperQuestionSeq().toString()
                             + "-" + gradedQuestion.getUploadPaperQuestionSubQuestion().getUploadPaperQuestionSubQuestionSeq().toString());
                     questionResponse.setMax_marks(gradedQuestion.getUploadPaperQuestionSubQuestion().getMark());

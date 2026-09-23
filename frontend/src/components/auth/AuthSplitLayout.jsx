@@ -19,18 +19,19 @@ export default function AuthSplitLayout({
   const institutions = leftConfig.institutions ?? STUDENT_INSTITUTIONS;
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
+    <div className="h-screen overflow-hidden flex flex-col md:flex-row">
       {/* Left panel — hidden on mobile */}
-      <div className="hidden md:flex md:w-[42%] lg:w-[45%] shrink-0">
+      <div className="hidden md:flex md:w-[42%] lg:w-[58%] shrink-0">
         <LeftPanel
           headline={leftConfig.headline}
           bullets={leftConfig.bullets}
           institutions={institutions}
+          backgroundImage={leftConfig.backgroundImage}
         />
       </div>
 
       {/* Right panel */}
-      <div className="flex-1 flex flex-col bg-white min-h-screen">
+      <div className="flex-1 flex flex-col bg-white h-full overflow-y-auto">
         <div className="flex-1 flex items-center justify-center px-6 py-12">
           <div className="w-full max-w-[440px]">
             {/* Tenant badge */}

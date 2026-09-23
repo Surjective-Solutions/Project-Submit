@@ -9,6 +9,7 @@ const LEFT_CONFIG = {
     'Built for tuition institutes and educational institutions',
     'Secure multi-institution platform with role-based access',
   ],
+  backgroundImage: '/images/student-login-bg.jpg/',
 };
 
 export const metadata = {

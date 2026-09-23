@@ -1,27 +1,36 @@
-import { BookOpen, Users, Check } from 'lucide-react';
+import { BookOpen, Check } from 'lucide-react';
 
 /**
  * @param {{ headline: string, bullets: string[], institutions: string[] }} props
  */
-export default function LeftPanel({ headline, bullets, institutions }) {
+export default function LeftPanel({ headline, bullets, institutions, backgroundImage }) {
   return (
     <div
-      className="w-full min-h-screen flex flex-col p-8 lg:p-14"
-      style={{ backgroundColor: '#053A34' }}
+      className="w-full h-full flex flex-col p-8 lg:p-14 bg-cover bg-no-repeat"
+      style={{
+        backgroundColor: '#053A34',
+        ...(backgroundImage ? { backgroundImage: `url(${backgroundImage})`, backgroundPosition: 'center bottom' } : {}),
+      }}
     >
       {/* Logo */}
-      <div className="flex items-center gap-2.5">
-        <div
-          className="w-9 h-9 rounded-xl flex items-center justify-center"
-          style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
-        >
-          <BookOpen className="w-5 h-5 text-white" />
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center"
+            style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
+          >
+            <BookOpen className="w-5 h-5 text-white" />
+          </div>
+          <span className="text-white font-semibold text-lg tracking-tight">SubmitX</span>
         </div>
-        <span className="text-white font-semibold text-lg tracking-tight">SubmitX</span>
+
+        <div className="w-px h-6" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }} />
+
+        <img src="/images/syzygy-logo.png" alt="SyZyGy" className="h-7.5 w-auto" />
       </div>
 
       {/* Middle */}
-      <div className="flex-1 flex flex-col justify-center mt-16 lg:mt-0">
+      <div className="flex-1 flex flex-col justify-center pb-32 mt-16 lg:mt-0">
         <p
           className="text-xs font-semibold uppercase tracking-widest mb-5"
           style={{ color: 'rgba(255,255,255,0.4)' }}
@@ -51,30 +60,6 @@ export default function LeftPanel({ headline, bullets, institutions }) {
             </li>
           ))}
         </ul>
-      </div>
-
-      {/* Footer */}
-      <div className="mt-12">
-        <div className="flex items-center gap-2 mb-4">
-          <Users className="w-4 h-4" style={{ color: 'rgba(255,255,255,0.35)' }} />
-          <span className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
-            Trusted by leading institutions
-          </span>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {institutions.map((name) => (
-            <span
-              key={name}
-              className="rounded-full px-3 py-1 text-xs"
-              style={{
-                border: '1px solid rgba(255,255,255,0.18)',
-                color: 'rgba(255,255,255,0.55)',
-              }}
-            >
-              {name}
-            </span>
-          ))}
-        </div>
       </div>
     </div>
   );

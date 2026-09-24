@@ -26,18 +26,11 @@ const NAV_ITEMS = [
     activeBg: 'rgba(184,255,143,0.13)',
   },
   {
-    label: 'Academic Staff',
-    icon: GraduationCap,
-    href: '/admin/academic-staff',
+    label: 'Staff',
+    icon: Users,
+    href: '/admin/staff',
     accent: '#34A0C5',
     activeBg: 'rgba(52,160,197,0.15)',
-  },
-  {
-    label: 'Cashiers',
-    icon: Wallet,
-    href: '/admin/cashiers',
-    accent: '#E9D848',
-    activeBg: 'rgba(233,216,72,0.13)',
   },
   {
     label: 'Payments',
@@ -52,13 +45,6 @@ const NAV_ITEMS = [
     href: '/admin/students',
     accent: '#34A0C5',
     activeBg: 'rgba(52,160,197,0.15)',
-  },
-  {
-    label: 'Instructors',
-    icon: UserCheck,
-    href: '/admin/instructors',
-    accent: '#E9D848',
-    activeBg: 'rgba(233,216,72,0.13)',
   },
   {
     label: 'Bank Details',

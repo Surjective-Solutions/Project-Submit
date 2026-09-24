@@ -348,11 +348,11 @@ export default function StudentsPage() {
             </button>
             <button
               type="button"
-              onClick={() => fillExample("email", "rizwan.m@gmail.com")}
+              onClick={() => fillExample("email", "name@example.com")}
               className="text-xs font-medium px-3 py-1.5 rounded-full transition-colors hover:opacity-80"
               style={{ backgroundColor: "rgba(156,238,249,0.3)", color: HARBOUR }}
             >
-              rizwan.m@gmail.com
+              name@example.com
             </button>
           </div>
         </div>

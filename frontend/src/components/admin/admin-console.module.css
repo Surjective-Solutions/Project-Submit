@@ -21,19 +21,12 @@
   --syz-muted: #5B6178;
   --syz-focus: 0 0 0 3px rgba(8, 165, 225, 0.28);
 
-  display: grid;
-  grid-template-columns: 240px minmax(0, 1fr);
-  min-height: 100vh;
+  /* Layout (grid/flex/min-height) is now owned by SidebarProvider's own
+     wrapper — this class only supplies tokens, colors and the base font. */
   background: var(--syz-page);
   color: var(--syz-ink);
-  font-family: 'Plus Jakarta Sans', 'Noto Sans Sinhala', 'Noto Sans Tamil', ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-sans), 'Noto Sans Sinhala', 'Noto Sans Tamil', ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
-}
-
-.main {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
 }
 
 .content {
@@ -62,18 +55,6 @@
 }
 
 /* ── Sidebar ─────────────────────────────────────────────────────────── */
-.sidebar {
-  position: sticky;
-  top: 0;
-  align-self: start;
-  height: 100vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  padding: 22px 14px 16px;
-  background: linear-gradient(180deg, #1C2554 0%, #172C4E 55%, #0F3447 100%);
-}
-
 .navScroll {
   flex: 1;
   min-height: 0;
@@ -97,23 +78,17 @@
 }
 
 .logoTile {
-  width: 40px;
-  height: 40px;
+  width: 55px;
+  height: 55px;
   flex-shrink: 0;
   display: grid;
-  grid-template-columns: repeat(2, 7px);
-  grid-template-rows: repeat(2, 7px);
-  gap: 4px;
-  place-content: center;
-  background: #F4F6FB;
-  border-radius: 12px;
-  box-shadow: 0 4px 14px rgba(8, 165, 225, 0.18);
+  place-items: center;
 }
 
-.logoDot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
+.logoImg {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 .brandText {

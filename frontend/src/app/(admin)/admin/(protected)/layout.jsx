@@ -1,24 +1,21 @@
 'use client';
 
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import AdminSidebar from '@/components/admin/AdminSidebar';
-import AdminTopNav from '@/components/admin/AdminTopNav';
+import { AdminConsoleProvider } from '@/components/admin/AdminConsoleContext';
 import AuthGuard from '@/components/AuthGuard';
+import styles from '@/components/admin/admin-console.module.css';
 
 export default function AdminLayout({ children }) {
   return (
     <AuthGuard loginPath="/admin/login">
-      <div data-admin-shell>
-        <SidebarProvider defaultOpen={true}>
+      <AdminConsoleProvider>
+        <div data-admin-shell className={styles.shell}>
           <AdminSidebar />
-          <SidebarInset>
-            <AdminTopNav />
-            <main className="flex-1 p-6 bg-[#F8FAFC] min-h-[calc(100vh-3.5rem)]">
-              {children}
-            </main>
-          </SidebarInset>
-        </SidebarProvider>
-      </div>
+          <div className={styles.main}>
+            <main className={styles.content}>{children}</main>
+          </div>
+        </div>
+      </AdminConsoleProvider>
     </AuthGuard>
   );
 }

@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Icon from '@/components/admin/Icon';
 import { TODAYS_CLASSES } from './dashboard-data';
-import { formatNumber, percent, plural } from './format';
 import styles from './dashboard.module.css';
 
 const FILTERS = [
@@ -32,30 +31,6 @@ const EMPTY_MESSAGE = {
   ended: 'No classes have ended yet today.',
 };
 
-function Attendance({ attended, enrolled }) {
-  if (attended == null) {
-    return (
-      <div className={styles.attText}>
-        — / {formatNumber(enrolled)} enrolled
-      </div>
-    );
-  }
-  const pct = percent(attended, enrolled);
-  return (
-    <div
-      role="img"
-      aria-label={`${formatNumber(attended)} of ${formatNumber(enrolled)} enrolled attending, ${pct}%`}
-    >
-      <div className={styles.attText} aria-hidden="true">
-        <strong>{formatNumber(attended)}</strong> / {formatNumber(enrolled)} · {pct}%
-      </div>
-      <div className={styles.attBar} aria-hidden="true">
-        <div className={styles.attFill} style={{ width: `${pct}%` }} />
-      </div>
-    </div>
-  );
-}
-
 export default function TodayClassesCard() {
   const [filter, setFilter] = useState('all');
 
@@ -72,11 +47,8 @@ export default function TodayClassesCard() {
       <div className={styles.cardHeader}>
         <div>
           <h2 id="today-classes-title" className={styles.cardTitle}>
-            Today&apos;s classes &amp; attendance
+            Today&apos;s classes 
           </h2>
-          <p className={styles.cardSub}>
-            {plural(counts.all, 'class', 'classes')} · {counts.live} live now
-          </p>
         </div>
         <div className={styles.segmented} role="group" aria-label="Filter classes by status">
           {FILTERS.map(({ key, label }) => (
@@ -102,14 +74,13 @@ export default function TodayClassesCard() {
               <th scope="col">Class</th>
               <th scope="col">Medium</th>
               <th scope="col">Status</th>
-              <th scope="col">Attendance</th>
               <th scope="col">Recording</th>
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 && (
               <tr>
-                <td colSpan={6} className={styles.emptyRow}>
+                <td colSpan={5} className={styles.emptyRow}>
                   {EMPTY_MESSAGE[filter]}
                 </td>
               </tr>
@@ -135,9 +106,6 @@ export default function TodayClassesCard() {
                       {c.status === 'live' && <span className={styles.chipDot} aria-hidden="true" />}
                       {status.label}
                     </span>
-                  </td>
-                  <td className={styles.attendance}>
-                    <Attendance attended={c.attended} enrolled={c.enrolled} />
                   </td>
                   <td>
                     <span className={`${styles.recording} ${styles[`rec_${c.recording}`]}`}>

@@ -1,10 +1,9 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Icon from '@/components/admin/Icon';
 import { useAdminConsole } from '@/components/admin/AdminConsoleContext';
-import { formatLKR, formatNumber, formatWait } from './format';
+import {formatNumber, formatWait } from './format';
 import styles from './dashboard.module.css';
 
 const VISIBLE_SLIPS = 5;
@@ -12,34 +11,14 @@ const VISIBLE_SLIPS = 5;
 const LONG_WAIT_MINUTES = 120;
 
 export default function SlipQueueCard() {
-  const { slips, approveSlip, rejectSlip } = useAdminConsole();
+  const { slips } = useAdminConsole();
   const visible = slips.slice(0, VISIBLE_SLIPS);
-  const listRef = useRef(null);
-  const headingRef = useRef(null);
-  const pendingFocus = useRef(null);
-
-  function resolve(slip, action, index) {
-    pendingFocus.current = { action, index };
-    if (action === 'approve') approveSlip(slip.id);
-    else rejectSlip(slip.id);
-  }
-
-  // The clicked row disappears, so hand keyboard focus to the same button on
-  // the row that slides into its place (or the heading once the queue is empty).
-  useEffect(() => {
-    const target = pendingFocus.current;
-    if (!target) return;
-    pendingFocus.current = null;
-    const buttons = listRef.current?.querySelectorAll(`[data-action="${target.action}"]`) ?? [];
-    const next = buttons[Math.min(target.index, buttons.length - 1)];
-    (next ?? headingRef.current)?.focus();
-  }, [slips]);
 
   return (
     <section id="slip-queue" className={`${styles.card} ${styles.slipsCard}`} aria-labelledby="slip-queue-title">
       <div className={styles.cardHeader}>
         <div>
-          <h2 id="slip-queue-title" ref={headingRef} tabIndex={-1} className={styles.cardTitle}>
+          <h2 id="slip-queue-title" className={styles.cardTitle}>
             Bank slip verification
           </h2>
           <p className={styles.cardSub}>Oldest first · approving activates the student&apos;s pass</p>
@@ -55,9 +34,8 @@ export default function SlipQueueCard() {
         </div>
       ) : (
         <>
-          <ul className={styles.slipList} ref={listRef}>
+          <ul className={styles.slipList}>
             {visible.map((slip, index) => {
-              const summary = `${slip.name}, ${formatLKR(slip.amount)}`;
               return (
                 <li key={slip.id} className={styles.slipRow}>
                   <span className={styles.slipThumb} aria-hidden="true">
@@ -78,28 +56,6 @@ export default function SlipQueueCard() {
                   <div className={styles.slipAmount}>
                     <small>LKR</small>
                     {formatNumber(slip.amount)}
-                  </div>
-                  <div className={styles.slipActions}>
-                    <button
-                      type="button"
-                      className={`${styles.slipButton} ${styles.approve}`}
-                      aria-label={`Approve slip: ${summary}`}
-                      title="Approve"
-                      data-action="approve"
-                      onClick={() => resolve(slip, 'approve', index)}
-                    >
-                      <Icon name="check" size={20} weight={600} />
-                    </button>
-                    <button
-                      type="button"
-                      className={`${styles.slipButton} ${styles.reject}`}
-                      aria-label={`Reject slip: ${summary}`}
-                      title="Reject"
-                      data-action="reject"
-                      onClick={() => resolve(slip, 'reject', index)}
-                    >
-                      <Icon name="close" size={20} weight={600} />
-                    </button>
                   </div>
                 </li>
               );

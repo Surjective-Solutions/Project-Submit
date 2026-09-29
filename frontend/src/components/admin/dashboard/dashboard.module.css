@@ -1,6 +1,3 @@
-/* Admin dashboard. Colour tokens (--syz-*) come from the shell in
-   admin-console.module.css. */
-
 .page {
   display: flex;
   flex-direction: column;
@@ -78,7 +75,7 @@
   padding: 20px;
   border: 1px solid var(--syz-border);
   border-radius: 16px;
-  background: var(--syz-card);
+  background: rgba(5, 58, 52, 0.15);
 }
 
 .cardHeader {
@@ -401,10 +398,6 @@
 
 .table tbody tr:hover {
   background: #FAFBFD;
-}
-
-.rowLive {
-  background: #FFFBFB;
 }
 
 .timeStart {

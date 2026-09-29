@@ -4,12 +4,11 @@ import { useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import Icon from '@/components/admin/Icon';
 import { useAdminConsole } from '@/components/admin/AdminConsoleContext';
-import { COLLECTION_SUMMARY, STUDENT_SUMMARY, TODAYS_CLASSES } from './dashboard-data';
-import { formatNumber, formatWait, percent, plural } from './format';
+import {STUDENT_SUMMARY, TODAYS_CLASSES } from './dashboard-data';
+import { formatNumber, formatWait, plural } from './format';
 import TodayClassesCard from './TodayClassesCard';
 import SlipQueueCard from './SlipQueueCard';
-import FeeCollectionsCard from './FeeCollectionsCard';
-import { StudentsByStreamCard, StudyPacksCard } from './SummaryCards';
+import { StudentsByStreamCard } from './SummaryCards';
 import styles from './dashboard.module.css';
 
 // The academy runs on Sri Lanka time regardless of where the admin signs in.
@@ -38,7 +37,7 @@ function useColomboToday() {
   );
   const hour = Number(parts.hour);
   return {
-    greeting: hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening',
+    greeting: hour < 5 ? 'Good night' : hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening',
     dateLabel: `${parts.weekday}, ${parts.day} ${parts.month} ${parts.year}`,
   };
 }
@@ -50,14 +49,14 @@ const QUICK_ACTIONS = [
 ];
 
 const liveClasses = TODAYS_CLASSES.filter((c) => c.status === 'live');
-const liveAttending = liveClasses.reduce((sum, c) => sum + c.attended, 0);
-const liveEnrolled = liveClasses.reduce((sum, c) => sum + c.enrolled, 0);
 
 export default function AdminDashboard() {
   const { profile, slips, pendingSlipCount } = useAdminConsole();
   const { greeting, dateLabel } = useColomboToday();
   const oldestWait = slips.length ? Math.max(...slips.map((s) => s.waitingMinutes)) : 0;
-  const collectedPct = percent(COLLECTION_SUMMARY.collected, COLLECTION_SUMMARY.target);
+  const totalClassesToday = TODAYS_CLASSES.length;
+  const completedClasses = TODAYS_CLASSES.filter((c) => c.status === 'ended').length;
+  
 
   return (
     <div className={styles.page}>
@@ -67,13 +66,7 @@ export default function AdminDashboard() {
           <h1 className={styles.title}>
             {greeting}, {profile.firstName}
           </h1>
-          <p className={styles.subline}>
-            {dateLabel && <>{dateLabel} · </>}
-            <strong>{plural(liveClasses.length, 'class', 'classes')} live</strong> ·{' '}
-            <strong>
-              {pendingSlipCount ? plural(pendingSlipCount, 'bank slip') : 'No bank slips'} waiting
-            </strong>
-          </p>
+          <p className={styles.subline}>{dateLabel}</p>
         </div>
         <div className={styles.quickActions}>
           {QUICK_ACTIONS.map(({ label, icon, href }) => (
@@ -106,27 +99,13 @@ export default function AdminDashboard() {
         <div className={styles.kpi}>
           <div className={styles.kpiHead}>
             <span className={styles.kpiTile}>
-              <Icon name="account_balance_wallet" size={19} />
+              <Icon name="calendar_today" size={19} />
             </span>
-            {COLLECTION_SUMMARY.month} collection
+            Classes today
           </div>
-          <p className={styles.kpiValue}>
-            <span className={styles.kpiUnit}>LKR</span>
-            {COLLECTION_SUMMARY.collected.toFixed(1)}M
-          </p>
-          <div
-            className={styles.progress}
-            role="progressbar"
-            aria-label={`${COLLECTION_SUMMARY.month} collection against target`}
-            aria-valuenow={collectedPct}
-            aria-valuemin={0}
-            aria-valuemax={100}
-          >
-            <div className={styles.progressFill} style={{ width: `${collectedPct}%` }} />
-          </div>
+          <p className={styles.kpiValue}>{completedClasses}/{totalClassesToday}</p>
           <div className={styles.kpiFoot}>
-            <strong style={{ color: 'var(--syz-ink)' }}>{collectedPct}%</strong> of{' '}
-            {COLLECTION_SUMMARY.target.toFixed(1)}M
+            completed · {plural(liveClasses.length, 'class', 'classes')} live now
           </div>
         </div>
 
@@ -152,20 +131,6 @@ export default function AdminDashboard() {
             )}
           </div>
         </div>
-
-        <div className={styles.kpi}>
-          <div className={styles.kpiHead}>
-            <span className={styles.kpiTile}>
-              <Icon name="sensors" size={19} />
-            </span>
-            Attending live now
-            <span className={styles.liveDot} aria-hidden="true" />
-          </div>
-          <p className={styles.kpiValue}>{formatNumber(liveAttending)}</p>
-          <div className={styles.kpiFoot}>
-            in {plural(liveClasses.length, 'class', 'classes')} · {percent(liveAttending, liveEnrolled)}% of enrolled
-          </div>
-        </div>
       </section>
 
       {/* ── Classes + slip queue ── */}
@@ -174,11 +139,9 @@ export default function AdminDashboard() {
         <SlipQueueCard />
       </div>
 
-      {/* ── Collections, streams, study packs ── */}
+      {/* ── Students by stream ── */}
       <div className={styles.row}>
-        <FeeCollectionsCard />
         <StudentsByStreamCard />
-        <StudyPacksCard />
       </div>
     </div>
   );

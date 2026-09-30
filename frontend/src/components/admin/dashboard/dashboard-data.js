@@ -13,11 +13,6 @@ export const ACADEMIC_YEARS = [2027, 2026, 2025];
 
 export const NOTIFICATION_COUNT = 5;
 
-export const STUDENT_SUMMARY = {
-  active: 4812,
-  newThisMonth: 126,
-};
-
 export const COLLECTION_SUMMARY = {
   month: 'September',
   collected: 18.4, // LKR millions

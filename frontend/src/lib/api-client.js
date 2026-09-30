@@ -599,6 +599,15 @@ export async function getPaymentRecords() {
   });
 }
 
+// ── Admin dashboard ──────────────────────────────────────────────────────────────
+
+// Returns { active, newThisMonth }
+export async function getAdminStudentSummary() {
+  return protectedRequest("/api/admin-dashboard/student-summary", {
+    method: "GET",
+  });
+}
+
 // ── Instructors ──────────────────────────────────────────────────────────────────
 
 //get single instrctor by ID for profile display

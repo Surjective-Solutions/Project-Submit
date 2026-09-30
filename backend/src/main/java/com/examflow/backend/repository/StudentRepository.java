@@ -2,6 +2,7 @@ package com.examflow.backend.repository;
 
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,5 +21,9 @@ public interface StudentRepository extends JpaRepository<Student, Integer> {
     List<Student> findByStatus(Integer status);
 
     Student findByStudentSeq(Integer studentSeq);
+
+    long countByStatus(Integer status);
+
+    long countByStatusAndRegisterDateTimeGreaterThanEqual(Integer status, LocalDateTime registerDateTime);
 
 }

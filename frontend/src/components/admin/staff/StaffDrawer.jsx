@@ -10,6 +10,7 @@ const INFO_FIELDS = {
     { label: 'Subject', value: (p) => p.subject },
     { label: 'Exam level', value: (p) => p.examLevel },
     { label: 'Medium', value: (p) => p.medium },
+    { label: 'Enrolled students', value: (p) => p.enrolledStudents }, 
     { label: 'Username', value: (p) => p.username },
     { label: 'Joined', value: (p) => p.joined },
   ],

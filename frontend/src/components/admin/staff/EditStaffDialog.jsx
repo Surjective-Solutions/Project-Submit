@@ -40,7 +40,7 @@ const EDIT_FIELDS = {
       key: 'medium',
       label: 'Medium',
       type: 'select',
-      options: ['Sinhala', 'English'],
+      options: ['Sinhala', 'English', 'Sinhala & English'],
     },
     {
       key: 'subject',

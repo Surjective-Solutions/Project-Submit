@@ -32,6 +32,7 @@ function mapTutorToPerson(tutor) {
     medium: tutor.medium,
     status: tutor.status === 2 ? 'Active' : 'Inactive',
     joined: formatJoinedDate(tutor.createdDateTime),
+    enrolledStudents: tutor.enrolledStudentsCount ?? 0,
   };
 }
 

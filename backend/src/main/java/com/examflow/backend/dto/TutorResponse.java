@@ -26,6 +26,8 @@ public class TutorResponse {
 
     private String tutorCode;
 
+    private String medium;
+
     private String examLevel;
 
     private String profile_image_url;
@@ -144,6 +146,14 @@ public class TutorResponse {
 
     public void setExamLevel(String examLevel) {
         this.examLevel = examLevel;
+    }
+
+    public String getMedium() {
+        return medium;
+    }
+
+    public void setMedium(String medium) {
+        this.medium = medium;
     }
 
     public java.time.LocalDateTime getCreatedDateTime() {

@@ -70,6 +70,7 @@ public class TutorControllerManagerImpl implements TutorControllermanager {
                 || isBlank(tutorRequest.getContactNumber())
                 || isBlank(tutorRequest.getSubject())
                 || isBlank(tutorRequest.getExamLevel())
+                || isBlank(tutorRequest.getMedium())
                 || isBlank(tutorRequest.getPassword())
                 || isBlank(tutorRequest.getConfirmPassword())) {
             response.setIsSuccess(false);
@@ -99,6 +100,7 @@ public class TutorControllerManagerImpl implements TutorControllermanager {
             newTutor.setContactNumber(tutorRequest.getContactNumber());
             newTutor.setSubject(tutorRequest.getSubject());
             newTutor.setExamLevel(tutorRequest.getExamLevel());
+            newTutor.setMedium(tutorRequest.getMedium());
             newTutor.setConfirmPassword(passwordEncoder.encode(tutorRequest.getConfirmPassword()));
             newTutor.setFinalPassword(passwordEncoder.encode(tutorRequest.getConfirmPassword()));
             newTutor.setPassword(passwordEncoder.encode(tutorRequest.getPassword()));
@@ -139,6 +141,7 @@ public class TutorControllerManagerImpl implements TutorControllermanager {
             tutorResponse.setStatus(tutor.getStatus());
             tutorResponse.setTutorCode(tutor.getTutorCode());
             tutorResponse.setExamLevel(tutor.getExamLevel());
+            tutorResponse.setMedium(tutor.getMedium());
             tutorResponse.setCreatedDateTime(tutor.getCreatedDateTime());
 
             tutorResponses.add(tutorResponse);
@@ -227,6 +230,10 @@ public class TutorControllerManagerImpl implements TutorControllermanager {
         if (!isBlank(tutorRequest.getExamLevel())) {
             tutor.setExamLevel(tutorRequest.getExamLevel());
         }
+        if (!isBlank(tutorRequest.getMedium())) {
+                    tutor.setMedium(tutorRequest.getMedium());
+                }
+
         tutor.setLastModifiedBy(username);
         tutor.setLastModifiedDateTime(LocalDateTime.now());
 
@@ -452,6 +459,7 @@ public class TutorControllerManagerImpl implements TutorControllermanager {
         tutorResponse.setStatus(tutor.getStatus());
         tutorResponse.setTutorCode(tutor.getTutorCode());
         tutorResponse.setExamLevel(tutor.getExamLevel());
+        tutorResponse.setMedium(tutor.getMedium());
         tutorResponse.setCreatedDateTime(tutor.getCreatedDateTime());
 
         return tutorResponse;

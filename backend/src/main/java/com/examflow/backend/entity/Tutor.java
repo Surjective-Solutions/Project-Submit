@@ -25,6 +25,8 @@ public class Tutor {
 
     private String examLevel;
 
+    private String medium;
+
     private String tutorCode;
 
     private String userName;
@@ -189,6 +191,15 @@ public class Tutor {
 
     public void setTutorCode(String tutorCode) {
         this.tutorCode = tutorCode;
+    }
+
+    @Column(name = "medium")
+    public String getMedium() {
+        return medium;
+    }
+
+    public void setMedium(String medium) {
+        this.medium = medium;
     }
 
 }

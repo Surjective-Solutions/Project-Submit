@@ -23,6 +23,10 @@ public class Tutor {
 
     private String Subject;
 
+    private String examLevel;
+
+    private String tutorCode;
+
     private String userName;
 
     private String password;
@@ -86,6 +90,15 @@ public class Tutor {
 
     public void setSubject(String subject) {
         Subject = subject;
+    }
+
+    @Column(name = "exam_level")
+    public String getExamLevel() {
+        return examLevel;
+    }
+
+    public void setExamLevel(String examLevel) {
+        this.examLevel = examLevel;
     }
 
     @Column(name = "userName")
@@ -167,6 +180,15 @@ public class Tutor {
 
     public void setStatus(Integer status) {
         this.status = status;
+    }
+
+    @Column(name = "tutor_code", insertable = false, updatable = false)
+    public String getTutorCode() {
+        return tutorCode;
+    }
+
+    public void setTutorCode(String tutorCode) {
+        this.tutorCode = tutorCode;
     }
 
 }

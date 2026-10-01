@@ -28,4 +28,12 @@ public interface TutorControllermanager {
 
     List<TutorResponse> getAllTutorsForStudent();
 
+    GeneralResponse adminUpdateTutor(Integer tutorSeq, TutorRequest tutorRequest);
+
+    GeneralResponse adminResetPassword(Integer tutorSeq, TutorRequest tutorRequest);
+
+    GeneralResponse activateTutor(Integer tutorSeq);
+
+    GeneralResponse deactivateTutor(Integer tutorSeq);
+
 }

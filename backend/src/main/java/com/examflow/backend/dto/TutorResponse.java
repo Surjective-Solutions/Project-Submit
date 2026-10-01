@@ -22,7 +22,15 @@ public class TutorResponse {
 
     private String bio;
 
+    private Integer status;
+
+    private String tutorCode;
+
+    private String examLevel;
+
     private String profile_image_url;
+
+    private java.time.LocalDateTime createdDateTime;
 
     private List<ClassResponse> classes;
 
@@ -114,4 +122,35 @@ public class TutorResponse {
         this.classes = classes;
     }
 
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
+
+    public String getTutorCode() {
+        return tutorCode;
+    }
+
+    public void setTutorCode(String tutorCode) {
+        this.tutorCode = tutorCode;
+    }
+
+    public String getExamLevel() {
+        return examLevel;
+    }
+
+    public void setExamLevel(String examLevel) {
+        this.examLevel = examLevel;
+    }
+
+    public java.time.LocalDateTime getCreatedDateTime() {
+        return createdDateTime;
+    }
+
+    public void setCreatedDateTime(java.time.LocalDateTime createdDateTime) {
+        this.createdDateTime = createdDateTime;
+    }
 }

@@ -73,6 +73,26 @@ public class TutorController {
         return result;
     }
 
+    @PutMapping("/admin/update/{id}")
+    public GeneralResponse adminUpdateTutor(@PathVariable Integer id, @RequestBody TutorRequest tutorRequest) {
+        return tutorControllermanager.adminUpdateTutor(id, tutorRequest);
+    }
+
+    @PutMapping("/admin/reset-password/{id}")
+    public GeneralResponse adminResetPassword(@PathVariable Integer id, @RequestBody TutorRequest tutorRequest) {
+        return tutorControllermanager.adminResetPassword(id, tutorRequest);
+    }
+
+    @PutMapping("/admin/activate/{id}")
+    public GeneralResponse activateTutor(@PathVariable Integer id) {
+        return tutorControllermanager.activateTutor(id);
+    }
+
+    @PutMapping("/admin/deactivate/{id}")
+    public GeneralResponse deactivateTutor(@PathVariable Integer id) {
+        return tutorControllermanager.deactivateTutor(id);
+    }
+
     @DeleteMapping("delete/{id}")
     public String deleteTutor(@PathVariable String id) {
         int tutorSeq = Integer.parseInt(id);

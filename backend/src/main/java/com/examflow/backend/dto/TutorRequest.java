@@ -7,6 +7,8 @@ public class TutorRequest {
 
     private String subject;
 
+    private String examLevel;
+
     private String username;
 
     private String contactNumber;
@@ -43,6 +45,14 @@ public class TutorRequest {
 
     public void setSubject(String subject) {
         this.subject = subject;
+    }
+
+    public String getExamLevel() {
+        return examLevel;
+    }
+
+    public void setExamLevel(String examLevel) {
+        this.examLevel = examLevel;
     }
 
     public String getUsername() {

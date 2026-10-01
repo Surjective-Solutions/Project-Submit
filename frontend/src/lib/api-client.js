@@ -483,17 +483,14 @@ export async function getTutorById(id) {
   return protectedRequest(`/api/tutor/get-tutor/${id}`, { method: "GET" });
 }
 
-// TODO: replace with actual microservice endpoint
 export async function getTutors() {
   return protectedRequest("/api/tutor/get-all-tutors", { method: "GET" });
 }
 
-// TODO: replace with actual microservice endpoint
 export async function createTutor(data) {
   return protectedRequest("/api/tutor/create", { body: data });
 }
 
-// TODO: replace with actual microservice endpoint
 export async function updateTutor(id, data) {
   return protectedRequestPath(`/api/tutor/update/${id}`, {
     method: "PUT",
@@ -501,11 +498,40 @@ export async function updateTutor(id, data) {
   });
 }
 
-// TODO: replace with actual microservice endpoint
 export async function deleteTutor(id) {
   return protectedRequestPath(`/api/tutor/delete/${id}`, {
     method: "DELETE",
     body: { id },
+  });
+}
+
+// admin edits a tutor's profile fields directly, no current-password confirmation required
+export async function adminUpdateTutor(id, data) {
+  return protectedRequestPath(`/api/tutor/admin/update/${id}`, {
+    method: "PUT",
+    body: data,
+  });
+}
+
+// admin resets a tutor's password directly, no current password required
+export async function adminResetTutorPassword(id, data) {
+  return protectedRequestPath(`/api/tutor/admin/reset-password/${id}`, {
+    method: "PUT",
+    body: data,
+  });
+}
+
+// admin activates a tutor account
+export async function activateTutor(id) {
+  return protectedRequestPath(`/api/tutor/admin/activate/${id}`, {
+    method: "PUT",
+  });
+}
+
+// admin deactivates a tutor account
+export async function deactivateTutor(id) {
+  return protectedRequestPath(`/api/tutor/admin/deactivate/${id}`, {
+    method: "PUT",
   });
 }
 

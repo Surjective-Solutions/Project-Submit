@@ -8,9 +8,8 @@ import styles from './staff.module.css';
 const INFO_FIELDS = {
   teachers: [
     { label: 'Subject', value: (p) => p.subject },
-    { label: 'Stream', value: (p) => p.stream },
-    { label: 'Medium', value: (p) => p.medium },
-    { label: 'Enrolled students', value: (p) => p.enrolledStudents.toLocaleString() },
+    { label: 'Exam level', value: (p) => p.examLevel },
+    { label: 'Username', value: (p) => p.username },
     { label: 'Joined', value: (p) => p.joined },
   ],
   instructors: [

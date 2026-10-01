@@ -9,6 +9,7 @@ const SUBJECTS_BY_LEVEL = {
     'Combined Mathematics',
     'Physics',
     'Chemistry',
+    'Biology',
     'Science for Technology',
     'Business Studies',
     'Accounting',

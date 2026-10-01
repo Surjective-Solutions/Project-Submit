@@ -10,6 +10,7 @@ const SUBJECTS_BY_LEVEL = {
     'Combined Mathematics',
     'Physics',
     'Chemistry',
+    'Biology',
     'Science for Technology',
     'Business Studies',
     'Accounting',
@@ -30,7 +31,7 @@ const FIELDS = {
   teachers: [
     { key: 'fullName', label: 'Full name', placeholder: 'e.g. Mr. Ruwan Perera' },
     { key: 'username', label: 'Username', placeholder: 'e.g. ruwan.perera' },
-    { key: 'contactNumber', label: 'Contact number', placeholder: '+94 71 234 5678' },
+    { key: 'contactNumber', label: 'Contact number', placeholder: 'e.g. 0712345678' },
     { key: 'email', label: 'Email', type: 'email', placeholder: 'name@syzygy.lk' },
     {
       key: 'examLevel',
@@ -54,7 +55,7 @@ const FIELDS = {
   ],
   instructors: [
     { key: 'fullName', label: 'Full name', placeholder: 'e.g. Mr. Ruwan Perera' },
-    { key: 'contactNumber', label: 'Contact number', placeholder: '+94 71 234 5678' },
+    { key: 'contactNumber', label: 'Contact number', placeholder: 'e.g. 0712345678' },
     { key: 'email', label: 'Email', type: 'email', placeholder: 'name@syzygy.lk' },
     { key: 'nic', label: 'NIC', placeholder: 'e.g. 200012345678V' },
     { key: 'address', label: 'Address', placeholder: 'e.g. 12, Galle Road, Colombo' },
@@ -63,9 +64,45 @@ const FIELDS = {
     { key: 'fullName', label: 'Full name', placeholder: 'e.g. Ms. Nadeesha Silva' },
     { key: 'username', label: 'Username', placeholder: 'e.g. nadeesha.silva' },
     { key: 'email', label: 'Email', type: 'email', placeholder: 'name@syzygy.lk' },
-    { key: 'contactNumber', label: 'Contact number', placeholder: '+94 71 234 5678' },
+    { key: 'contactNumber', label: 'Contact number', placeholder: 'e.g. 0712345678' },
   ],
 };
+
+// --- Validation rules -------------------------------------------------
+
+const USERNAME_PATTERN = /^[a-zA-Z0-9_]+$/;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// At least 8 chars, 1 uppercase, 1 lowercase, 1 digit, 1 special character.
+const STRONG_PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+
+// Per-field validation beyond "is it empty". Returns an error message string,
+// or '' when the value is fine.
+function validateFieldValue(key, value) {
+  switch (key) {
+    case 'username':
+      return USERNAME_PATTERN.test(value)
+        ? ''
+        : 'Username can only contain letters, numbers, and underscores.';
+    case 'contactNumber':
+      return /^\d{10}$/.test(value)
+        ? ''
+        : 'Contact number must be exactly 10 digits.';
+    case 'email':
+      return EMAIL_PATTERN.test(value)
+        ? ''
+        : 'Please enter a valid email address.';
+    default:
+      return '';
+  }
+}
+
+function validatePassword(value) {
+  return STRONG_PASSWORD_PATTERN.test(value)
+    ? ''
+    : 'Password must be at least 8 characters and include an uppercase letter, a lowercase letter, a number, and a special character.';
+}
+
+// ------------------------------------------------------------------------
 
 function emptyFormData(categoryKey) {
   const base = {};
@@ -101,8 +138,12 @@ export default function AddStaffDialog({ open, defaultCategory, onClose, onSubmi
   }
 
   function handleChange(key, value) {
+    // Contact number: strip anything non-numeric as the person types, and
+    // hard-cap at 10 digits so a longer number can never be entered.
+    const nextValue = key === 'contactNumber' ? value.replace(/\D/g, '').slice(0, 10) : value;
+
     setFormData((prev) => {
-      const next = { ...prev, [key]: value };
+      const next = { ...prev, [key]: nextValue };
       FIELDS[categoryKey].forEach((f) => {
         if (f.dependsOn === key) {
           const validOptions = f.optionsFor(next);
@@ -119,18 +160,34 @@ export default function AddStaffDialog({ open, defaultCategory, onClose, onSubmi
     e.preventDefault();
 
     const nextErrors = {};
+
     FIELDS[categoryKey].forEach((f) => {
-      if (formData[f.key].trim().length === 0) nextErrors[f.key] = true;
+      const value = formData[f.key].trim();
+      if (value.length === 0) {
+        nextErrors[f.key] = 'This field is required.';
+        return;
+      }
+      const message = validateFieldValue(f.key, value);
+      if (message) nextErrors[f.key] = message;
     });
-    if (formData.password.trim().length === 0) nextErrors.password = true;
-    if (formData.confirmPassword.trim().length === 0) nextErrors.confirmPassword = true;
+
+    if (formData.password.trim().length === 0) {
+      nextErrors.password = 'This field is required.';
+    } else {
+      const passwordMessage = validatePassword(formData.password);
+      if (passwordMessage) nextErrors.password = passwordMessage;
+    }
+
+    if (formData.confirmPassword.trim().length === 0) {
+      nextErrors.confirmPassword = 'This field is required.';
+    }
+
     if (
       formData.password.length > 0 &&
       formData.confirmPassword.length > 0 &&
       formData.password !== formData.confirmPassword
     ) {
-      nextErrors.confirmPassword = true;
-      nextErrors.passwordMismatch = true;
+      nextErrors.confirmPassword = 'Passwords do not match.';
     }
 
     setErrors(nextErrors);
@@ -201,7 +258,11 @@ export default function AddStaffDialog({ open, defaultCategory, onClose, onSubmi
                     value={formData[f.key]}
                     onChange={(e) => handleChange(f.key, e.target.value)}
                     placeholder={f.placeholder}
+                    {...(f.key === 'contactNumber' ? { inputMode: 'numeric', maxLength: 10 } : {})}
                   />
+                )}
+                {errors[f.key] && (
+                  <span style={{ fontSize: 12.5, color: '#C81E24' }}>{errors[f.key]}</span>
                 )}
               </label>
             );
@@ -238,6 +299,9 @@ export default function AddStaffDialog({ open, defaultCategory, onClose, onSubmi
                 <Icon name={showPassword ? 'visibility_off' : 'visibility'} size={18} />
               </button>
             </div>
+            {errors.password && (
+              <span style={{ fontSize: 12.5, color: '#C81E24' }}>{errors.password}</span>
+            )}
           </label>
 
           <label className={styles.fieldLabel}>
@@ -271,10 +335,10 @@ export default function AddStaffDialog({ open, defaultCategory, onClose, onSubmi
                 <Icon name={showConfirmPassword ? 'visibility_off' : 'visibility'} size={18} />
               </button>
             </div>
+            {errors.confirmPassword && (
+              <span style={{ fontSize: 12.5, color: '#C81E24' }}>{errors.confirmPassword}</span>
+            )}
           </label>
-          {errors.passwordMismatch && (
-            <p style={{ fontSize: 12.5, color: '#C81E24', margin: '-10px 0 0' }}>Passwords do not match.</p>
-          )}
 
           <p className={styles.dialogNote}>
             They&rsquo;ll be able to sign in immediately using the password you set here.

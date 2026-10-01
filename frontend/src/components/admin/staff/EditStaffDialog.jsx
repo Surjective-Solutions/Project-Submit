@@ -4,17 +4,50 @@ import { useEffect, useState } from 'react';
 import Icon from '@/components/admin/Icon';
 import styles from './staff.module.css';
 
+const SUBJECTS_BY_LEVEL = {
+  'G.C.E. Advanced Level': [
+    'Combined Mathematics',
+    'Physics',
+    'Chemistry',
+    'Science for Technology',
+    'Business Studies',
+    'Accounting',
+    'Economics',
+  ],
+  'G.C.E. Ordinary Level': [
+    'Science',
+    'Mathematics',
+    'Sinhala',
+    'English',
+    'History',
+    'Business and Accounting Studies',
+    'Information and Communication Technology',
+  ],
+};
+
 const EDIT_FIELDS = {
   teachers: [
     { key: 'fullName', label: 'Full name', placeholder: 'e.g. Mr. Ruwan Perera' },
     { key: 'mobile', label: 'Contact number', placeholder: '+94 71 234 5678' },
     { key: 'email', label: 'Email', type: 'email', placeholder: 'name@syzygy.lk' },
-    { key: 'subject', label: 'Subject', placeholder: 'e.g. Physics' },
     {
       key: 'examLevel',
       label: 'Exam level',
       type: 'select',
       options: ['G.C.E. Ordinary Level', 'G.C.E. Advanced Level'],
+    },
+    {
+      key: 'medium',
+      label: 'Medium',
+      type: 'select',
+      options: ['Sinhala', 'English'],
+    },
+    {
+      key: 'subject',
+      label: 'Subject',
+      type: 'select',
+      optionsFor: (formData) => SUBJECTS_BY_LEVEL[formData.examLevel] || [],
+      dependsOn: 'examLevel',
     },
   ],
   instructors: [
@@ -49,7 +82,18 @@ export default function EditStaffDialog({ open, category, person, onClose, onSub
   if (!open || !person || !category) return null;
 
   function handleChange(key, value) {
-    setFormData((prev) => ({ ...prev, [key]: value }));
+    setFormData((prev) => {
+      const next = { ...prev, [key]: value };
+      EDIT_FIELDS[category.key].forEach((f) => {
+        if (f.dependsOn === key) {
+          const validOptions = f.optionsFor(next);
+          if (!validOptions.includes(next[f.key])) {
+            next[f.key] = '';
+          }
+        }
+      });
+      return next;
+    });
   }
 
   function handleSubmit(e) {
@@ -81,35 +125,42 @@ export default function EditStaffDialog({ open, category, person, onClose, onSub
         </div>
 
         <form onSubmit={handleSubmit} className={styles.dialogForm}>
-          {EDIT_FIELDS[category.key].map((f) => (
-            <label className={styles.fieldLabel} key={f.key}>
-              {f.label}
-              {f.type === 'select' ? (
-                <select
-                  className={errors[f.key] ? `${styles.fieldInput} ${styles.fieldInvalid}` : styles.fieldInput}
-                  value={formData[f.key] ?? ''}
-                  onChange={(e) => handleChange(f.key, e.target.value)}
-                >
-                  <option value="" disabled>
-                    Select an option
-                  </option>
-                  {f.options.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
+          {EDIT_FIELDS[category.key].map((f) => {
+            const isSelect = f.type === 'select';
+            const options = f.optionsFor ? f.optionsFor(formData) : f.options;
+            const isDependentDisabled = f.dependsOn && !formData[f.dependsOn];
+
+            return (
+              <label className={styles.fieldLabel} key={f.key}>
+                {f.label}
+                {isSelect ? (
+                  <select
+                    className={errors[f.key] ? `${styles.fieldInput} ${styles.fieldInvalid}` : styles.fieldInput}
+                    value={formData[f.key] ?? ''}
+                    onChange={(e) => handleChange(f.key, e.target.value)}
+                    disabled={isDependentDisabled}
+                  >
+                    <option value="" disabled>
+                      {isDependentDisabled ? 'Select exam level first' : 'Select an option'}
                     </option>
-                  ))}
-                </select>
-              ) : (
-                <input
-                  type={f.type || 'text'}
-                  className={errors[f.key] ? `${styles.fieldInput} ${styles.fieldInvalid}` : styles.fieldInput}
-                  value={formData[f.key] ?? ''}
-                  onChange={(e) => handleChange(f.key, e.target.value)}
-                  placeholder={f.placeholder}
-                />
-              )}
-            </label>
-          ))}
+                    {options.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type={f.type || 'text'}
+                    className={errors[f.key] ? `${styles.fieldInput} ${styles.fieldInvalid}` : styles.fieldInput}
+                    value={formData[f.key] ?? ''}
+                    onChange={(e) => handleChange(f.key, e.target.value)}
+                    placeholder={f.placeholder}
+                  />
+                )}
+              </label>
+            );
+          })}
 
           <p className={styles.dialogNote}>Changes are saved immediately — no password required.</p>
 

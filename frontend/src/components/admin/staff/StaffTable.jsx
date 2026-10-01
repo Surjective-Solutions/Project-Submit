@@ -21,6 +21,7 @@ function getColumns(categoryKey) {
         { key: 'name', header: 'Teacher' },
         { key: 'subject', header: 'Subject', cell: (p) => <Cell main={p.subject} /> },
         { key: 'examLevel', header: 'Exam level', cell: (p) => <Cell main={p.examLevel} /> },
+        { key: 'medium', header: 'Medium', cell: (p) => <Cell main={p.medium} /> },
         { key: 'status', header: 'Status', cell: (p) => <StatusChip status={p.status} /> },
       ];
     case 'instructors':

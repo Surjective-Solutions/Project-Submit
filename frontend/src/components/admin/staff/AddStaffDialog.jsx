@@ -5,6 +5,27 @@ import Icon from '@/components/admin/Icon';
 import { CATEGORIES } from '@/mocks/staff';
 import styles from './staff.module.css';
 
+const SUBJECTS_BY_LEVEL = {
+  'G.C.E. Advanced Level': [
+    'Combined Mathematics',
+    'Physics',
+    'Chemistry',
+    'Science for Technology',
+    'Business Studies',
+    'Accounting',
+    'Economics',
+  ],
+  'G.C.E. Ordinary Level': [
+    'Science',
+    'Mathematics',
+    'Sinhala',
+    'English',
+    'History',
+    'Business and Accounting Studies',
+    'Information and Communication Technology',
+  ],
+};
+
 const FIELDS = {
   teachers: [
     { key: 'fullName', label: 'Full name', placeholder: 'e.g. Mr. Ruwan Perera' },
@@ -17,7 +38,19 @@ const FIELDS = {
       type: 'select',
       options: ['G.C.E. Ordinary Level', 'G.C.E. Advanced Level'],
     },
-    { key: 'subject', label: 'Subject', placeholder: 'e.g. Physics' },
+    {
+      key: 'medium',
+      label: 'Medium',
+      type: 'select',
+      options: ['Sinhala', 'English'],
+    },
+    {
+      key: 'subject',
+      label: 'Subject',
+      type: 'select',
+      optionsFor: (formData) => SUBJECTS_BY_LEVEL[formData.examLevel] || [],
+      dependsOn: 'examLevel',
+    },
   ],
   instructors: [
     { key: 'fullName', label: 'Full name', placeholder: 'e.g. Mr. Ruwan Perera' },
@@ -68,7 +101,18 @@ export default function AddStaffDialog({ open, defaultCategory, onClose, onSubmi
   }
 
   function handleChange(key, value) {
-    setFormData((prev) => ({ ...prev, [key]: value }));
+    setFormData((prev) => {
+      const next = { ...prev, [key]: value };
+      FIELDS[categoryKey].forEach((f) => {
+        if (f.dependsOn === key) {
+          const validOptions = f.optionsFor(next);
+          if (!validOptions.includes(next[f.key])) {
+            next[f.key] = '';
+          }
+        }
+      });
+      return next;
+    });
   }
 
   function handleSubmit(e) {
@@ -126,35 +170,42 @@ export default function AddStaffDialog({ open, defaultCategory, onClose, onSubmi
         </div>
 
         <form onSubmit={handleSubmit} className={styles.dialogForm}>
-          {FIELDS[categoryKey].map((f) => (
-            <label className={styles.fieldLabel} key={f.key}>
-              {f.label}
-              {f.type === 'select' ? (
-                <select
-                  className={errors[f.key] ? `${styles.fieldInput} ${styles.fieldInvalid}` : styles.fieldInput}
-                  value={formData[f.key]}
-                  onChange={(e) => handleChange(f.key, e.target.value)}
-                >
-                  <option value="" disabled>
-                    Select an option
-                  </option>
-                  {f.options.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
+          {FIELDS[categoryKey].map((f) => {
+            const isSelect = f.type === 'select';
+            const options = f.optionsFor ? f.optionsFor(formData) : f.options;
+            const isDependentDisabled = f.dependsOn && !formData[f.dependsOn];
+
+            return (
+              <label className={styles.fieldLabel} key={f.key}>
+                {f.label}
+                {isSelect ? (
+                  <select
+                    className={errors[f.key] ? `${styles.fieldInput} ${styles.fieldInvalid}` : styles.fieldInput}
+                    value={formData[f.key]}
+                    onChange={(e) => handleChange(f.key, e.target.value)}
+                    disabled={isDependentDisabled}
+                  >
+                    <option value="" disabled>
+                      {isDependentDisabled ? 'Select exam level first' : 'Select an option'}
                     </option>
-                  ))}
-                </select>
-              ) : (
-                <input
-                  type={f.type || 'text'}
-                  className={errors[f.key] ? `${styles.fieldInput} ${styles.fieldInvalid}` : styles.fieldInput}
-                  value={formData[f.key]}
-                  onChange={(e) => handleChange(f.key, e.target.value)}
-                  placeholder={f.placeholder}
-                />
-              )}
-            </label>
-          ))}
+                    {options.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type={f.type || 'text'}
+                    className={errors[f.key] ? `${styles.fieldInput} ${styles.fieldInvalid}` : styles.fieldInput}
+                    value={formData[f.key]}
+                    onChange={(e) => handleChange(f.key, e.target.value)}
+                    placeholder={f.placeholder}
+                  />
+                )}
+              </label>
+            );
+          })}
 
           <label className={styles.fieldLabel}>
             Password

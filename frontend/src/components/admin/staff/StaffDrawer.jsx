@@ -9,6 +9,7 @@ const INFO_FIELDS = {
   teachers: [
     { label: 'Subject', value: (p) => p.subject },
     { label: 'Exam level', value: (p) => p.examLevel },
+    { label: 'Medium', value: (p) => p.medium },
     { label: 'Username', value: (p) => p.username },
     { label: 'Joined', value: (p) => p.joined },
   ],

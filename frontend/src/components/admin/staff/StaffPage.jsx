@@ -29,6 +29,7 @@ function mapTutorToPerson(tutor) {
     username: tutor.username,
     subject: tutor.subject,
     examLevel: tutor.examLevel,
+    medium: tutor.medium,
     status: tutor.status === 2 ? 'Active' : 'Inactive',
     joined: formatJoinedDate(tutor.createdDateTime),
   };
@@ -146,6 +147,7 @@ export default function StaffPage() {
         email: formValues.email,
         subject: formValues.subject,
         examLevel: formValues.examLevel,
+        medium: formValues.medium,
       });
 
       if (result?.isSuccess === false) {
@@ -190,6 +192,7 @@ export default function StaffPage() {
         contactNumber: formValues.contactNumber,
         subject: formValues.subject,
         examLevel: formValues.examLevel,
+        medium: formValues.medium,
         password: formValues.password,
         confirmPassword: formValues.confirmPassword,
       });

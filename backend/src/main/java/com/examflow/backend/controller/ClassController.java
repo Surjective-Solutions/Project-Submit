@@ -25,6 +25,7 @@ import com.examflow.backend.dto.GeneralResponse;
 import com.examflow.backend.dto.PaperUploadRequest;
 import com.examflow.backend.dto.RegradeRequestResponse;
 import com.examflow.backend.dto.SubmitGradeResponse;
+import com.examflow.backend.dto.EnrolledStudentsCountResponse;
 import com.examflow.backend.entity.UplaodPaper;
 import com.examflow.backend.service.ClassControllerManager;
 
@@ -111,5 +112,10 @@ public class ClassController {
     @GetMapping("/regrade-requests/{regradeRequestSeq}")
     public RegradeRequestResponse getRegradeRequestById(@PathVariable Integer regradeRequestSeq) {
         return classControllerManager.getRegradeRequestById(regradeRequestSeq);
+    }
+
+    @GetMapping("/enrolled-students-count")
+    public EnrolledStudentsCountResponse getEnrolledStudentsCount() {
+        return classControllerManager.getEnrolledStudentsCount();
     }
 }

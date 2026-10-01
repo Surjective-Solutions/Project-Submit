@@ -24,6 +24,7 @@ import com.examflow.backend.repository.ClassesRepository;
 import com.examflow.backend.repository.InstructorRepository;
 import com.examflow.backend.repository.TutorInstructorRepository;
 import com.examflow.backend.repository.TutorRepository;
+import com.examflow.backend.repository.StudentClassesRepository;
 import com.examflow.backend.service.TutorControllermanager;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,6 +37,7 @@ public class TutorControllerManagerImpl implements TutorControllermanager {
     private final InstructorRepository instructorRepository;
     private final TutorInstructorRepository tutorInstructorRepository;
     private final ClassesRepository classesRepository;
+    private final StudentClassesRepository studentClassesRepository;
     private HttpServletRequest request;
 
     @Autowired
@@ -44,13 +46,15 @@ public class TutorControllerManagerImpl implements TutorControllermanager {
             HttpServletRequest request,
             ClassesRepository classesRepository,
             InstructorRepository instructorRepository,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            StudentClassesRepository studentClassesRepository) {
         this.tutorRepository = tutorRepository;
         this.passwordEncoder = passwordEncoder;
         this.request = request;
         this.classesRepository = classesRepository;
         this.instructorRepository = instructorRepository;
         this.tutorInstructorRepository = tutorInstructorRepository;
+        this.studentClassesRepository = studentClassesRepository;
     }
 
     private boolean isBlank(String value) {
@@ -143,6 +147,8 @@ public class TutorControllerManagerImpl implements TutorControllermanager {
             tutorResponse.setExamLevel(tutor.getExamLevel());
             tutorResponse.setMedium(tutor.getMedium());
             tutorResponse.setCreatedDateTime(tutor.getCreatedDateTime());
+            Integer enrolledCount = studentClassesRepository.countDistinctEnrolledStudentsByTutor(tutor, 2, 2);
+            tutorResponse.setEnrolledStudentsCount(enrolledCount != null ? enrolledCount : 0);
 
             tutorResponses.add(tutorResponse);
         }
@@ -461,6 +467,8 @@ public class TutorControllerManagerImpl implements TutorControllermanager {
         tutorResponse.setExamLevel(tutor.getExamLevel());
         tutorResponse.setMedium(tutor.getMedium());
         tutorResponse.setCreatedDateTime(tutor.getCreatedDateTime());
+        Integer enrolledCount = studentClassesRepository.countDistinctEnrolledStudentsByTutor(tutor, 2, 2);
+        tutorResponse.setEnrolledStudentsCount(enrolledCount != null ? enrolledCount : 0);
 
         return tutorResponse;
     }

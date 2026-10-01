@@ -32,7 +32,11 @@ public class TutorResponse {
 
     private String profile_image_url;
 
+    private Integer enrolledStudentsCount;
+
     private java.time.LocalDateTime createdDateTime;
+
+
 
     private List<ClassResponse> classes;
 
@@ -162,5 +166,13 @@ public class TutorResponse {
 
     public void setCreatedDateTime(java.time.LocalDateTime createdDateTime) {
         this.createdDateTime = createdDateTime;
+    }
+
+    public Integer getEnrolledStudentsCount() {
+        return enrolledStudentsCount;
+    }
+
+    public void setEnrolledStudentsCount(Integer enrolledStudentsCount) {
+        this.enrolledStudentsCount = enrolledStudentsCount;
     }
 }

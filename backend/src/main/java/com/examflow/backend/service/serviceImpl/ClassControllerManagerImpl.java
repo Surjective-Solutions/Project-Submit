@@ -27,6 +27,7 @@ import com.examflow.backend.dto.SubmissionPaperInstructorTutorResponse;
 import com.examflow.backend.dto.SubmitGradeQuestionsResponse;
 import com.examflow.backend.dto.SubmitGradeResponse;
 import com.examflow.backend.dto.UploadPaperResponse;
+import com.examflow.backend.dto.EnrolledStudentsCountResponse;
 import com.examflow.backend.entity.Cashier;
 import com.examflow.backend.entity.ClassPaymentRecord;
 import com.examflow.backend.entity.Classes;
@@ -49,9 +50,9 @@ import com.examflow.backend.repository.UploadPaperQuestionRepository;
 import com.examflow.backend.repository.UploadPaperQuestionSubQuestionRepository;
 import com.examflow.backend.repository.UploadPaperQuestionSubSubQuestionRepository;
 import com.examflow.backend.repository.UploadPaperRepository;
+import com.examflow.backend.repository.StudentClassesRepository;
 import com.examflow.backend.service.ClassControllerManager;
 import com.examflow.backend.service.FileStorageService;
-
 
 import jakarta.servlet.http.HttpServletRequest;
 import tools.jackson.core.type.TypeReference;
@@ -76,6 +77,7 @@ public class ClassControllerManagerImpl implements ClassControllerManager {
     private final GradeEditService gradeEditService;
     private final RegradeRequestQueryService regradeRequestQueryService;
     private final SubmissionGradeSummaryService submissionGradeSummaryService;
+    private final StudentClassesRepository studentClassesRepository;
 
     @Autowired
     public ClassControllerManagerImpl(HttpServletRequest request,
@@ -93,7 +95,8 @@ public class ClassControllerManagerImpl implements ClassControllerManager {
             GradeEditService gradeEditService,
             RegradeRequestQueryService regradeRequestQueryService,
             SubmissionGradeSummaryService submissionGradeSummaryService,
-            MonthlyPaymentService monthlyPaymentService) {
+            MonthlyPaymentService monthlyPaymentService,
+            StudentClassesRepository studentClassesRepository) {
         this.request = request;
         this.paperSubmissionRepository = paperSubmissionRepository;
         this.gradeSubmissionRepository = gradeSubmissionRepository;
@@ -110,6 +113,7 @@ public class ClassControllerManagerImpl implements ClassControllerManager {
         this.uploadPaperQuestionSubSubQuestionRepository = uploadPaperQuestionSubSubQuestionRepository;
         this.uploadPaperRepository = uploadPaperRepository;
         this.monthlyPaymentService = monthlyPaymentService;
+        this.studentClassesRepository = studentClassesRepository;
     }
 
     // The file_url / pdf_url fields returned to the frontend need to be absolute,
@@ -360,6 +364,22 @@ public class ClassControllerManagerImpl implements ClassControllerManager {
         }
 
         return classResponseList;
+    }
+
+    @Override
+    public EnrolledStudentsCountResponse getEnrolledStudentsCount() {
+        Integer tutorSeq = (Integer) request.getAttribute("userId");
+        Tutor tutor = tutorRepository.findByTutorSeq(tutorSeq);
+
+        EnrolledStudentsCountResponse response = new EnrolledStudentsCountResponse();
+        if (tutor == null) {
+            response.setEnrolled_students_count(0);
+            return response;
+        }
+
+        Integer count = studentClassesRepository.countDistinctEnrolledStudentsByTutor(tutor, 2, 2);
+        response.setEnrolled_students_count(count != null ? count : 0);
+        return response;
     }
 
     @Override

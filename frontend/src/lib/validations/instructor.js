@@ -48,7 +48,6 @@ export const instructorProfileSchema = z
     email: z.string().email('Invalid email address').optional().or(z.literal('')),
     contact_number: sriLankaPhone,
     subject_area: z.string().min(1, 'Subject area is required'),
-    employee_id: z.string().min(1, 'Employee ID is required'),
     new_password: z
       .string()
       .refine(

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Icon from '@/components/admin/Icon';
 import { CATEGORIES, STAFF_DATA } from '@/mocks/staff';
-import { getTutors, createTutor, activateTutor, deactivateTutor, adminResetTutorPassword, adminUpdateTutor} from '@/lib/api-client';
+import { getTutors, createTutor, activateTutor, deactivateTutor, adminResetTutorPassword, adminUpdateTutor, createInstructor, getInstructors, adminUpdateInstructor, activateInstructor, deactivateInstructor } from '@/lib/api-client';
 import CategoryCard from './CategoryCard';
 import StaffTable from './StaffTable';
 import StaffDrawer from './StaffDrawer';
@@ -11,6 +11,7 @@ import AddStaffDialog from './AddStaffDialog';
 import Toast from './Toast';
 import styles from './staff.module.css';
 import EditStaffDialog from './EditStaffDialog';
+import ResetPasswordDialog from './ResetPasswordDialog';
 
 function formatJoinedDate(isoString) {
   if (!isoString) return '—';
@@ -36,6 +37,20 @@ function mapTutorToPerson(tutor) {
   };
 }
 
+function mapInstructorToPerson(instructor) {
+  return {
+    id: instructor.id,
+    idCode: instructor.employee_id,
+    fullName: instructor.name || `${instructor.first_name ?? ''} ${instructor.last_name ?? ''}`.trim(),
+    mobile: instructor.contact_number,
+    email: instructor.email,
+    address: instructor.address,
+    nic: instructor.nic_number,
+    status: instructor.statusSeq === 2 ? 'Active' : 'Inactive',
+    joined: formatJoinedDate(instructor.createdDateTime),
+  };
+}
+
 export default function StaffPage() {
   const [data, setData] = useState(STAFF_DATA);
   const [categoryKey, setCategoryKey] = useState('teachers');
@@ -46,6 +61,7 @@ export default function StaffPage() {
   const [toastMessage, setToastMessage] = useState('');
   const [teachersLoading, setTeachersLoading] = useState(true);
   const [teachersError, setTeachersError] = useState('');
+  const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
 
   const category = CATEGORIES.find((c) => c.key === categoryKey);
   const people = data[categoryKey];
@@ -74,6 +90,26 @@ export default function StaffPage() {
     loadTeachers();
   }, [loadTeachers]);
 
+  const [instructorsLoading, setInstructorsLoading] = useState(true);
+  const [instructorsError, setInstructorsError] = useState('');
+
+  const loadInstructors = useCallback(async () => {
+    setInstructorsLoading(true);
+    setInstructorsError('');
+    try {
+      const instructors = await getInstructors();
+      setData((prev) => ({ ...prev, instructors: instructors.map(mapInstructorToPerson) }));
+    } catch (err) {
+      setInstructorsError(err?.message || 'Could not load instructors.');
+    } finally {
+      setInstructorsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadInstructors();
+  }, [loadInstructors]);
+
   function switchCategory(key) {
     setCategoryKey(key);
     setSearch('');
@@ -94,40 +130,48 @@ export default function StaffPage() {
 
   const selectedPerson = people.find((p) => p.id === selectedId) ?? null;
 
-  async function handleResetPassword(person) {
+  function handleResetPassword(person) {
     if (categoryKey !== 'teachers') {
       showToast("Password reset isn't wired up for this role yet.");
       return;
     }
-    // TODO: replace with a proper modal — this is a stopgap so the action is testable now.
-    const newPassword = window.prompt(`Enter a new password for ${person.fullName}:`);
-    if (!newPassword) return;
-    const confirmNewPassword = window.prompt('Re-enter the new password to confirm:');
-    if (newPassword !== confirmNewPassword) {
-      showToast('Passwords did not match — nothing was changed.');
-      return;
+    setResetPasswordOpen(true);
+  }
+
+  async function handleSubmitResetPassword(personId, payload) {
+    const result = await adminResetTutorPassword(personId, payload);
+    if (result?.isSuccess !== false) {
+      showToast(result?.message || `Password reset for ${selectedPerson?.fullName ?? 'the account'}.`);
     }
-    try {
-      const result = await adminResetTutorPassword(person.id, { newPassword, confirmNewPassword });
-      showToast(result?.message || `Password reset for ${person.fullName}.`);
-    } catch (err) {
-      showToast(err?.message || 'Could not reset password.');
-    }
+    return result;
   }
 
   async function handleToggleActive(person) {
-    if (categoryKey !== 'teachers') {
-      showToast("Activation isn't wired up for this role yet.");
+    if (categoryKey === 'teachers') {
+      try {
+        const result =
+          person.status === 'Inactive' ? await activateTutor(person.id) : await deactivateTutor(person.id);
+        showToast(result?.message || `${person.fullName}'s account updated.`);
+        await loadTeachers();
+      } catch (err) {
+        showToast(err?.message || 'Could not update account status.');
+      }
       return;
     }
-    try {
-      const result =
-        person.status === 'Inactive' ? await activateTutor(person.id) : await deactivateTutor(person.id);
-      showToast(result?.message || `${person.fullName}'s account updated.`);
-      await loadTeachers();
-    } catch (err) {
-      showToast(err?.message || 'Could not update account status.');
+
+    if (categoryKey === 'instructors') {
+      try {
+        const result =
+          person.status === 'Inactive' ? await activateInstructor(person.id) : await deactivateInstructor(person.id);
+        showToast(result?.message || `${person.fullName}'s account updated.`);
+        await loadInstructors();
+      } catch (err) {
+        showToast(err?.message || 'Could not update account status.');
+      }
+      return;
     }
+
+    showToast("Activation isn't wired up for this role yet.");
   }
 
   function handleEditProfile() {
@@ -135,81 +179,133 @@ export default function StaffPage() {
   }
 
   async function handleSaveProfile(personId, formValues) {
-    if (categoryKey !== 'teachers') {
-      showToast("Editing isn't wired up for this role yet.");
-      setEditOpen(false);
+    if (categoryKey === 'teachers') {
+      try {
+        const result = await adminUpdateTutor(personId, {
+          displayName: formValues.fullName,
+          contactNumber: formValues.mobile,
+          email: formValues.email,
+          subject: formValues.subject,
+          examLevel: formValues.examLevel,
+          medium: formValues.medium,
+        });
+
+        if (result?.isSuccess === false) {
+          showToast(result.message || 'Could not save changes.');
+          return;
+        }
+
+        setEditOpen(false);
+        showToast(result?.message || 'Profile updated.');
+        await loadTeachers();
+      } catch (err) {
+        showToast(err?.message || 'Could not save changes.');
+      }
       return;
     }
 
-    try {
-      const result = await adminUpdateTutor(personId, {
-        displayName: formValues.fullName,
-        contactNumber: formValues.contactNumber,
-        email: formValues.email,
-        subject: formValues.subject,
-        examLevel: formValues.examLevel,
-        medium: formValues.medium,
-      });
+    if (categoryKey === 'instructors') {
+      try {
+        const result = await adminUpdateInstructor(personId, {
+          fullName: formValues.fullName,
+          email: formValues.email,
+          contactNumber: formValues.mobile,
+          nicNumber: formValues.nic,
+          address: formValues.address,
+        });
 
-      if (result?.isSuccess === false) {
-        showToast(result.message || 'Could not save changes.');
-        return;
+        if (result?.isSuccess === false) {
+          showToast(result.message || 'Could not save changes.');
+          return;
+        }
+
+        setEditOpen(false);
+        showToast(result?.message || 'Profile updated.');
+        await loadInstructors();
+      } catch (err) {
+        showToast(err?.message || 'Could not save changes.');
       }
-
-      setEditOpen(false);
-      showToast(result?.message || 'Profile updated.');
-      await loadTeachers();
-    } catch (err) {
-      showToast(err?.message || 'Could not save changes.');
+      return;
     }
+
+    showToast("Editing isn't wired up for this role yet.");
+    setEditOpen(false);
   }
 
   async function handleAddStaff(targetCategoryKey, formValues) {
-    if (targetCategoryKey !== 'teachers') {
-      const targetCategory = CATEGORIES.find((c) => c.key === targetCategoryKey);
-      const existingCount = data[targetCategoryKey].length;
-      const idCode = `${targetCategory.idPrefix}-01${String(existingCount + 1).padStart(2, '0')}`;
-      const newPerson = {
-        id: `${targetCategoryKey}-${Date.now()}`,
-        idCode,
-        fullName: formValues.fullName,
-        mobile: formValues.contactNumber,
-        email: formValues.email,
-        status: 'Inactive',
-        joined: '—',
-      };
-      setData((prev) => ({ ...prev, [targetCategoryKey]: [newPerson, ...prev[targetCategoryKey]] }));
-      setAddOpen(false);
-      switchCategory(targetCategoryKey);
-      showToast(`${formValues.fullName} added (mock — backend not wired up yet for this role).`);
+    if (targetCategoryKey === 'teachers') {
+      try {
+        const result = await createTutor({
+          displayName: formValues.fullName,
+          username: formValues.username,
+          email: formValues.email,
+          contactNumber: formValues.contactNumber,
+          subject: formValues.subject,
+          examLevel: formValues.examLevel,
+          medium: formValues.medium,
+          password: formValues.password,
+          confirmPassword: formValues.confirmPassword,
+        });
+
+        if (result?.isSuccess === false) {
+          showToast(result.message || 'Could not create account.');
+          return;
+        }
+
+        setAddOpen(false);
+        switchCategory('teachers');
+        showToast(`${formValues.fullName} added — inactive until you activate them.`);
+        await loadTeachers();
+      } catch (err) {
+        showToast(err?.message || 'Could not create account.');
+      }
       return;
     }
 
-    try {
-      const result = await createTutor({
-        displayName: formValues.fullName,
-        username: formValues.username,
-        email: formValues.email,
-        contactNumber: formValues.contactNumber,
-        subject: formValues.subject,
-        examLevel: formValues.examLevel,
-        medium: formValues.medium,
-        password: formValues.password,
-        confirmPassword: formValues.confirmPassword,
-      });
+    if (targetCategoryKey === 'instructors') {
+      try {
+        const result = await createInstructor({
+          fullName: formValues.fullName,
+          email: formValues.email,
+          contactNumber: formValues.contactNumber,
+          nicNumber: formValues.nic,
+          address: formValues.address,
+          password: formValues.password,
+          confirmPassword: formValues.confirmPassword,
+        });
 
-      if (result?.isSuccess === false) {
-        showToast(result.message || 'Could not create account.');
-        return;
+        if (result?.isSuccess === false) {
+          showToast(result.message || 'Could not create account.');
+          return;
+        }
+
+        setAddOpen(false);
+        switchCategory('instructors');
+        showToast(`${formValues.fullName} added — inactive until you activate them.`);
+        await loadInstructors();
+      } catch (err) {
+        showToast(err?.message || 'Could not create account.');
       }
-
-      setAddOpen(false);
-      switchCategory('teachers');
-      showToast(`${formValues.fullName} added — inactive until you activate them.`);
-      await loadTeachers();
-    } catch (err) {
-      showToast(err?.message || 'Could not create account.');
+      return;
     }
+
+    // remaining categories (e.g. cashiers) are still mocked
+    const targetCategory = CATEGORIES.find((c) => c.key === targetCategoryKey);
+    const existingCount = data[targetCategoryKey].length;
+    const idCode = `${targetCategory.idPrefix}-01${String(existingCount + 1).padStart(2, '0')}`;
+    const newPerson = {
+      id: `${targetCategoryKey}-${Date.now()}`,
+      idCode,
+      fullName: formValues.fullName,
+      mobile: formValues.contactNumber,
+      email: formValues.email,
+      status: 'Inactive',
+      joined: '—',
+    };
+    setData((prev) => ({ ...prev, [targetCategoryKey]: [newPerson, ...prev[targetCategoryKey]] }));
+    setAddOpen(false);
+    switchCategory(targetCategoryKey);
+    showToast(`${formValues.fullName} added (mock — backend not wired up yet for this role).`);
   }
 
   return (
@@ -261,6 +357,10 @@ export default function StaffPage() {
           <div className={styles.emptyState}>Loading teachers…</div>
         ) : categoryKey === 'teachers' && teachersError ? (
           <div className={styles.emptyState}>{teachersError}</div>
+        ) : categoryKey === 'instructors' && instructorsLoading ? (
+          <div className={styles.emptyState}>Loading instructors…</div>
+        ) : categoryKey === 'instructors' && instructorsError ? (
+          <div className={styles.emptyState}>{instructorsError}</div>
         ) : (
           <StaffTable
             category={category}
@@ -294,6 +394,13 @@ export default function StaffPage() {
         person={selectedPerson}
         onClose={() => setEditOpen(false)}
         onSubmit={handleSaveProfile}
+      />
+
+      <ResetPasswordDialog
+        open={resetPasswordOpen}
+        person={selectedPerson}
+        onClose={() => setResetPasswordOpen(false)}
+        onSubmit={handleSubmitResetPassword}
       />
 
       <Toast message={toastMessage} />

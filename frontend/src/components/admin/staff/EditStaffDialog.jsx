@@ -26,6 +26,19 @@ const SUBJECTS_BY_LEVEL = {
   ],
 };
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const CONTACT_NUMBER_PATTERN = /^\d{10}$/;
+
+function validateFieldValue(key, value) {
+  if (key === 'email' && !EMAIL_PATTERN.test(value)) {
+    return 'Please enter a valid email address.';
+  }
+  if (key === 'mobile' && !CONTACT_NUMBER_PATTERN.test(value)) {
+    return 'Contact number must be exactly 10 digits.';
+  }
+  return null;
+}
+
 const EDIT_FIELDS = {
   teachers: [
     { key: 'fullName', label: 'Full name', placeholder: 'e.g. Mr. Ruwan Perera' },
@@ -55,7 +68,7 @@ const EDIT_FIELDS = {
     { key: 'fullName', label: 'Full name', placeholder: 'e.g. Mr. Ruwan Perera' },
     { key: 'mobile', label: 'Contact number', placeholder: '+94 71 234 5678' },
     { key: 'email', label: 'Email', type: 'email', placeholder: 'name@syzygy.lk' },
-    { key: 'nic', label: 'NIC', placeholder: 'e.g. 200012345678V' },
+    { key: 'nic', label: 'NIC', placeholder: 'e.g. 200012345678V', readOnly: true,},
     { key: 'address', label: 'Address', placeholder: 'e.g. 12, Galle Road, Colombo' },
   ],
   cashiers: [
@@ -83,8 +96,13 @@ export default function EditStaffDialog({ open, category, person, onClose, onSub
   if (!open || !person || !category) return null;
 
   function handleChange(key, value) {
+    let nextValue = value;
+    if (key === 'mobile') {
+      nextValue = value.replace(/\D/g, '').slice(0, 10);
+    }
+
     setFormData((prev) => {
-      const next = { ...prev, [key]: value };
+      const next = { ...prev, [key]: nextValue };
       EDIT_FIELDS[category.key].forEach((f) => {
         if (f.dependsOn === key) {
           const validOptions = f.optionsFor(next);
@@ -102,14 +120,25 @@ export default function EditStaffDialog({ open, category, person, onClose, onSub
 
     const nextErrors = {};
     EDIT_FIELDS[category.key].forEach((f) => {
-      if (!formData[f.key] || formData[f.key].trim().length === 0) nextErrors[f.key] = true;
+      if (f.readOnly) return;
+
+      const value = formData[f.key];
+      if (!value || value.trim().length === 0) {
+        nextErrors[f.key] = 'This field is required.';
+        return;
+      }
+
+      const message = validateFieldValue(f.key, value.trim());
+      if (message) {
+        nextErrors[f.key] = message;
+      }
     });
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
     const payload = {};
     EDIT_FIELDS[category.key].forEach((f) => {
-      payload[f.key] = formData[f.key].trim();
+      payload[f.key] = (formData[f.key] ?? '').trim();
     });
 
     onSubmit(person.id, payload);
@@ -150,15 +179,22 @@ export default function EditStaffDialog({ open, category, person, onClose, onSub
                       </option>
                     ))}
                   </select>
-                ) : (
+                  ) : (
                   <input
                     type={f.type || 'text'}
-                    className={errors[f.key] ? `${styles.fieldInput} ${styles.fieldInvalid}` : styles.fieldInput}
+                    className={[
+                      styles.fieldInput,
+                      errors[f.key] ? styles.fieldInvalid : '',
+                      f.readOnly ? styles.fieldReadOnly : '',
+                    ].filter(Boolean).join(' ')}
                     value={formData[f.key] ?? ''}
                     onChange={(e) => handleChange(f.key, e.target.value)}
                     placeholder={f.placeholder}
+                    disabled={f.readOnly}
+                    readOnly={f.readOnly}
                   />
                 )}
+                {errors[f.key] && <span className={styles.fieldError}>{errors[f.key]}</span>}
               </label>
             );
           })}

@@ -3,8 +3,8 @@
 import styles from './staff.module.css';
 
 const STATUS_STYLES = {
-  Active: { bg: '#E4F5FC', color: '#0B4F6E', dot: '#08A5E1' },
-  Inactive: { bg: '#F1F3F7', color: '#5B6178', dot: '#9AA0B4' },
+  Active: { bg: '#B8FF8F', color: '#053A34', dot: '#115827' },
+  Inactive: { bg: '#F7CDA5', color: '#053A34', dot: '#ba2c2c' },
 };
 
 export default function StatusChip({ status }) {

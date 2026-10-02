@@ -59,7 +59,6 @@ export default function EditProfileDialog({ open, onOpenChange, instructor, onSa
         email:           instructor.email ?? '',
         contact_number:  instructor.contact_number ?? '',
         subject_area:    instructor.subject_area ?? '',
-        employee_id:     instructor.employee_id ?? '',
         new_password:    '',
         confirm_password: '',
       });
@@ -128,12 +127,6 @@ export default function EditProfileDialog({ open, onOpenChange, instructor, onSa
               <div className="grid grid-cols-1 gap-4">
                 <Field label="Subject Area" required id="subject_area" error={errors.subject_area?.message}>
                   <Input id="subject_area" placeholder="e.g. Combined Mathematics" {...register('subject_area')} />
-                </Field>
-                <Field label="Employee ID" required id="employee_id" error={errors.employee_id?.message}>
-                  <Input id="employee_id" placeholder="e.g. INS-2026-00042" {...register('employee_id')} />
-                  <p className="text-[11px] text-gray-400 mt-1">
-                    Contact your admin to change your Employee ID.
-                  </p>
                 </Field>
               </div>
 

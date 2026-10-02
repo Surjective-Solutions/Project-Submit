@@ -304,10 +304,8 @@ export async function getEngagedInstructors() {
   return protectedRequestPath("/api/tutor/get-engaged-instructors", { method: "GET" });
 }
 
-// TODO: replace with actual microservice endpoint
 export async function createInstructor(data) {
-  console.log("Creating instructor with data:", data);
-  return protectedRequest("/api/tutor/add/instructor", { body: data });
+  return protectedRequest("/api/instructor/create", { body: data });
 }
 
 // TODO: replace with actual microservice endpoint
@@ -378,36 +376,22 @@ export async function getAdminInstructors() {
   return request("/admin/instructors", { method: "GET" });
 }
 
-// export async function updateAdminInstructor(id, data) {
-//   return protectedRequest(`/api/instructor/update/${id}`, {
-//     method: "PUT",
-//     body: {
-//       fullName: `${data.first_name} ${data.last_name}`,
-//       email: data.email,
-      
-//       contactNumber: data.contact_number,
-//       address: data.address ?? '',
-//     },
-//   });
-// }
-
-
-
-export async function updateAdminInstructor(id, data) {
-  return protectedRequest(`/api/instructor/update/${id}`, {
+export async function adminUpdateInstructor(id, data) {
+  return protectedRequestPath(`/api/instructor/admin/update/${id}`, {
     method: "PUT",
-    body: {
-      firstName: data.first_name,
-      lastName: data.last_name,
-      employeeId: data.employee_id,
-      subjectArea: data.subject_area,
-      email: data.email,
-      contactNumber: data.contact_number,
-      status: data.status,
-      ...(data.new_password && {
-        password: data.new_password,
-      }),
-    },
+    body: data,
+  });
+}
+
+export async function activateInstructor(id) {
+  return protectedRequestPath(`/api/instructor/admin/activate/${id}`, {
+    method: "PUT",
+  });
+}
+
+export async function deactivateInstructor(id) {
+  return protectedRequestPath(`/api/instructor/admin/deactivate/${id}`, {
+    method: "PUT",
   });
 }
 

@@ -110,14 +110,27 @@ export default function AdminLoginPage() {
     setLoading(true);
     try {
       const res = await adminLogin(trimmedUsername, password);
+
+      if (res?.isSuccess === false) {
+        setFieldErrors({ username: true, password: true });
+        setError(res.message || "That username and password don't match our records.");
+        setLoading(false);
+        return;
+      }
+
       // NOTE: assumes the response carries the auth token as `token`
       // (matches what protectedRequest/protectedRequestPath read back out of
       // sessionStorage). Adjust the key here if your backend names it
       // differently (e.g. accessToken / jwt).
       const token = res?.token ?? res?.accessToken ?? res?.jwt;
-      if (token) {
-        sessionStorage.setItem('token', token);
+      if (!token) {
+        setFieldErrors({ username: true, password: true });
+        setError("That username and password don't match our records.");
+        setLoading(false);
+        return;
       }
+
+      sessionStorage.setItem('token', token);
       router.push('/admin/dashboard');
     } catch (err) {
       setFieldErrors({ username: true, password: true });

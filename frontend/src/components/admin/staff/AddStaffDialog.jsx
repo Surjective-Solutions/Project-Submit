@@ -55,8 +55,8 @@ const FIELDS = {
   ],
   instructors: [
     { key: 'fullName', label: 'Full name', placeholder: 'e.g. Mr. Ruwan Perera' },
-    { key: 'contactNumber', label: 'Contact number', placeholder: 'e.g. 0712345678' },
     { key: 'email', label: 'Email', type: 'email', placeholder: 'name@syzygy.lk' },
+    { key: 'contactNumber', label: 'Contact number', placeholder: 'e.g. 0712345678' },
     { key: 'nic', label: 'NIC', placeholder: 'e.g. 200012345678V' },
     { key: 'address', label: 'Address', placeholder: 'e.g. 12, Galle Road, Colombo' },
   ],

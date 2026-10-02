@@ -16,8 +16,9 @@ const INFO_FIELDS = {
   ],
   instructors: [
     { label: 'Assists', value: (p) => p.assists },
-    { label: 'Subject', value: (p) => p.subject },
     { label: 'Joined', value: (p) => p.joined },
+    { label: 'NIC', value: (p) => p.nic },
+    { label: 'Address', value: (p) => p.address },
   ],
   cashiers: [
   { label: 'Joined', value: (p) => p.joined },
@@ -91,7 +92,7 @@ export default function StaffDrawer({
             className={isInactive ? styles.reactivateButton : styles.deactivateButton}
             onClick={() => onToggleActive(person)}
           >
-            {isInactive ? 'Reactivate account' : 'Deactivate account'}
+            {isInactive ? 'Activate account' : 'Deactivate account'}
           </button>
         </div>
       </aside>

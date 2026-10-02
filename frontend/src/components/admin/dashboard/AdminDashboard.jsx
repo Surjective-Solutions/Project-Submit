@@ -52,10 +52,9 @@ const QUICK_ACTIONS = [
 const liveClasses = TODAYS_CLASSES.filter((c) => c.status === 'live');
 
 export default function AdminDashboard() {
-  const { profile, slips, pendingSlipCount } = useAdminConsole();
+  const { profile } = useAdminConsole();
   const { greeting, dateLabel } = useColomboToday();
-  const { studentSummary } = useDashboardData();
-  const oldestWait = slips.length ? Math.max(...slips.map((s) => s.waitingMinutes)) : 0;
+  const { studentSummary, slipsToVerify, slipQueue, studentsByStream } = useDashboardData();
   const totalClassesToday = TODAYS_CLASSES.length;
   const completedClasses = TODAYS_CLASSES.filter((c) => c.status === 'ended').length;
   
@@ -128,18 +127,26 @@ export default function AdminDashboard() {
             </span>
             Slips to verify
           </div>
-          <p className={styles.kpiValue}>{formatNumber(pendingSlipCount)}</p>
+          <p className={styles.kpiValue}>
+            {slipsToVerify.data ? formatNumber(slipsToVerify.data.pending) : '—'}
+          </p>
           <div className={styles.kpiFoot}>
-            {pendingSlipCount ? (
-              <>
-                Oldest waiting {formatWait(oldestWait)}
-                <a href="#slip-queue" className={styles.kpiWaitingLink}>
-                  Review queue
-                  <Icon name="arrow_forward" size={16} />
-                </a>
-              </>
+            {slipsToVerify.data ? (
+              slipsToVerify.data.pending ? (
+                <>
+                  Oldest waiting {formatWait(slipsToVerify.data.oldestWaitingMinutes)}
+                  <a href="#slip-queue" className={styles.kpiWaitingLink}>
+                    Review queue
+                    <Icon name="arrow_forward" size={16} />
+                  </a>
+                </>
+              ) : (
+                'All caught up'
+              )
+            ) : slipsToVerify.error ? (
+              "Couldn't load slip figures"
             ) : (
-              'All caught up'
+              'Loading…'
             )}
           </div>
         </div>
@@ -148,12 +155,12 @@ export default function AdminDashboard() {
       {/* ── Classes + slip queue ── */}
       <div className={styles.row}>
         <TodayClassesCard />
-        <SlipQueueCard />
+        <SlipQueueCard slipQueue={slipQueue} />
       </div>
 
       {/* ── Students by stream ── */}
       <div className={styles.row}>
-        <StudentsByStreamCard />
+        <StudentsByStreamCard studentsByStream={studentsByStream} />
       </div>
     </div>
   );

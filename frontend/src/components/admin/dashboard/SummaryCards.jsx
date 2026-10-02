@@ -1,12 +1,14 @@
 import Link from 'next/link';
 import Icon from '@/components/admin/Icon';
-import { STUDENTS_BY_STREAM, STUDY_PACK_STAGES } from './dashboard-data';
+import { STUDY_PACK_STAGES } from './dashboard-data';
 import { formatNumber, percent } from './format';
 import styles from './dashboard.module.css';
 
-export function StudentsByStreamCard() {
-  const total = STUDENTS_BY_STREAM.reduce((sum, s) => sum + s.count, 0);
-  const max = Math.max(...STUDENTS_BY_STREAM.map((s) => s.count));
+// studentsByStream is a useDashboardData section: { data: { total, streams }, loading, error }
+export function StudentsByStreamCard({ studentsByStream }) {
+  const total = studentsByStream.data?.total ?? 0;
+  const streams = studentsByStream.data?.streams ?? [];
+  const max = Math.max(0, ...streams.map((s) => s.count));
 
   return (
     <section className={`${styles.card} ${styles.streamCard}`} aria-labelledby="stream-title">
@@ -15,26 +17,40 @@ export function StudentsByStreamCard() {
           <h2 id="stream-title" className={styles.cardTitle}>
             Students by stream
           </h2>
-          <p className={styles.cardSub}>{formatNumber(total)} active students</p>
+          <p className={styles.cardSub}>
+            {studentsByStream.data
+              ? `${formatNumber(total)} active students`
+              : studentsByStream.error
+                ? "Couldn't load stream figures"
+                : 'Loading…'}
+          </p>
         </div>
       </div>
 
-      <ul className={styles.streamList}>
-        {STUDENTS_BY_STREAM.map(({ stream, count }) => (
-          <li key={stream} className={styles.streamRow}>
-            <span className={styles.streamName} title={stream}>
-              {stream}
-            </span>
-            <span className={styles.streamTrack} aria-hidden="true">
-              <span className={styles.streamFill} style={{ width:`${(count / max) * 100}%` }} />
-            </span>
-            <span className={styles.streamValue}>
-              {formatNumber(count)}
-              <span>{percent(count, total)}%</span>
-            </span>
-          </li>
-        ))}
-      </ul>
+      {studentsByStream.data && streams.length === 0 ? (
+        <div className={styles.emptyState}>
+          <Icon name="school" size={32} style={{ color: 'var(--syz-cyan-dark)' }} />
+          <strong>No active students yet</strong>
+          <span>Approved sign-ups will appear here by stream.</span>
+        </div>
+      ) : (
+        <ul className={styles.streamList}>
+          {streams.map(({ stream, count }) => (
+            <li key={stream} className={styles.streamRow}>
+              <span className={styles.streamName} title={stream}>
+                {stream}
+              </span>
+              <span className={styles.streamTrack} aria-hidden="true">
+                <span className={styles.streamFill} style={{ width: `${max ? (count / max) * 100 : 0}%` }} />
+              </span>
+              <span className={styles.streamValue}>
+                {formatNumber(count)}
+                <span>{percent(count, total)}%</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
 
       <Link href="/admin/reports" className={`${styles.textLink} ${styles.cardFooterLink}`}>
         Enrolment reports

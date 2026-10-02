@@ -66,15 +66,6 @@ export const PAYMENT_METHODS = [
   { key: 'frimi', label: 'FriMi', share: 11, color: '#F3E895' },
 ];
 
-export const STUDENTS_BY_STREAM = [
-  { stream: 'Physical Science', count: 1420 },
-  { stream: 'Biological Science', count: 1180 },
-  { stream: 'Commerce', count: 860 },
-  { stream: 'O/L', count: 552 },
-  { stream: 'Technology', count: 410 },
-  { stream: 'Arts', count: 390 },
-];
-
 // tone: key into the study-pack tint styles in dashboard.module.css
 export const STUDY_PACK_STAGES = [
   { key: 'packed', label: 'Packed', note: 'Ready at the warehouse', count: 4120, icon: 'inventory_2', tone: 'grey' },

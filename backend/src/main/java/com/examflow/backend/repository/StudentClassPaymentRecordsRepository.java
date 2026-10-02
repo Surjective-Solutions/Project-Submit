@@ -2,6 +2,7 @@ package com.examflow.backend.repository;
 
 import java.util.List;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.examflow.backend.entity.ClassPaymentRecord;
@@ -25,5 +26,13 @@ public interface StudentClassPaymentRecordsRepository extends JpaRepository<Stud
 
     StudentClassPaymentRecord findTopByStudentAndClassPaymentRecordAndStatusOrderByApprovedTimeDesc(
             Student student, ClassPaymentRecord classPaymentRecord, Integer status);
+
+    long countByStatusAndIsForPaymentsAndIsApprovedIsNull(Integer status, Boolean isForPayments);
+
+    StudentClassPaymentRecord findTopByStatusAndIsForPaymentsAndIsApprovedIsNullOrderByPayedTimeAsc(Integer status,
+            Boolean isForPayments);
+
+    List<StudentClassPaymentRecord> findByStatusAndIsForPaymentsAndIsApprovedIsNullOrderByPayedTimeAsc(Integer status,
+            Boolean isForPayments, Pageable pageable);
 
 }

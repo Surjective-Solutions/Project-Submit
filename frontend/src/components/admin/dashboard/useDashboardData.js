@@ -1,13 +1,21 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getAdminStudentSummary } from '@/lib/api-client';
+import {
+  getAdminSlipQueue,
+  getAdminSlipsToVerify,
+  getAdminStudentsByStream,
+  getAdminStudentSummary,
+} from '@/lib/api-client';
 
 // All admin dashboard API calls live here so AdminDashboard only binds data.
 // Each section loads independently: one failing endpoint doesn't blank the
 // rest of the page. Add new dashboard calls as another entry in `loaders`.
 const loaders = {
   studentSummary: getAdminStudentSummary,
+  slipsToVerify: getAdminSlipsToVerify,
+  slipQueue: () => getAdminSlipQueue(5),
+  studentsByStream: getAdminStudentsByStream,
 };
 
 const initialState = Object.fromEntries(

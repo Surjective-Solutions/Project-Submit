@@ -608,6 +608,28 @@ export async function getAdminStudentSummary() {
   });
 }
 
+// Returns { pending, oldestWaitingMinutes }
+export async function getAdminSlipsToVerify() {
+  return protectedRequest("/api/admin-dashboard/slips-to-verify", {
+    method: "GET",
+  });
+}
+
+// Returns { total, slips: [{ id, studentName, studentNo, className, tutorName, month, year, amount, waitingMinutes }] }
+// Slips are oldest first; `limit` caps how many are returned (server max 20).
+export async function getAdminSlipQueue(limit = 5) {
+  return protectedRequest(`/api/admin-dashboard/slip-queue?limit=${limit}`, {
+    method: "GET",
+  });
+}
+
+// Returns { total, streams: [{ stream, count }] } — active students only, largest stream first
+export async function getAdminStudentsByStream() {
+  return protectedRequest("/api/admin-dashboard/students-by-stream", {
+    method: "GET",
+  });
+}
+
 // ── Instructors ──────────────────────────────────────────────────────────────────
 
 //get single instrctor by ID for profile display

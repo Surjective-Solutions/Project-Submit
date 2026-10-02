@@ -19,13 +19,9 @@ function getColumns(categoryKey) {
     case 'teachers':
       return [
         { key: 'name', header: 'Teacher' },
-        { key: 'subject', header: 'Subject', cell: (p) => <Cell main={p.subject} sub={p.stream} /> },
+        { key: 'subject', header: 'Subject', cell: (p) => <Cell main={p.subject} /> },
+        { key: 'examLevel', header: 'Exam level', cell: (p) => <Cell main={p.examLevel} /> },
         { key: 'medium', header: 'Medium', cell: (p) => <Cell main={p.medium} /> },
-        {
-          key: 'students',
-          header: 'Students',
-          cell: (p) => <Cell main={p.enrolledStudents.toLocaleString()} />,
-        },
         { key: 'status', header: 'Status', cell: (p) => <StatusChip status={p.status} /> },
       ];
     case 'instructors':

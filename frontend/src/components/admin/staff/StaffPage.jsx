@@ -1,14 +1,40 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Icon from '@/components/admin/Icon';
 import { CATEGORIES, STAFF_DATA } from '@/mocks/staff';
+import { getTutors, createTutor, activateTutor, deactivateTutor, adminResetTutorPassword, adminUpdateTutor} from '@/lib/api-client';
 import CategoryCard from './CategoryCard';
 import StaffTable from './StaffTable';
 import StaffDrawer from './StaffDrawer';
 import AddStaffDialog from './AddStaffDialog';
 import Toast from './Toast';
 import styles from './staff.module.css';
+import EditStaffDialog from './EditStaffDialog';
+
+function formatJoinedDate(isoString) {
+  if (!isoString) return '—';
+  const date = new Date(isoString);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function mapTutorToPerson(tutor) {
+  return {
+    id: tutor.id,
+    idCode: tutor.tutorCode,
+    fullName: tutor.displayName,
+    mobile: tutor.contactNumber,
+    email: tutor.email,
+    username: tutor.username,
+    subject: tutor.subject,
+    examLevel: tutor.examLevel,
+    medium: tutor.medium,
+    status: tutor.status === 2 ? 'Active' : 'Inactive',
+    joined: formatJoinedDate(tutor.createdDateTime),
+    enrolledStudents: tutor.enrolledStudentsCount ?? 0,
+  };
+}
 
 export default function StaffPage() {
   const [data, setData] = useState(STAFF_DATA);
@@ -16,7 +42,10 @@ export default function StaffPage() {
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState(null);
   const [addOpen, setAddOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [teachersLoading, setTeachersLoading] = useState(true);
+  const [teachersError, setTeachersError] = useState('');
 
   const category = CATEGORIES.find((c) => c.key === categoryKey);
   const people = data[categoryKey];
@@ -27,6 +56,23 @@ export default function StaffPage() {
       setToastMessage((current) => (current === message ? '' : current));
     }, 3500);
   }
+
+  const loadTeachers = useCallback(async () => {
+    setTeachersLoading(true);
+    setTeachersError('');
+    try {
+      const tutors = await getTutors();
+      setData((prev) => ({ ...prev, teachers: tutors.map(mapTutorToPerson) }));
+    } catch (err) {
+      setTeachersError(err?.message || 'Could not load teachers.');
+    } finally {
+      setTeachersLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadTeachers();
+  }, [loadTeachers]);
 
   function switchCategory(key) {
     setCategoryKey(key);
@@ -48,73 +94,122 @@ export default function StaffPage() {
 
   const selectedPerson = people.find((p) => p.id === selectedId) ?? null;
 
-  function updatePerson(id, updater) {
-    setData((prev) => ({
-      ...prev,
-      [categoryKey]: prev[categoryKey].map((p) => (p.id === id ? updater(p) : p)),
-    }));
+  async function handleResetPassword(person) {
+    if (categoryKey !== 'teachers') {
+      showToast("Password reset isn't wired up for this role yet.");
+      return;
+    }
+    // TODO: replace with a proper modal — this is a stopgap so the action is testable now.
+    const newPassword = window.prompt(`Enter a new password for ${person.fullName}:`);
+    if (!newPassword) return;
+    const confirmNewPassword = window.prompt('Re-enter the new password to confirm:');
+    if (newPassword !== confirmNewPassword) {
+      showToast('Passwords did not match — nothing was changed.');
+      return;
+    }
+    try {
+      const result = await adminResetTutorPassword(person.id, { newPassword, confirmNewPassword });
+      showToast(result?.message || `Password reset for ${person.fullName}.`);
+    } catch (err) {
+      showToast(err?.message || 'Could not reset password.');
+    }
   }
 
-  function handleResetPassword(person) {
-    showToast(`Password reset link sent to ${person.mobile}.`);
-  }
-
-  function handleToggleActive(person) {
-    const nextStatus = person.status === 'Inactive' ? 'Active' : 'Inactive';
-    updatePerson(person.id, (p) => ({ ...p, status: nextStatus }));
-    showToast(
-      nextStatus === 'Inactive'
-        ? `${person.fullName}'s account deactivated.`
-        : `${person.fullName}'s account reactivated.`,
-    );
+  async function handleToggleActive(person) {
+    if (categoryKey !== 'teachers') {
+      showToast("Activation isn't wired up for this role yet.");
+      return;
+    }
+    try {
+      const result =
+        person.status === 'Inactive' ? await activateTutor(person.id) : await deactivateTutor(person.id);
+      showToast(result?.message || `${person.fullName}'s account updated.`);
+      await loadTeachers();
+    } catch (err) {
+      showToast(err?.message || 'Could not update account status.');
+    }
   }
 
   function handleEditProfile() {
-    // TODO: wire to a real edit-profile flow once designed/backed by the API.
-    showToast("Editing isn't available yet.");
+    setEditOpen(true);
   }
 
-  function handleAddStaff(targetCategoryKey, formValues) {
-    const targetCategory = CATEGORIES.find((c) => c.key === targetCategoryKey);
-    const existingCount = data[targetCategoryKey].length;
-    const idCode = `${targetCategory.idPrefix}-01${String(existingCount + 1).padStart(2, '0')}`;
+  async function handleSaveProfile(personId, formValues) {
+    if (categoryKey !== 'teachers') {
+      showToast("Editing isn't wired up for this role yet.");
+      setEditOpen(false);
+      return;
+    }
 
-    const newPerson = {
-      id: `${targetCategoryKey}-${Date.now()}`,
-      idCode,
-      fullName: formValues.fullName,
-      mobile: formValues.mobile,
-      email: formValues.email,
-      status: 'Inactive',
-      joined: '—',
-      permissions: Object.fromEntries(targetCategory.permissions.map((perm) => [perm.key, false])),
-      ...(targetCategoryKey === 'teachers' && {
-        subject: formValues.roleField,
-        stream: '',
-        medium: '',
-        weeklyLoad: '',
-        enrolledStudents: 0,
-      }),
-      ...(targetCategoryKey === 'instructors' && {
-        assists: formValues.roleField,
-        subject: '',
-        role: '',
-        focus: '',
-        hours: 0,
-      }),
-      ...(targetCategoryKey === 'cashiers' && {
-        desk: formValues.roleField,
-        location: '',
-        shift: '',
-        days: '',
-        today: 'LKR 0',
-      }),
-    };
+    try {
+      const result = await adminUpdateTutor(personId, {
+        displayName: formValues.fullName,
+        contactNumber: formValues.contactNumber,
+        email: formValues.email,
+        subject: formValues.subject,
+        examLevel: formValues.examLevel,
+        medium: formValues.medium,
+      });
 
-    setData((prev) => ({ ...prev, [targetCategoryKey]: [newPerson, ...prev[targetCategoryKey]] }));
-    setAddOpen(false);
-    switchCategory(targetCategoryKey);
-    showToast(`Invite sent to ${formValues.fullName}.`);
+      if (result?.isSuccess === false) {
+        showToast(result.message || 'Could not save changes.');
+        return;
+      }
+
+      setEditOpen(false);
+      showToast(result?.message || 'Profile updated.');
+      await loadTeachers();
+    } catch (err) {
+      showToast(err?.message || 'Could not save changes.');
+    }
+  }
+
+  async function handleAddStaff(targetCategoryKey, formValues) {
+    if (targetCategoryKey !== 'teachers') {
+      const targetCategory = CATEGORIES.find((c) => c.key === targetCategoryKey);
+      const existingCount = data[targetCategoryKey].length;
+      const idCode = `${targetCategory.idPrefix}-01${String(existingCount + 1).padStart(2, '0')}`;
+      const newPerson = {
+        id: `${targetCategoryKey}-${Date.now()}`,
+        idCode,
+        fullName: formValues.fullName,
+        mobile: formValues.contactNumber,
+        email: formValues.email,
+        status: 'Inactive',
+        joined: '—',
+      };
+      setData((prev) => ({ ...prev, [targetCategoryKey]: [newPerson, ...prev[targetCategoryKey]] }));
+      setAddOpen(false);
+      switchCategory(targetCategoryKey);
+      showToast(`${formValues.fullName} added (mock — backend not wired up yet for this role).`);
+      return;
+    }
+
+    try {
+      const result = await createTutor({
+        displayName: formValues.fullName,
+        username: formValues.username,
+        email: formValues.email,
+        contactNumber: formValues.contactNumber,
+        subject: formValues.subject,
+        examLevel: formValues.examLevel,
+        medium: formValues.medium,
+        password: formValues.password,
+        confirmPassword: formValues.confirmPassword,
+      });
+
+      if (result?.isSuccess === false) {
+        showToast(result.message || 'Could not create account.');
+        return;
+      }
+
+      setAddOpen(false);
+      switchCategory('teachers');
+      showToast(`${formValues.fullName} added — inactive until you activate them.`);
+      await loadTeachers();
+    } catch (err) {
+      showToast(err?.message || 'Could not create account.');
+    }
   }
 
   return (
@@ -162,13 +257,19 @@ export default function StaffPage() {
           </div>
         </div>
 
-        <StaffTable
-          category={category}
-          people={filteredPeople}
-          selectedId={selectedId}
-          onSelect={(person) => setSelectedId(person.id)}
-          emptyLabel={`No ${category.label.toLowerCase()} match this search.`}
-        />
+        {categoryKey === 'teachers' && teachersLoading ? (
+          <div className={styles.emptyState}>Loading teachers…</div>
+        ) : categoryKey === 'teachers' && teachersError ? (
+          <div className={styles.emptyState}>{teachersError}</div>
+        ) : (
+          <StaffTable
+            category={category}
+            people={filteredPeople}
+            selectedId={selectedId}
+            onSelect={(person) => setSelectedId(person.id)}
+            emptyLabel={`No ${category.label.toLowerCase()} match this search.`}
+          />
+        )}
       </div>
 
       <StaffDrawer
@@ -185,6 +286,14 @@ export default function StaffPage() {
         defaultCategory={categoryKey}
         onClose={() => setAddOpen(false)}
         onSubmit={handleAddStaff}
+      />
+
+      <EditStaffDialog
+        open={editOpen}
+        category={category}
+        person={selectedPerson}
+        onClose={() => setEditOpen(false)}
+        onSubmit={handleSaveProfile}
       />
 
       <Toast message={toastMessage} />

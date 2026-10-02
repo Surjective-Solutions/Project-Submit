@@ -11,6 +11,7 @@ import com.examflow.backend.dto.GeneralResponse;
 import com.examflow.backend.dto.PaperUploadRequest;
 import com.examflow.backend.dto.RegradeRequestResponse;
 import com.examflow.backend.dto.SubmitGradeResponse;
+import com.examflow.backend.dto.EnrolledStudentsCountResponse;
 
 @Service
 public interface ClassControllerManager {
@@ -38,5 +39,7 @@ public interface ClassControllerManager {
     List<RegradeRequestResponse> getPendingRegradeRequests();
 
     RegradeRequestResponse getRegradeRequestById(Integer regradeRequestSeq);
+
+    EnrolledStudentsCountResponse getEnrolledStudentsCount();
 }
     

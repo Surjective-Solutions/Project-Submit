@@ -16,6 +16,8 @@ public interface TutorRepository extends JpaRepository<Tutor, Integer> {
 
     List<Tutor> findByStatus(Integer status);
 
+    List<Tutor> findByStatusIn(List<Integer> statuses);
+
     Tutor findByTutorSeq(Integer tutorSeq);
 
 }

@@ -44,6 +44,8 @@ public class Instructor {
 
     private LocalDateTime lastModifiedDateTime;
 
+    private LocalDateTime createdDateTime;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "instructorSeq")
@@ -154,7 +156,7 @@ public class Instructor {
         this.isOtpVerified = isOtpVerified;
     }
 
-    @Column(name = "instructorNo")
+    @Column(name = "instructorNo", insertable = false, updatable = false)
     public String getInstrutorNo() {
         return instrutorNo;
     }
@@ -188,6 +190,14 @@ public class Instructor {
 
     public void setLastModifiedDateTime(LocalDateTime lastModifiedDateTime) {
         this.lastModifiedDateTime = lastModifiedDateTime;
+    }
+
+    @Column(name = "createdDateTime")
+    public LocalDateTime getCreatedDateTime() {
+        return createdDateTime;
+    }
+    public void setCreatedDateTime(LocalDateTime createdDateTime) {
+        this.createdDateTime = createdDateTime;
     }
 
 }

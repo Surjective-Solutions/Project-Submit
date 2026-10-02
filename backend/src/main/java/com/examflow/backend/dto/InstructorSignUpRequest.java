@@ -16,8 +16,6 @@ public class InstructorSignUpRequest {
 
     private String nicNumber;
 
-    private String employeeId;
-
     private Boolean termsAccepted;
 
     private String password;
@@ -89,14 +87,6 @@ public class InstructorSignUpRequest {
 
     public void setConfirmPassword(String confirmPassword) {
         this.confirmPassword = confirmPassword;
-    }
-
-    public String getEmployeeId() {
-        return employeeId;
-    }
-
-    public void setEmployeeId(String employeeId) {
-        this.employeeId = employeeId;
     }
 
     public String getStatus() {

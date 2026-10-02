@@ -24,6 +24,12 @@ public class InstructorResponse {
 
     private String profile_photo_url;
 
+    private String address;
+
+    private String nic_number;
+
+    private java.time.LocalDateTime createdDateTime;
+
     public Integer getId() {
         return id;
     }
@@ -112,4 +118,24 @@ public class InstructorResponse {
         this.statusSeq = statusSeq;
     }
 
+    public String getAddress(){
+        return address;
+    }
+    public void setAddress(String address){
+        this.address = address;
+    }
+
+    public String getNic_number(){
+        return nic_number;
+    }
+    public void setNic_number(String nic_number){
+        this.nic_number = nic_number;
+    }
+
+    public java.time.LocalDateTime getCreatedDateTime() {
+        return createdDateTime;
+    }
+    public void setCreatedDateTime(java.time.LocalDateTime createdDateTime) {
+        this.createdDateTime = createdDateTime;
+    }
 }

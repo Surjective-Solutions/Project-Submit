@@ -20,6 +20,8 @@ import com.examflow.backend.dto.InstructorSignUpRequest;
 import com.examflow.backend.dto.InstructorTeacherResponse;
 import com.examflow.backend.dto.RegradeRequestResponse;
 import com.examflow.backend.dto.SubmitGradeResponse;
+import com.examflow.backend.dto.InstructorRequest;
+import com.examflow.backend.dto.AdminUpdateInstructorRequest;
 
 @RestController
 @RequestMapping("/api/instructor")
@@ -76,4 +78,23 @@ public class InstructorController {
         return instructorControllerManager.getRegradeRequestById(regradeRequestSeq);
     }
 
+    @PostMapping("/create")
+    public GeneralResponse createInstructor(@RequestBody InstructorRequest instructorRequest) {
+        return instructorControllerManager.createInstructor(instructorRequest);
+    }
+
+    @PutMapping("/admin/update/{id}")
+    public GeneralResponse adminUpdateInstructor(@PathVariable Integer id, @RequestBody AdminUpdateInstructorRequest request) {
+        return instructorControllerManager.adminUpdateInstructor(id, request);
+    }
+
+    @PutMapping("/admin/activate/{id}")
+    public GeneralResponse activateInstructor(@PathVariable Integer id) {
+        return instructorControllerManager.activateInstructor(id);
+    }
+
+    @PutMapping("/admin/deactivate/{id}")
+    public GeneralResponse deactivateInstructor(@PathVariable Integer id) {
+        return instructorControllerManager.deactivateInstructor(id);
+    }
 }

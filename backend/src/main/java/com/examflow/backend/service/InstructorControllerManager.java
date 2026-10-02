@@ -11,6 +11,8 @@ import com.examflow.backend.dto.InstructorSignUpRequest;
 import com.examflow.backend.dto.InstructorTeacherResponse;
 import com.examflow.backend.dto.RegradeRequestResponse;
 import com.examflow.backend.dto.SubmitGradeResponse;
+import com.examflow.backend.dto.InstructorRequest;
+import com.examflow.backend.dto.AdminUpdateInstructorRequest;
 
 @Service
 public interface InstructorControllerManager {
@@ -28,4 +30,12 @@ public interface InstructorControllerManager {
     List<RegradeRequestResponse> getPendingRegradeRequests();
 
     RegradeRequestResponse getRegradeRequestById(Integer regradeRequestSeq);
+
+    GeneralResponse createInstructor(InstructorRequest instructorRequest);
+
+    GeneralResponse adminUpdateInstructor(Integer id, AdminUpdateInstructorRequest request);
+
+    GeneralResponse activateInstructor(Integer id);
+
+    GeneralResponse deactivateInstructor(Integer id);
 }

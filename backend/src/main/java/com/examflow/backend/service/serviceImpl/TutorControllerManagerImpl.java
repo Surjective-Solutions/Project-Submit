@@ -40,6 +40,16 @@ public class TutorControllerManagerImpl implements TutorControllermanager {
     private final StudentClassesRepository studentClassesRepository;
     private HttpServletRequest request;
 
+    private static final java.util.regex.Pattern USERNAME_PATTERN =
+        java.util.regex.Pattern.compile("^[a-zA-Z0-9_]+$");
+private static final java.util.regex.Pattern EMAIL_PATTERN =
+        java.util.regex.Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
+private static final java.util.regex.Pattern CONTACT_NUMBER_PATTERN =
+        java.util.regex.Pattern.compile("^\\d{10}$");
+// At least 8 chars, 1 uppercase, 1 lowercase, 1 digit, 1 special character.
+private static final java.util.regex.Pattern STRONG_PASSWORD_PATTERN =
+        java.util.regex.Pattern.compile("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$");
+
     @Autowired
     public TutorControllerManagerImpl(TutorRepository tutorRepository,
             TutorInstructorRepository tutorInstructorRepository,
@@ -79,6 +89,31 @@ public class TutorControllerManagerImpl implements TutorControllermanager {
                 || isBlank(tutorRequest.getConfirmPassword())) {
             response.setIsSuccess(false);
             response.setMessage("Please fill all the fields.");
+            return response;
+        }
+
+        // NEW: format validation, mirroring the frontend's rules so they can't be bypassed.
+        if (!USERNAME_PATTERN.matcher(tutorRequest.getUsername()).matches()) {
+            response.setIsSuccess(false);
+            response.setMessage("Username can only contain letters, numbers, and underscores.");
+            return response;
+        }
+
+        if (!CONTACT_NUMBER_PATTERN.matcher(tutorRequest.getContactNumber()).matches()) {
+            response.setIsSuccess(false);
+            response.setMessage("Contact number must be exactly 10 digits.");
+            return response;
+        }
+
+        if (!EMAIL_PATTERN.matcher(tutorRequest.getEmail()).matches()) {
+            response.setIsSuccess(false);
+            response.setMessage("Please enter a valid email address.");
+            return response;
+        }
+
+        if (!STRONG_PASSWORD_PATTERN.matcher(tutorRequest.getPassword()).matches()) {
+            response.setIsSuccess(false);
+            response.setMessage("Password must be at least 8 characters and include an uppercase letter, a lowercase letter, a number, and a special character.");
             return response;
         }
 
@@ -171,6 +206,16 @@ public class TutorControllerManagerImpl implements TutorControllermanager {
             return "Incorrect password.";
         }
 
+        // NEW: validate format before applying any changes.
+        if (!isBlank(tutorRequest.getEmail()) && !EMAIL_PATTERN.matcher(tutorRequest.getEmail()).matches()) {
+            return "Please enter a valid email address.";
+        }
+
+        if (!isBlank(tutorRequest.getContactNumber())
+                && !CONTACT_NUMBER_PATTERN.matcher(tutorRequest.getContactNumber()).matches()) {
+            return "Contact number must be exactly 10 digits.";
+        }
+
         if (!isBlank(tutorRequest.getDisplayName())) {
             tutor.setName(tutorRequest.getDisplayName());
         }
@@ -186,11 +231,15 @@ public class TutorControllerManagerImpl implements TutorControllermanager {
         if (!isBlank(tutorRequest.getExamLevel())) {
             tutor.setExamLevel(tutorRequest.getExamLevel());
         }
-        
+
         tutor.setLastModifiedBy(username);
         tutor.setLastModifiedDateTime(LocalDateTime.now());
 
         if (!isBlank(tutorRequest.getNewPassword()) && tutorRequest.getNewPassword().length() > 2) {
+            // NEW: strength check before the match check.
+            if (!STRONG_PASSWORD_PATTERN.matcher(tutorRequest.getNewPassword()).matches()) {
+                return "Password must be at least 8 characters and include an uppercase letter, a lowercase letter, a number, and a special character.";
+            }
             if (!tutorRequest.getNewPassword().equals(tutorRequest.getConfirmNewPassword())) {
                 return "New passwords do not match.";
             }
@@ -200,6 +249,10 @@ public class TutorControllerManagerImpl implements TutorControllermanager {
         }
 
         if (!isBlank(tutorRequest.getNewUsername()) && tutorRequest.getNewUsername().length() > 2) {
+            // NEW: format check.
+            if (!USERNAME_PATTERN.matcher(tutorRequest.getNewUsername()).matches()) {
+                return "Username can only contain letters, numbers, and underscores.";
+            }
             tutor.setUserName(tutorRequest.getNewUsername());
         }
 
@@ -221,6 +274,20 @@ public class TutorControllerManagerImpl implements TutorControllermanager {
             return response;
         }
 
+        // NEW: validate format before applying any changes.
+        if (!isBlank(tutorRequest.getEmail()) && !EMAIL_PATTERN.matcher(tutorRequest.getEmail()).matches()) {
+            response.setIsSuccess(false);
+            response.setMessage("Please enter a valid email address.");
+            return response;
+        }
+
+        if (!isBlank(tutorRequest.getContactNumber())
+                && !CONTACT_NUMBER_PATTERN.matcher(tutorRequest.getContactNumber()).matches()) {
+            response.setIsSuccess(false);
+            response.setMessage("Contact number must be exactly 10 digits.");
+            return response;
+        }
+
         if (!isBlank(tutorRequest.getDisplayName())) {
             tutor.setName(tutorRequest.getDisplayName());
         }
@@ -237,8 +304,8 @@ public class TutorControllerManagerImpl implements TutorControllermanager {
             tutor.setExamLevel(tutorRequest.getExamLevel());
         }
         if (!isBlank(tutorRequest.getMedium())) {
-                    tutor.setMedium(tutorRequest.getMedium());
-                }
+            tutor.setMedium(tutorRequest.getMedium());
+        }
 
         tutor.setLastModifiedBy(username);
         tutor.setLastModifiedDateTime(LocalDateTime.now());
@@ -266,6 +333,13 @@ public class TutorControllerManagerImpl implements TutorControllermanager {
         if (isBlank(tutorRequest.getNewPassword()) || isBlank(tutorRequest.getConfirmNewPassword())) {
             response.setIsSuccess(false);
             response.setMessage("Please fill all the fields.");
+            return response;
+        }
+
+        // NEW: strength check before the match check.
+        if (!STRONG_PASSWORD_PATTERN.matcher(tutorRequest.getNewPassword()).matches()) {
+            response.setIsSuccess(false);
+            response.setMessage("Password must be at least 8 characters and include an uppercase letter, a lowercase letter, a number, and a special character.");
             return response;
         }
 

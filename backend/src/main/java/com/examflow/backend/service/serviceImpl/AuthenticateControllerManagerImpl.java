@@ -134,10 +134,10 @@ public class AuthenticateControllerManagerImpl implements AuthenticateController
                     return loginResponse;
                 }
             } else {
-                System.out.println("instructor not found with email: " + identifier);
+                System.out.println("Instructor not found with email: " + identifier);
                 loginResponse.setToken(null);
                 loginResponse.setIsSuccess(false);
-                loginResponse.setMessage("instructor not found");
+                loginResponse.setMessage("Instructor not found");
                 return loginResponse;
             }
         }
@@ -166,10 +166,10 @@ public class AuthenticateControllerManagerImpl implements AuthenticateController
             }
         } else {
 
-            System.out.println("instructor not found with email: " + identifier);
+            System.out.println("Admin not found with email: " + identifier);
             loginResponse.setToken(null);
             loginResponse.setIsSuccess(false);
-            loginResponse.setMessage("instructor not found");
+            loginResponse.setMessage("Admin not found");
             return loginResponse;
         }
 
@@ -198,10 +198,10 @@ public class AuthenticateControllerManagerImpl implements AuthenticateController
             }
         } else {
 
-            System.out.println("instructor not found with email: " + username);
+            System.out.println("Teacher not found with email: " + username);
             loginResponse.setToken(null);
             loginResponse.setIsSuccess(false);
-            loginResponse.setMessage("instructor not found");
+            loginResponse.setMessage("Teacher not found");
             return loginResponse;
         }
     }
@@ -230,10 +230,10 @@ public class AuthenticateControllerManagerImpl implements AuthenticateController
             }
         } else {
 
-            System.out.println("instructor not found with email: " + username);
+            System.out.println("Cashier not found with email: " + username);
             loginResponse.setToken(null);
             loginResponse.setIsSuccess(false);
-            loginResponse.setMessage("instructor not found");
+            loginResponse.setMessage("Cashier not found");
             return loginResponse;
         }
     }

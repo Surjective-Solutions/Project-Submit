@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.examflow.backend.dto.CashierResponse;
 import com.examflow.backend.dto.InstructorResponse;
+import com.examflow.backend.dto.AdminUpdateInstructorRequest;
 import com.examflow.backend.entity.Cashier;
 import com.examflow.backend.entity.Classes;
 import com.examflow.backend.entity.GradeSubmission;
@@ -47,6 +48,7 @@ import com.examflow.backend.dto.RegradeRequestResponse;
 import com.examflow.backend.dto.SubmissionPaperInstructorTutorResponse;
 import com.examflow.backend.dto.SubmitGradeQuestionsResponse;
 import com.examflow.backend.dto.SubmitGradeResponse;
+import com.examflow.backend.dto.InstructorRequest;
 
 @Service
 public class InstructorControllerManagerImpl implements InstructorControllerManager {
@@ -65,6 +67,17 @@ public class InstructorControllerManagerImpl implements InstructorControllerMana
     private final GradeEditService gradeEditService;
     private final RegradeRequestQueryService regradeRequestQueryService;
     private final SubmissionGradeSummaryService submissionGradeSummaryService;
+
+    private static final java.util.regex.Pattern EMAIL_PATTERN =
+        java.util.regex.Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
+    private static final java.util.regex.Pattern CONTACT_NUMBER_PATTERN =
+        java.util.regex.Pattern.compile("^\\d{10}$");
+    private static final java.util.regex.Pattern STRONG_PASSWORD_PATTERN =
+        java.util.regex.Pattern.compile("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$");
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
+    }
 
     @Autowired
     public InstructorControllerManagerImpl(InstructorRepository instructorRepository,
@@ -130,6 +143,9 @@ public class InstructorControllerManagerImpl implements InstructorControllerMana
             instructorResponse.setEmail(instructor.getEmail());
             instructorResponse.setContact_number(instructor.getContactNumber());
             instructorResponse.setSubject_area(instructor.getSubjectArea());
+            instructorResponse.setAddress(instructor.getAddress());
+            instructorResponse.setCreatedDateTime(instructor.getCreatedDateTime());
+            instructorResponse.setNic_number(instructor.getNicNumber());
             instructorResponse.setStatusSeq(instructor.getStatus());
             if (instructor.getStatus() == 2) {
                 instructorResponse.setStatus("ACTIVE");
@@ -154,12 +170,15 @@ public class InstructorControllerManagerImpl implements InstructorControllerMana
 
         InstructorResponse instructorResponse = new InstructorResponse();
         instructorResponse.setId(instructor.getInstructorSeq());
-        instructorResponse.setEmployee_id(null);
+        instructorResponse.setEmployee_id(instructor.getInstrutorNo());
         instructorResponse.setFirst_name(instructor.getFullName());
         instructorResponse.setLast_name(null);
         instructorResponse.setEmail(instructor.getEmail());
         instructorResponse.setContact_number(instructor.getContactNumber());
-        instructorResponse.setSubject_area(null);
+        instructorResponse.setSubject_area(instructor.getSubjectArea());
+        instructorResponse.setAddress(instructor.getAddress());
+        instructorResponse.setCreatedDateTime(instructor.getCreatedDateTime());
+        instructorResponse.setNic_number(instructor.getNicNumber());
         instructorResponse.setStatusSeq(instructor.getStatus());
         instructorResponse.setProfile_photo_url(null);
 
@@ -179,7 +198,6 @@ public class InstructorControllerManagerImpl implements InstructorControllerMana
         }
         instructor.setFullName(instructorRequest.getFirstName() + ' ' + instructorRequest.getLastName());
         instructor.setEmail(instructorRequest.getEmail());
-        instructor.setInstrutorNo(instructorRequest.getEmployeeId());
         instructor.setContactNumber(instructorRequest.getContactNumber());
         instructor.setLastModifiedBy(username);
         instructor.setLastModifiedDateTime(LocalDateTime.now());
@@ -208,7 +226,6 @@ public class InstructorControllerManagerImpl implements InstructorControllerMana
         response.setIsSuccess(true);
         response.setMessage("Instructor updated successfully");
         return response;
-
     }
 
     @Override
@@ -502,6 +519,185 @@ public class InstructorControllerManagerImpl implements InstructorControllerMana
             tutors.add(tutorInstructor.getTutor());
         }
         return tutors;
+    }
+
+    @Override
+    public GeneralResponse createInstructor(InstructorRequest instructorRequest) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        GeneralResponse response = new GeneralResponse();
+
+        if (isBlank(instructorRequest.getFullName())
+                || isBlank(instructorRequest.getEmail())
+                || isBlank(instructorRequest.getContactNumber())
+                || isBlank(instructorRequest.getNicNumber())
+                || isBlank(instructorRequest.getAddress())
+                || isBlank(instructorRequest.getPassword())
+                || isBlank(instructorRequest.getConfirmPassword())) {
+            response.setIsSuccess(false);
+            response.setMessage("Please fill all the fields.");
+            return response;
+        }
+
+        if (!EMAIL_PATTERN.matcher(instructorRequest.getEmail()).matches()) {
+            response.setIsSuccess(false);
+            response.setMessage("Please enter a valid email address.");
+            return response;
+        }
+
+        if (!CONTACT_NUMBER_PATTERN.matcher(instructorRequest.getContactNumber()).matches()) {
+            response.setIsSuccess(false);
+            response.setMessage("Contact number must be exactly 10 digits.");
+            return response;
+        }
+
+        if (!STRONG_PASSWORD_PATTERN.matcher(instructorRequest.getPassword()).matches()) {
+            response.setIsSuccess(false);
+            response.setMessage("Password must be at least 8 characters and include an uppercase letter, a lowercase letter, a number, and a special character.");
+            return response;
+        }
+
+        if (!instructorRequest.getPassword().equals(instructorRequest.getConfirmPassword())) {
+            response.setIsSuccess(false);
+            response.setMessage("Passwords do not match.");
+            return response;
+        }
+
+        List<Instructor> existingByEmail = instructorRepository.findByEmail(instructorRequest.getEmail());
+        if (!existingByEmail.isEmpty()) {
+            response.setIsSuccess(false);
+            response.setMessage("An instructor with this email already exists.");
+            return response;
+        }
+
+        List<Instructor> existingByContact = instructorRepository.findByContactNumber(instructorRequest.getContactNumber());
+        if (!existingByContact.isEmpty()) {
+            response.setIsSuccess(false);
+            response.setMessage("An instructor with this contact number already exists.");
+            return response;
+        }
+
+        Instructor newInstructor = new Instructor();
+        newInstructor.setFullName(instructorRequest.getFullName());
+        newInstructor.setEmail(instructorRequest.getEmail());
+        newInstructor.setContactNumber(instructorRequest.getContactNumber());
+        newInstructor.setNicNumber(instructorRequest.getNicNumber());
+        newInstructor.setAddress(instructorRequest.getAddress());
+        newInstructor.setPassword(passwordEncoder.encode(instructorRequest.getPassword()));
+        newInstructor.setConfirmPassword(passwordEncoder.encode(instructorRequest.getConfirmPassword()));
+        newInstructor.setFinalPassword(passwordEncoder.encode(instructorRequest.getConfirmPassword()));
+        newInstructor.setLastModifiedBy(username);
+        newInstructor.setLastModifiedDateTime(LocalDateTime.now());
+        newInstructor.setCreatedDateTime(LocalDateTime.now());
+        newInstructor.setStatus(1); // 1 = inactive, 2 = active, 0 = deleted — same convention as createTutor
+
+        instructorRepository.save(newInstructor);
+
+        response.setIsSuccess(true);
+        response.setMessage("Instructor created successfully");
+        return response;
+    }
+
+    @Override
+    public GeneralResponse adminUpdateInstructor(Integer id, AdminUpdateInstructorRequest request) {
+        GeneralResponse response = new GeneralResponse();
+        Instructor instructor = instructorRepository.findByInstructorSeq(id);
+        if (instructor == null) {
+            response.setIsSuccess(false);
+            response.setMessage("Instructor not found");
+            return response;
+        }
+
+        if (isBlank(request.getFullName())
+                || isBlank(request.getEmail())
+                || isBlank(request.getContactNumber())
+                || isBlank(request.getNicNumber())
+                || isBlank(request.getAddress())) {
+            response.setIsSuccess(false);
+            response.setMessage("Please fill all the fields.");
+            return response;
+        }
+
+        if (!EMAIL_PATTERN.matcher(request.getEmail()).matches()) {
+            response.setIsSuccess(false);
+            response.setMessage("Please enter a valid email address.");
+            return response;
+        }
+
+        if (!CONTACT_NUMBER_PATTERN.matcher(request.getContactNumber()).matches()) {
+            response.setIsSuccess(false);
+            response.setMessage("Contact number must be exactly 10 digits.");
+            return response;
+        }
+
+        if (!request.getEmail().equals(instructor.getEmail())) {
+            List<Instructor> existingByEmail = instructorRepository.findByEmail(request.getEmail());
+            boolean emailTaken = existingByEmail.stream().anyMatch(i -> !i.getInstructorSeq().equals(id));
+            if (emailTaken) {
+                response.setIsSuccess(false);
+                response.setMessage("An instructor with this email already exists.");
+                return response;
+            }
+        }
+
+        if (!request.getContactNumber().equals(instructor.getContactNumber())) {
+            List<Instructor> existingByContact = instructorRepository.findByContactNumber(request.getContactNumber());
+            boolean contactTaken = existingByContact.stream().anyMatch(i -> !i.getInstructorSeq().equals(id));
+            if (contactTaken) {
+                response.setIsSuccess(false);
+                response.setMessage("An instructor with this contact number already exists.");
+                return response;
+            }
+        }
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+
+        instructor.setFullName(request.getFullName());
+        instructor.setEmail(request.getEmail());
+        instructor.setContactNumber(request.getContactNumber());
+        instructor.setNicNumber(request.getNicNumber());
+        instructor.setAddress(request.getAddress());
+        instructor.setLastModifiedBy(username);
+        instructor.setLastModifiedDateTime(LocalDateTime.now());
+
+        instructorRepository.save(instructor);
+
+        response.setIsSuccess(true);
+        response.setMessage("Instructor updated successfully");
+        return response;
+    }
+
+    @Override
+    public GeneralResponse activateInstructor(Integer id) {
+        return setInstructorStatus(id, 2);
+    }
+
+    @Override
+    public GeneralResponse deactivateInstructor(Integer id) {
+        return setInstructorStatus(id, 1);
+    }
+
+    private GeneralResponse setInstructorStatus(Integer id, Integer status) {
+        GeneralResponse response = new GeneralResponse();
+        Instructor instructor = instructorRepository.findByInstructorSeq(id);
+        if (instructor == null) {
+            response.setIsSuccess(false);
+            response.setMessage("Instructor not found");
+            return response;
+        }
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+
+        instructor.setStatus(status);
+        instructor.setLastModifiedBy(username);
+        instructor.setLastModifiedDateTime(LocalDateTime.now());
+        instructorRepository.save(instructor);
+
+        response.setIsSuccess(true);
+        response.setMessage(status == 2 ? "Instructor activated" : "Instructor deactivated");
+        return response;
     }
 
 }

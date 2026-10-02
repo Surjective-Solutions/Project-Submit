@@ -13,11 +13,6 @@ export const ACADEMIC_YEARS = [2027, 2026, 2025];
 
 export const NOTIFICATION_COUNT = 5;
 
-export const STUDENT_SUMMARY = {
-  active: 4812,
-  newThisMonth: 126,
-};
-
 export const COLLECTION_SUMMARY = {
   month: 'September',
   collected: 18.4, // LKR millions
@@ -69,15 +64,6 @@ export const PAYMENT_METHODS = [
   { key: 'genie', label: 'Genie', share: 21, color: '#08A5E1' },
   { key: 'card', label: 'Card', share: 14, color: '#F27A6C' },
   { key: 'frimi', label: 'FriMi', share: 11, color: '#F3E895' },
-];
-
-export const STUDENTS_BY_STREAM = [
-  { stream: 'Physical Science', count: 1420 },
-  { stream: 'Biological Science', count: 1180 },
-  { stream: 'Commerce', count: 860 },
-  { stream: 'O/L', count: 552 },
-  { stream: 'Technology', count: 410 },
-  { stream: 'Arts', count: 390 },
 ];
 
 // tone: key into the study-pack tint styles in dashboard.module.css

@@ -4,8 +4,9 @@ import { useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import Icon from '@/components/admin/Icon';
 import { useAdminConsole } from '@/components/admin/AdminConsoleContext';
-import {STUDENT_SUMMARY, TODAYS_CLASSES } from './dashboard-data';
+import { TODAYS_CLASSES } from './dashboard-data';
 import { formatNumber, formatWait, plural } from './format';
+import useDashboardData from './useDashboardData';
 import TodayClassesCard from './TodayClassesCard';
 import SlipQueueCard from './SlipQueueCard';
 import { StudentsByStreamCard } from './SummaryCards';
@@ -51,9 +52,9 @@ const QUICK_ACTIONS = [
 const liveClasses = TODAYS_CLASSES.filter((c) => c.status === 'live');
 
 export default function AdminDashboard() {
-  const { profile, slips, pendingSlipCount } = useAdminConsole();
+  const { profile } = useAdminConsole();
   const { greeting, dateLabel } = useColomboToday();
-  const oldestWait = slips.length ? Math.max(...slips.map((s) => s.waitingMinutes)) : 0;
+  const { studentSummary, slipsToVerify, slipQueue, studentsByStream } = useDashboardData();
   const totalClassesToday = TODAYS_CLASSES.length;
   const completedClasses = TODAYS_CLASSES.filter((c) => c.status === 'ended').length;
   
@@ -87,12 +88,22 @@ export default function AdminDashboard() {
             </span>
             Active students
           </div>
-          <p className={styles.kpiValue}>{formatNumber(STUDENT_SUMMARY.active)}</p>
+          <p className={styles.kpiValue}>
+            {studentSummary.data ? formatNumber(studentSummary.data.active) : '—'}
+          </p>
           <div className={styles.kpiFoot}>
-            <span className={styles.kpiDelta}>
-              <Icon name="trending_up" size={16} />+{formatNumber(STUDENT_SUMMARY.newThisMonth)}
-            </span>
-            new this month
+            {studentSummary.data ? (
+              <>
+                <span className={styles.kpiDelta}>
+                  <Icon name="trending_up" size={16} />+{formatNumber(studentSummary.data.newThisMonth)}
+                </span>
+                new this month
+              </>
+            ) : studentSummary.error ? (
+              "Couldn't load student figures"
+            ) : (
+              'Loading…'
+            )}
           </div>
         </div>
 
@@ -116,18 +127,26 @@ export default function AdminDashboard() {
             </span>
             Slips to verify
           </div>
-          <p className={styles.kpiValue}>{formatNumber(pendingSlipCount)}</p>
+          <p className={styles.kpiValue}>
+            {slipsToVerify.data ? formatNumber(slipsToVerify.data.pending) : '—'}
+          </p>
           <div className={styles.kpiFoot}>
-            {pendingSlipCount ? (
-              <>
-                Oldest waiting {formatWait(oldestWait)}
-                <a href="#slip-queue" className={styles.kpiWaitingLink}>
-                  Review queue
-                  <Icon name="arrow_forward" size={16} />
-                </a>
-              </>
+            {slipsToVerify.data ? (
+              slipsToVerify.data.pending ? (
+                <>
+                  Oldest waiting {formatWait(slipsToVerify.data.oldestWaitingMinutes)}
+                  <a href="#slip-queue" className={styles.kpiWaitingLink}>
+                    Review queue
+                    <Icon name="arrow_forward" size={16} />
+                  </a>
+                </>
+              ) : (
+                'All caught up'
+              )
+            ) : slipsToVerify.error ? (
+              "Couldn't load slip figures"
             ) : (
-              'All caught up'
+              'Loading…'
             )}
           </div>
         </div>
@@ -136,12 +155,12 @@ export default function AdminDashboard() {
       {/* ── Classes + slip queue ── */}
       <div className={styles.row}>
         <TodayClassesCard />
-        <SlipQueueCard />
+        <SlipQueueCard slipQueue={slipQueue} />
       </div>
 
       {/* ── Students by stream ── */}
       <div className={styles.row}>
-        <StudentsByStreamCard />
+        <StudentsByStreamCard studentsByStream={studentsByStream} />
       </div>
     </div>
   );

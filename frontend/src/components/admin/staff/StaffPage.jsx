@@ -93,6 +93,7 @@ export default function StaffPage() {
   const [teachersLoading, setTeachersLoading] = useState(true);
   const [teachersError, setTeachersError] = useState('');
   const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'active' | 'inactive'
 
   const category = CATEGORIES.find((c) => c.key === categoryKey);
   const people = data[categoryKey];
@@ -164,20 +165,23 @@ export default function StaffPage() {
   function switchCategory(key) {
     setCategoryKey(key);
     setSearch('');
+    setStatusFilter('all');
     setSelectedId(null);
   }
 
   const filteredPeople = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return people;
     return people.filter((p) => {
+      if (statusFilter === 'active' && p.status !== 'Active') return false;
+      if (statusFilter === 'inactive' && p.status !== 'Inactive') return false;
+      if (!q) return true;
       const haystack = [p.fullName, p.subject, p.assists, p.desk, p.role]
         .filter(Boolean)
         .join(' ')
         .toLowerCase();
       return haystack.includes(q);
     });
-  }, [people, search]);
+  }, [people, search, statusFilter]);
 
   const selectedPerson = people.find((p) => p.id === selectedId) ?? null;
 
@@ -463,6 +467,17 @@ export default function StaffPage() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
+
+            <select
+              className={styles.statusFilterSelect}
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              aria-label="Filter by status"
+            >
+              <option value="all">All statuses</option>
+              <option value="active">Active only</option>
+              <option value="inactive">Inactive only</option>
+            </select>
           </div>
         </div>
 

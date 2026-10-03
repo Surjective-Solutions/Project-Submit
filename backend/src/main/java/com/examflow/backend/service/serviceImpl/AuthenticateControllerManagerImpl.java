@@ -98,7 +98,7 @@ public class AuthenticateControllerManagerImpl implements AuthenticateController
     public LoginResponse loginInstrutor(String identifier, String password) {
 
         LoginResponse loginResponse = new LoginResponse();
-        String role = "intructor";
+        String role = "instructor";
         Instructor instructor = instructorRepository.findByContactNumberAndStatus(identifier, 2);
         if (instructor != null) {
             if (passwordEncoder.matches(password, instructor.getFinalPassword())) {
@@ -178,7 +178,7 @@ public class AuthenticateControllerManagerImpl implements AuthenticateController
     @Override
     public LoginResponse loginTutor(String username, String password) {
         LoginResponse loginResponse = new LoginResponse();
-        String role = "admin";
+        String role = "tutor";
         Tutor tutorUser = tutorRepository.findByUserNameAndStatus(username, 2);
         if (tutorUser != null) {
             if (passwordEncoder.matches(password, tutorUser.getFinalPassword())) {
@@ -210,7 +210,7 @@ public class AuthenticateControllerManagerImpl implements AuthenticateController
     public LoginResponse loginCashier(String username, String password) {
 
         LoginResponse loginResponse = new LoginResponse();
-        String role = "admin";
+        String role = "cashier";
         Cashier cashierUser = cashierRepository.findByUserNameAndStatus(username, 2);
         if (cashierUser != null) {
             if (passwordEncoder.matches(password, cashierUser.getFinalPassword())) {

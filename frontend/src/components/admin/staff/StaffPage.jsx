@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Icon from '@/components/admin/Icon';
 import { CATEGORIES, STAFF_DATA } from '@/mocks/staff';
-import { getTutors, createTutor, activateTutor, deactivateTutor, adminResetTutorPassword, adminUpdateTutor, createInstructor, getInstructors, adminUpdateInstructor, activateInstructor, deactivateInstructor } from '@/lib/api-client';
 import CategoryCard from './CategoryCard';
 import StaffTable from './StaffTable';
 import StaffDrawer from './StaffDrawer';
@@ -12,6 +11,21 @@ import Toast from './Toast';
 import styles from './staff.module.css';
 import EditStaffDialog from './EditStaffDialog';
 import ResetPasswordDialog from './ResetPasswordDialog';
+import { 
+  getTutors, 
+  createTutor, 
+  activateTutor, 
+  deactivateTutor, 
+  adminResetTutorPassword, 
+  adminUpdateTutor, 
+  createInstructor, 
+  getInstructors, 
+  adminUpdateInstructor, 
+  activateInstructor, 
+  deactivateInstructor,
+  createCashier, 
+  getCashiers
+} from '@/lib/api-client';
 
 function formatJoinedDate(isoString) {
   if (!isoString) return '—';
@@ -48,6 +62,20 @@ function mapInstructorToPerson(instructor) {
     nic: instructor.nic_number,
     status: instructor.statusSeq === 2 ? 'Active' : 'Inactive',
     joined: formatJoinedDate(instructor.createdDateTime),
+  };
+}
+
+function mapCashierToPerson(cashier) {
+  return {
+    id: cashier.id,
+    idCode: cashier.cashierCode,
+    fullName: cashier.fullName,
+    mobile: cashier.contactNumber,
+    email: cashier.email,
+    username: cashier.username,
+    nic: cashier.nicNumber,
+    status: 'Active',
+    joined: formatJoinedDate(cashier.createdDateTime),
   };
 }
 
@@ -109,6 +137,26 @@ export default function StaffPage() {
   useEffect(() => {
     loadInstructors();
   }, [loadInstructors]);
+
+  const [cashiersLoading, setCashiersLoading] = useState(true);
+  const [cashiersError, setCashiersError] = useState('');
+
+  const loadCashiers = useCallback(async () => {
+    setCashiersLoading(true);
+    setCashiersError('');
+    try {
+      const cashiers = await getCashiers();
+      setData((prev) => ({ ...prev, cashiers: cashiers.map(mapCashierToPerson) }));
+    } catch (err) {
+      setCashiersError(err?.message || 'Could not load cashiers.');
+    } finally {
+      setCashiersLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadCashiers();
+  }, [loadCashiers]);
 
   function switchCategory(key) {
     setCategoryKey(key);
@@ -289,6 +337,33 @@ export default function StaffPage() {
       return;
     }
 
+      if (targetCategoryKey === 'cashiers') {
+      try {
+        const result = await createCashier({
+          fullName: formValues.fullName,
+          username: formValues.username,
+          email: formValues.email,
+          contactNumber: formValues.contactNumber,
+          nicNumber: formValues.nic,
+          password: formValues.password,
+          confirmPassword: formValues.confirmPassword,
+        });
+
+        if (result?.isSuccess === false) {
+          showToast(result.message || 'Could not create account.');
+          return;
+        }
+
+        setAddOpen(false);
+        switchCategory('cashiers');
+        showToast(`${formValues.fullName} added.`);
+        await loadCashiers();
+      } catch (err) {
+        showToast(err?.message || 'Could not create account.');
+      }
+      return;
+    }
+
     // remaining categories (e.g. cashiers) are still mocked
     const targetCategory = CATEGORIES.find((c) => c.key === targetCategoryKey);
     const existingCount = data[targetCategoryKey].length;
@@ -361,6 +436,10 @@ export default function StaffPage() {
           <div className={styles.emptyState}>Loading instructors…</div>
         ) : categoryKey === 'instructors' && instructorsError ? (
           <div className={styles.emptyState}>{instructorsError}</div>
+        ) : categoryKey === 'cashiers' && cashiersLoading ? (
+          <div className={styles.emptyState}>Loading cashiers…</div>
+        ) : categoryKey === 'cashiers' && cashiersError ? (
+          <div className={styles.emptyState}>{cashiersError}</div>
         ) : (
           <StaffTable
             category={category}

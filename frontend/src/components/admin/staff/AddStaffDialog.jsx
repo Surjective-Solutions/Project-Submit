@@ -65,6 +65,7 @@ const FIELDS = {
     { key: 'username', label: 'Username', placeholder: 'e.g. nadeesha.silva' },
     { key: 'email', label: 'Email', type: 'email', placeholder: 'name@syzygy.lk' },
     { key: 'contactNumber', label: 'Contact number', placeholder: 'e.g. 0712345678' },
+    { key: 'nic', label: 'NIC', placeholder: 'e.g. 200012345678V' },
   ],
 };
 

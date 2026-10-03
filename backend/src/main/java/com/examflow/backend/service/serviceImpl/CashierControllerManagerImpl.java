@@ -10,6 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.security.core.Authentication;
 
+import com.examflow.backend.dto.AdminUpdateCashierRequest;
 import com.examflow.backend.dto.CashierRequest;
 import com.examflow.backend.dto.CashierResponse;
 import com.examflow.backend.dto.GeneralResponse;
@@ -114,7 +115,7 @@ public class CashierControllerManagerImpl implements CashierControllerManager {
         newCashier.setEmail(cashierRequest.getEmail());
         newCashier.setContactNumber(cashierRequest.getContactNumber());
         newCashier.setNicNumber(cashierRequest.getNicNumber());
-        newCashier.setStatus(2); // cashiers are active immediately, same as before
+        newCashier.setStatus(0); // cashiers are active immediately, same as before
 
         newCashier.setConfirmPassword(passwordEncoder.encode(cashierRequest.getConfirmPassword()));
         newCashier.setPassword(passwordEncoder.encode(cashierRequest.getPassword()));
@@ -133,7 +134,7 @@ public class CashierControllerManagerImpl implements CashierControllerManager {
 
     @Override
     public List<CashierResponse> getAllCashiers() {
-        List<Cashier> cashierList = cashierRepository.findByStatus(2);
+        List<Cashier> cashierList = cashierRepository.findAll();
 
         List<CashierResponse> cashierResponseList = new ArrayList<>();
 
@@ -147,6 +148,7 @@ public class CashierControllerManagerImpl implements CashierControllerManager {
             cashierResponse.setNicNumber(cashier.getNicNumber());
             cashierResponse.setCreatedDateTime(cashier.getCreatedDateTime());
             cashierResponse.setCashierCode(cashier.getCashierCode());
+            cashierResponse.setStatus(cashier.getStatus());
             cashierResponseList.add(cashierResponse);
         }
 
@@ -201,4 +203,111 @@ public class CashierControllerManagerImpl implements CashierControllerManager {
         return response;
     }
 
+    @Override
+    public GeneralResponse adminUpdateCashier(Integer cashierSeq, AdminUpdateCashierRequest request) {
+        GeneralResponse response = new GeneralResponse();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+
+        Cashier cashier = cashierRepository.findByCashierSeq(cashierSeq);
+        if (cashier == null) {
+            response.setIsSuccess(false);
+            response.setMessage("Cashier not found.");
+            return response;
+        }
+
+        if (isBlank(request.getFullName()) || isBlank(request.getEmail())
+                || isBlank(request.getContactNumber()) || isBlank(request.getUsername())) {
+            response.setIsSuccess(false);
+            response.setMessage("Please fill all the fields.");
+            return response;
+        }
+
+        if (!USERNAME_PATTERN.matcher(request.getUsername()).matches()) {
+            response.setIsSuccess(false);
+            response.setMessage("Username can only contain letters, numbers, and underscores.");
+            return response;
+        }
+
+        if (!EMAIL_PATTERN.matcher(request.getEmail()).matches()) {
+            response.setIsSuccess(false);
+            response.setMessage("Please enter a valid email address.");
+            return response;
+        }
+
+        if (!CONTACT_NUMBER_PATTERN.matcher(request.getContactNumber()).matches()) {
+            response.setIsSuccess(false);
+            response.setMessage("Contact number must be exactly 10 digits.");
+            return response;
+        }
+
+        for (Cashier existing : cashierRepository.findByUserName(request.getUsername())) {
+            if (!existing.getCashierSeq().equals(cashierSeq)) {
+                response.setIsSuccess(false);
+                response.setMessage("Username already exists.");
+                return response;
+            }
+        }
+
+        for (Cashier existing : cashierRepository.findByEmail(request.getEmail())) {
+            if (!existing.getCashierSeq().equals(cashierSeq)) {
+                response.setIsSuccess(false);
+                response.setMessage("A cashier with this email already exists.");
+                return response;
+            }
+        }
+
+        for (Cashier existing : cashierRepository.findByContactNumber(request.getContactNumber())) {
+            if (!existing.getCashierSeq().equals(cashierSeq)) {
+                response.setIsSuccess(false);
+                response.setMessage("A cashier with this contact number already exists.");
+                return response;
+            }
+        }
+
+        cashier.setFullName(request.getFullName());
+        cashier.setEmail(request.getEmail());
+        cashier.setContactNumber(request.getContactNumber());
+        cashier.setUserName(request.getUsername());
+        cashier.setLastModifiedBy(username);
+        cashier.setLastModifiedDateTime(LocalDateTime.now());
+
+        cashierRepository.save(cashier);
+
+        response.setIsSuccess(true);
+        response.setMessage("Cashier profile updated successfully.");
+        return response;
+    }
+
+    @Override
+    public GeneralResponse activateCashier(Integer cashierSeq) {
+        return setCashierStatus(cashierSeq, 2, "activated");
+    }
+
+    @Override
+    public GeneralResponse deactivateCashier(Integer cashierSeq) {
+        return setCashierStatus(cashierSeq, 0, "deactivated");
+    }
+
+    private GeneralResponse setCashierStatus(Integer cashierSeq, int status, String action) {
+        GeneralResponse response = new GeneralResponse();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+
+        Cashier cashier = cashierRepository.findByCashierSeq(cashierSeq);
+        if (cashier == null) {
+            response.setIsSuccess(false);
+            response.setMessage("Cashier not found.");
+            return response;
+        }
+
+        cashier.setStatus(status);
+        cashier.setLastModifiedBy(username);
+        cashier.setLastModifiedDateTime(LocalDateTime.now());
+        cashierRepository.save(cashier);
+
+        response.setIsSuccess(true);
+        response.setMessage(cashier.getFullName() + " was " + action + ".");
+        return response;
+    }
 }

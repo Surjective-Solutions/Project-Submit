@@ -16,6 +16,8 @@ public class CashierResponse {
 
     private String cashierCode; 
 
+    private Integer status;
+
     private java.time.LocalDateTime createdDateTime; 
 
     public Integer getId() {
@@ -78,4 +80,10 @@ public class CashierResponse {
         this.cashierCode = cashierCode;
     }
 
+    public Integer getStatus() {
+        return status;
+    }
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
 }

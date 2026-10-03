@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.examflow.backend.dto.CashierRequest;
 import com.examflow.backend.dto.CashierResponse;
 import com.examflow.backend.dto.GeneralResponse;
+import com.examflow.backend.dto.AdminUpdateCashierRequest; 
 
 @Service
 public interface CashierControllerManager {
@@ -18,6 +19,12 @@ public interface CashierControllerManager {
     String deleteCashier(Integer CashierSeq);
 
     List<CashierResponse> getAllCashiers();
+
+    GeneralResponse adminUpdateCashier(Integer cashierSeq, AdminUpdateCashierRequest request);
+
+    GeneralResponse activateCashier(Integer cashierSeq);
+
+    GeneralResponse deactivateCashier(Integer cashierSeq);
 
 }
 

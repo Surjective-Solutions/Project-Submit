@@ -15,6 +15,7 @@ import com.examflow.backend.dto.CashierRequest;
 import com.examflow.backend.dto.CashierResponse;
 import com.examflow.backend.dto.GeneralResponse;
 import com.examflow.backend.dto.TutorRequest;
+import com.examflow.backend.dto.AdminUpdateCashierRequest;
 import com.examflow.backend.repository.CashierRepository;
 import com.examflow.backend.service.CashierControllerManager;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -62,6 +63,21 @@ public class CashierController {
         int cashierSeq = Integer.parseInt(id);
         String result = cashierControllerManager.deleteCashier(cashierSeq);
         return result;
+    }
+
+    @PutMapping("/admin/update/{id}")
+    public GeneralResponse adminUpdateCashier(@PathVariable Integer id, @RequestBody AdminUpdateCashierRequest request) {
+        return cashierControllerManager.adminUpdateCashier(id, request);
+    }
+
+    @PutMapping("/admin/activate/{id}")
+    public GeneralResponse activateCashier(@PathVariable Integer id) {
+        return cashierControllerManager.activateCashier(id);
+    }
+
+    @PutMapping("/admin/deactivate/{id}")
+    public GeneralResponse deactivateCashier(@PathVariable Integer id) {
+        return cashierControllerManager.deactivateCashier(id);
     }
 
 }

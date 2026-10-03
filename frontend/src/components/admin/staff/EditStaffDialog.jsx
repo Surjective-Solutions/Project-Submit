@@ -28,6 +28,7 @@ const SUBJECTS_BY_LEVEL = {
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const CONTACT_NUMBER_PATTERN = /^\d{10}$/;
+const USERNAME_PATTERN = /^[a-zA-Z0-9_]+$/;
 
 function validateFieldValue(key, value) {
   if (key === 'email' && !EMAIL_PATTERN.test(value)) {
@@ -35,6 +36,9 @@ function validateFieldValue(key, value) {
   }
   if (key === 'mobile' && !CONTACT_NUMBER_PATTERN.test(value)) {
     return 'Contact number must be exactly 10 digits.';
+  }
+  if (key === 'username' && !USERNAME_PATTERN.test(value)) {
+    return 'Username can only contain letters, numbers, and underscores.';
   }
   return null;
 }
@@ -75,6 +79,8 @@ const EDIT_FIELDS = {
     { key: 'fullName', label: 'Full name', placeholder: 'e.g. Ms. Nadeesha Silva' },
     { key: 'email', label: 'Email', type: 'email', placeholder: 'name@syzygy.lk' },
     { key: 'mobile', label: 'Contact number', placeholder: '+94 71 234 5678' },
+    { key: 'username', label: 'Username'},
+    { key: 'nic', label: 'NIC', readOnly: true },
   ],
 };
 

@@ -20,8 +20,10 @@ const INFO_FIELDS = {
     { label: 'NIC', value: (p) => p.nic },
     { label: 'Address', value: (p) => p.address },
   ],
-  cashiers: [
-  { label: 'Joined', value: (p) => p.joined },
+    cashiers: [
+    { label: 'Username', value: (p) => p.username },
+    { label: 'NIC', value: (p) => p.nic },
+    { label: 'Joined', value: (p) => p.joined },
   ],
 };
 

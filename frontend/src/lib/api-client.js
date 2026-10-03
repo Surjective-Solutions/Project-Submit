@@ -533,8 +533,6 @@ export async function getCashiers() {
   });
 }
 
-
-
 // TODO: replace with actual microservice endpoint
 export async function createCashier(data) {
   return protectedRequest("/api/cashier/create", { body: data });
@@ -606,6 +604,28 @@ export async function makeBankTransfer(formData) {
 export async function getPaymentRecords() {
   return protectedRequestPath("/api/payments/get-all-payments", {
     method: "GET",
+  });
+}
+
+// admin edits a cashier's profile fields directly, no current-password confirmation required
+export async function adminUpdateCashier(id, data) {
+  return protectedRequestPath(`/api/cashier/admin/update/${id}`, {
+    method: "PUT",
+    body: data,
+  });
+}
+
+// admin activates a cashier account
+export async function activateCashier(id) {
+  return protectedRequestPath(`/api/cashier/admin/activate/${id}`, {
+    method: "PUT",
+  });
+}
+
+// admin deactivates a cashier account
+export async function deactivateCashier(id) {
+  return protectedRequestPath(`/api/cashier/admin/deactivate/${id}`, {
+    method: "PUT",
   });
 }
 

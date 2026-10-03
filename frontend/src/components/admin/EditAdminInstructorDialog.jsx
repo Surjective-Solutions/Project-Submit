@@ -18,7 +18,7 @@ import { Label } from '@/components/ui/label';
 import PasswordField from './PasswordField';
 import PasswordStrengthIndicator from './PasswordStrengthIndicator';
 import { adminInstructorEditSchema } from '@/lib/validations/admin';
-import { updateAdminInstructor } from '@/lib/api-client';
+import { adminUpdateInstructor } from '@/lib/api-client';
 
 const SELECT_CLASS =
   'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring disabled:cursor-not-allowed disabled:opacity-50';
@@ -82,7 +82,7 @@ export default function EditAdminInstructorDialog({
 
   async function onSubmit(data) {
     try {
-      await updateAdminInstructor(instructor.id, data);
+      await adminUpdateInstructor(instructor.id, data);
       toast.success('Instructor updated successfully');
       onOpenChange(false);
       onSave({ ...instructor, ...data });

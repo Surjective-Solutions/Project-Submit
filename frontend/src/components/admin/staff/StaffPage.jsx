@@ -24,7 +24,10 @@ import {
   activateInstructor, 
   deactivateInstructor,
   createCashier, 
-  getCashiers
+  getCashiers,
+  adminUpdateCashier,
+  activateCashier,
+  deactivateCashier
 } from '@/lib/api-client';
 
 function formatJoinedDate(isoString) {
@@ -74,7 +77,7 @@ function mapCashierToPerson(cashier) {
     email: cashier.email,
     username: cashier.username,
     nic: cashier.nicNumber,
-    status: 'Active',
+    status: cashier.status === 2 ? 'Active' : 'Inactive',
     joined: formatJoinedDate(cashier.createdDateTime),
   };
 }
@@ -219,6 +222,18 @@ export default function StaffPage() {
       return;
     }
 
+    if (categoryKey === 'cashiers') {
+      try {
+        const result =
+          person.status === 'Inactive' ? await activateCashier(person.id) : await deactivateCashier(person.id);
+        showToast(result?.message || `${person.fullName}'s account updated.`);
+        await loadCashiers();
+      } catch (err) {
+        showToast(err?.message || 'Could not update account status.');
+      }
+      return;
+    }
+
     showToast("Activation isn't wired up for this role yet.");
   }
 
@@ -270,6 +285,29 @@ export default function StaffPage() {
         setEditOpen(false);
         showToast(result?.message || 'Profile updated.');
         await loadInstructors();
+      } catch (err) {
+        showToast(err?.message || 'Could not save changes.');
+      }
+      return;
+    }
+
+    if (categoryKey === 'cashiers') {
+      try {
+        const result = await adminUpdateCashier(personId, {
+          fullName: formValues.fullName,
+          email: formValues.email,
+          contactNumber: formValues.mobile,
+          username: formValues.username,
+        });
+
+        if (result?.isSuccess === false) {
+          showToast(result.message || 'Could not save changes.');
+          return;
+        }
+
+        setEditOpen(false);
+        showToast(result?.message || 'Profile updated.');
+        await loadCashiers();
       } catch (err) {
         showToast(err?.message || 'Could not save changes.');
       }

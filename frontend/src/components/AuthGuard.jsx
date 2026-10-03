@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { isTokenExpired, markSessionExpired } from '@/lib/auth';
+import { isTokenExpired, markSessionExpired, markAccountDeactivated, getUserRole } from '@/lib/auth';
+import { getSessionStatus } from '@/lib/api-client';
 
 const SESSION_CHECK_INTERVAL_MS = 5000;
+const DEACTIVATABLE_ROLES = ['tutor', 'instructor', 'cashier'];
 
 export default function AuthGuard({ children, loginPath }) {
   const router = useRouter();
@@ -21,16 +23,31 @@ export default function AuthGuard({ children, loginPath }) {
     }
   }, [router, loginPath]);
 
-  // Catches tokens that expire while the user stays on the page without navigating.
+  // Catches tokens that expire, or accounts that get deactivated, while the user stays on the page.
   useEffect(() => {
     if (isChecking) return;
 
-    const intervalId = setInterval(() => {
+    const intervalId = setInterval(async () => {
       if (isTokenExpired()) {
         sessionStorage.removeItem('token');
         sessionStorage.removeItem('role');
         markSessionExpired();
         router.replace(loginPath);
+        return;
+      }
+
+      if (DEACTIVATABLE_ROLES.includes(getUserRole())) {
+        try {
+          const { active } = await getSessionStatus();
+          if (active === false) {
+            sessionStorage.removeItem('token');
+            sessionStorage.removeItem('role');
+            markAccountDeactivated();
+            router.replace(loginPath);
+          }
+        } catch {
+          // transient network/server error — don't log the user out over a blip
+        }
       }
     }, SESSION_CHECK_INTERVAL_MS);
 

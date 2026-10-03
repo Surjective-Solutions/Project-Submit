@@ -44,3 +44,17 @@ export function consumeSessionExpiredFlag() {
   }
   return wasExpired;
 }
+
+const ACCOUNT_DEACTIVATED_KEY = 'accountDeactivated';
+
+export function markAccountDeactivated() {
+  sessionStorage.setItem(ACCOUNT_DEACTIVATED_KEY, 'true');
+}
+
+export function consumeAccountDeactivatedFlag() {
+  const wasDeactivated = sessionStorage.getItem(ACCOUNT_DEACTIVATED_KEY) === 'true';
+  if (wasDeactivated) {
+    sessionStorage.removeItem(ACCOUNT_DEACTIVATED_KEY);
+  }
+  return wasDeactivated;
+}

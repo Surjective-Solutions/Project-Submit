@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { instructorLoginSchema } from '@/lib/validations/instructor';
 import { instructorLogin } from '@/lib/api-client';
-import { consumeSessionExpiredFlag } from '@/lib/auth';
+import { consumeSessionExpiredFlag, consumeAccountDeactivatedFlag } from '@/lib/auth';
 
 export default function InstructorLoginForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -32,6 +32,9 @@ export default function InstructorLoginForm() {
   useEffect(() => {
     if (consumeSessionExpiredFlag()) {
       toast.error('Session expired. Please log in again.');
+    }
+    if (consumeAccountDeactivatedFlag()) {
+      toast.error('Your account has been deactivated by an admin.');
     }
   }, []);
 

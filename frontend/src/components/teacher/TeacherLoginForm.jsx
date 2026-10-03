@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import PasswordField from '@/components/admin/PasswordField';
 import { teacherLoginSchema } from '@/lib/validations/admin';
 import { teacherLogin } from '@/lib/api-client';
-import { consumeSessionExpiredFlag } from '@/lib/auth';
+import { consumeSessionExpiredFlag, consumeAccountDeactivatedFlag } from '@/lib/auth';
 
 export default function TeacherLoginForm() {
   const [isLoading, setIsLoading] = useState(false);
@@ -32,6 +32,9 @@ export default function TeacherLoginForm() {
   useEffect(() => {
     if (consumeSessionExpiredFlag()) {
       toast.error('Session expired. Please log in again.');
+    }
+    if (consumeAccountDeactivatedFlag()) {
+      toast.error('Your account has been deactivated by an admin.');
     }
   }, []);
 

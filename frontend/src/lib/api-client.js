@@ -152,6 +152,11 @@ export async function instructorRegister(data) {
   return actualRequest("/api/test/instructor/register", { body: data });
 }
 
+// poll whether the current session's account is still active
+export async function getSessionStatus() {
+  return protectedRequestPath('/api/session/status', { method: 'GET' });
+}
+
 // ── Admin ─────────────────────────────────────────────────────────────────────
 
 // TODO: replace with actual microservice endpoint

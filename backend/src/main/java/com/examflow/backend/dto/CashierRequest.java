@@ -18,6 +18,10 @@ public class CashierRequest {
 
     private String confirmNewPassword;
 
+    private String contactNumber;
+
+    private String nicNumber;
+
     public String getEmail() {
         return email;
     }
@@ -80,6 +84,22 @@ public class CashierRequest {
 
     public void setConfirmNewPassword(String confirmNewPassword) {
         this.confirmNewPassword = confirmNewPassword;
+    }
+
+    public String getContactNumber() {
+        return contactNumber;
+    }
+
+    public void setContactNumber(String contactNumber) {
+        this.contactNumber = contactNumber;
+    }
+
+    public String getNicNumber() {
+        return nicNumber;
+    }
+
+    public void setNicNumber(String nicNumber) {
+        this.nicNumber = nicNumber;
     }
 
 }

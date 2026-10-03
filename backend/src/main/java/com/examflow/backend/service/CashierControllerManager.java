@@ -20,3 +20,4 @@ public interface CashierControllerManager {
     List<CashierResponse> getAllCashiers();
 
 }
+

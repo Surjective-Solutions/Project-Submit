@@ -10,6 +10,14 @@ public class CashierResponse {
 
     private String username;
 
+    private String contactNumber;
+
+    private String nicNumber;
+
+    private String cashierCode; 
+
+    private java.time.LocalDateTime createdDateTime; 
+
     public Integer getId() {
         return id;
     }
@@ -40,6 +48,34 @@ public class CashierResponse {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public String getContactNumber() {
+        return contactNumber;
+    }
+    public void setContactNumber(String contactNumber) {
+        this.contactNumber = contactNumber;
+    }
+
+    public String getNicNumber() {
+        return nicNumber;
+    }
+    public void setNicNumber(String nicNumber) {
+        this.nicNumber = nicNumber;
+    }
+
+    public java.time.LocalDateTime getCreatedDateTime() {
+        return createdDateTime;
+    }
+    public void setCreatedDateTime(java.time.LocalDateTime createdDateTime) {
+        this.createdDateTime = createdDateTime;
+    }
+
+    public String getCashierCode() {
+        return cashierCode;
+    }
+    public void setCashierCode(String cashierCode) {
+        this.cashierCode = cashierCode;
     }
 
 }

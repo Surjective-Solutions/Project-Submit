@@ -37,6 +37,12 @@ public class Cashier {
 
     private Integer status;
 
+    private String contactNumber;
+
+    private String nicNumber;
+
+    private String cashierCode;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "cashierSeq")
@@ -147,4 +153,28 @@ public class Cashier {
         this.fullName = fullName;
     }
 
+    @Column(name = "contactNumber")
+    public String getContactNumber() {
+        return contactNumber;
+    }
+
+    public void setContactNumber(String contactNumber) {
+        this.contactNumber = contactNumber;
+    }
+
+    @Column(name = "nicNumber")
+    public String getNicNumber() {
+        return nicNumber;
+    }
+    public void setNicNumber(String nicNumber) {
+        this.nicNumber = nicNumber;
+    }
+
+    @Column(name = "cashierCode", insertable = false, updatable = false)
+    public String getCashierCode() {
+        return cashierCode;
+    }
+    public void setCashierCode(String cashierCode) {
+        this.cashierCode = cashierCode;
+    }
 }

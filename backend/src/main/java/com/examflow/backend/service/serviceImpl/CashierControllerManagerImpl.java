@@ -23,6 +23,15 @@ public class CashierControllerManagerImpl implements CashierControllerManager {
     private final CashierRepository cashierRepository;
     private final PasswordEncoder passwordEncoder;
 
+    private static final java.util.regex.Pattern USERNAME_PATTERN = java.util.regex.Pattern.compile("^[a-zA-Z0-9_]+$");
+    private static final java.util.regex.Pattern EMAIL_PATTERN = java.util.regex.Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
+    private static final java.util.regex.Pattern CONTACT_NUMBER_PATTERN = java.util.regex.Pattern.compile("^\\d{10}$");
+    private static final java.util.regex.Pattern STRONG_PASSWORD_PATTERN = java.util.regex.Pattern.compile("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$");
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
+    }
+
     @Autowired
     public CashierControllerManagerImpl(CashierRepository cashierRepository,
             PasswordEncoder passwordEncoder) {
@@ -35,36 +44,91 @@ public class CashierControllerManagerImpl implements CashierControllerManager {
         GeneralResponse response = new GeneralResponse();
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
-        Cashier newCashier = new Cashier();
-        System.out.println(username);
 
-        List<Cashier> existingCashiers = cashierRepository.findByUserName(cashierRequest.getUsername());
-        if (existingCashiers.size() != 0) {
+        if (isBlank(cashierRequest.getFullName())
+                || isBlank(cashierRequest.getUsername())
+                || isBlank(cashierRequest.getEmail())
+                || isBlank(cashierRequest.getContactNumber())
+                || isBlank(cashierRequest.getNicNumber())
+                || isBlank(cashierRequest.getPassword())
+                || isBlank(cashierRequest.getConfirmPassword())) {
             response.setIsSuccess(false);
-            response.setMessage("userName Already exists");
-            return response;
-        } else {
-
-            newCashier.setUserName(cashierRequest.getUsername());
-            newCashier.setFullName(cashierRequest.getFullName());
-            newCashier.setEmail(cashierRequest.getEmail());
-            newCashier.setStatus(2);// make cashier to approved status
-
-            newCashier.setConfirmPassword(passwordEncoder.encode(cashierRequest.getConfirmPassword()));
-            newCashier.setPassword(passwordEncoder.encode(cashierRequest.getPassword()));
-            newCashier.setFinalPassword(passwordEncoder.encode(cashierRequest.getConfirmPassword()));
-
-            newCashier.setCreatedDateTime(LocalDateTime.now());
-            newCashier.setLastModifiedDateTime(LocalDateTime.now());
-            newCashier.setCreatedBy(username);
-            newCashier.setLastModifiedBy(username);
-
-            cashierRepository.save(newCashier);
-            response.setIsSuccess(true);
-            response.setMessage("Cashier Created Successsfully");
+            response.setMessage("Please fill all the fields.");
             return response;
         }
 
+        if (!USERNAME_PATTERN.matcher(cashierRequest.getUsername()).matches()) {
+            response.setIsSuccess(false);
+            response.setMessage("Username can only contain letters, numbers, and underscores.");
+            return response;
+        }
+
+        if (!EMAIL_PATTERN.matcher(cashierRequest.getEmail()).matches()) {
+            response.setIsSuccess(false);
+            response.setMessage("Please enter a valid email address.");
+            return response;
+        }
+
+        if (!CONTACT_NUMBER_PATTERN.matcher(cashierRequest.getContactNumber()).matches()) {
+            response.setIsSuccess(false);
+            response.setMessage("Contact number must be exactly 10 digits.");
+            return response;
+        }
+
+        if (!STRONG_PASSWORD_PATTERN.matcher(cashierRequest.getPassword()).matches()) {
+            response.setIsSuccess(false);
+            response.setMessage("Password must be at least 8 characters and include an uppercase letter, a lowercase letter, a number, and a special character.");
+            return response;
+        }
+
+        if (!cashierRequest.getPassword().equals(cashierRequest.getConfirmPassword())) {
+            response.setIsSuccess(false);
+            response.setMessage("Passwords do not match.");
+            return response;
+        }
+
+        List<Cashier> existingByUsername = cashierRepository.findByUserName(cashierRequest.getUsername());
+        if (!existingByUsername.isEmpty()) {
+            response.setIsSuccess(false);
+            response.setMessage("Username already exists.");
+            return response;
+        }
+
+        List<Cashier> existingByEmail = cashierRepository.findByEmail(cashierRequest.getEmail());
+        if (!existingByEmail.isEmpty()) {
+            response.setIsSuccess(false);
+            response.setMessage("A cashier with this email already exists.");
+            return response;
+        }
+
+        List<Cashier> existingByContact = cashierRepository.findByContactNumber(cashierRequest.getContactNumber());
+        if (!existingByContact.isEmpty()) {
+            response.setIsSuccess(false);
+            response.setMessage("A cashier with this contact number already exists.");
+            return response;
+        }
+
+        Cashier newCashier = new Cashier();
+        newCashier.setUserName(cashierRequest.getUsername());
+        newCashier.setFullName(cashierRequest.getFullName());
+        newCashier.setEmail(cashierRequest.getEmail());
+        newCashier.setContactNumber(cashierRequest.getContactNumber());
+        newCashier.setNicNumber(cashierRequest.getNicNumber());
+        newCashier.setStatus(2); // cashiers are active immediately, same as before
+
+        newCashier.setConfirmPassword(passwordEncoder.encode(cashierRequest.getConfirmPassword()));
+        newCashier.setPassword(passwordEncoder.encode(cashierRequest.getPassword()));
+        newCashier.setFinalPassword(passwordEncoder.encode(cashierRequest.getConfirmPassword()));
+
+        newCashier.setCreatedDateTime(LocalDateTime.now());
+        newCashier.setLastModifiedDateTime(LocalDateTime.now());
+        newCashier.setCreatedBy(username);
+        newCashier.setLastModifiedBy(username);
+
+        cashierRepository.save(newCashier);
+        response.setIsSuccess(true);
+        response.setMessage("Cashier created successfully");
+        return response;
     }
 
     @Override
@@ -79,6 +143,10 @@ public class CashierControllerManagerImpl implements CashierControllerManager {
             cashierResponse.setEmail(cashier.getEmail());
             cashierResponse.setUsername(cashier.getUserName());
             cashierResponse.setId(cashier.getCashierSeq());
+            cashierResponse.setContactNumber(cashier.getContactNumber());
+            cashierResponse.setNicNumber(cashier.getNicNumber());
+            cashierResponse.setCreatedDateTime(cashier.getCreatedDateTime());
+            cashierResponse.setCashierCode(cashier.getCashierCode());
             cashierResponseList.add(cashierResponse);
         }
 

@@ -15,4 +15,8 @@ public interface CashierRepository extends JpaRepository<Cashier, Integer> {
     List<Cashier> findByStatus(Integer statusSeq);
 
     Cashier findByCashierSeq(Integer cashierSeq);
+
+    List<Cashier> findByEmail(String email);
+
+    List<Cashier> findByContactNumber(String contactNumber);
 }

@@ -169,18 +169,22 @@ export default function StaffPage() {
     setSelectedId(null);
   }
 
-  const filteredPeople = useMemo(() => {
+    const filteredPeople = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return people.filter((p) => {
-      if (statusFilter === 'active' && p.status !== 'Active') return false;
-      if (statusFilter === 'inactive' && p.status !== 'Inactive') return false;
-      if (!q) return true;
-      const haystack = [p.fullName, p.subject, p.assists, p.desk, p.role]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
-      return haystack.includes(q);
-    });
+    return people
+      .filter((p) => {
+        if (statusFilter === 'active' && p.status !== 'Active') return false;
+        if (statusFilter === 'inactive' && p.status !== 'Inactive') return false;
+        if (!q) return true;
+        const haystack = [p.fullName, p.subject, p.assists, p.desk, p.role]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+        return haystack.includes(q);
+      })
+      .sort((a, b) =>
+        (a.fullName ?? '').localeCompare(b.fullName ?? '', undefined, { sensitivity: 'base' })
+      );
   }, [people, search, statusFilter]);
 
   const selectedPerson = people.find((p) => p.id === selectedId) ?? null;

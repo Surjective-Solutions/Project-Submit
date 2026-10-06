@@ -447,7 +447,7 @@ export default function StaffPage() {
           <CategoryCard
             key={cat.key}
             category={cat}
-            count={data[cat.key].length}
+            count={data[cat.key].filter((p) => p.status === 'Active').length}
             active={cat.key === categoryKey}
             onClick={() => switchCategory(cat.key)}
           />

@@ -22,7 +22,13 @@ export default function CategoryCard({ category, count, active, onClick }) {
           <span className={styles.categoryLabel}>{category.label}</span>
           {active && <span className={styles.categoryDot} aria-hidden="true" />}
         </span>
-        <span className={styles.categoryCount}>{count}</span>
+        <span className={styles.categoryCountRow}>
+          <span className={styles.categoryCount}>{count}</span>
+          <span className={styles.activePill}>
+            <span className={styles.activePillDot} aria-hidden="true" />
+            Active
+          </span>
+        </span>
       </span>
     </button>
   );

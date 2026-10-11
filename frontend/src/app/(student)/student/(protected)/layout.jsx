@@ -9,7 +9,7 @@ import AuthGuard from '@/components/AuthGuard';
 
 export default function StudentLayout({ children }) {
   return (
-    <AuthGuard loginPath="/login">
+    <AuthGuard loginPath="/login" role="student">
       <div data-student-shell>
         <SidebarProvider defaultOpen={true}>
           <Suspense fallback={null}>

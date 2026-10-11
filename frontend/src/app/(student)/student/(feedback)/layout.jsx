@@ -4,7 +4,7 @@ import { EnrolledClassesProvider } from '@/context/EnrolledClassesContext';
 
 export default function FeedbackRouteLayout({ children }) {
   return (
-    <AuthGuard loginPath="/login">
+    <AuthGuard loginPath="/login" role="student">
       <EnrolledClassesProvider>
         <div className="min-h-screen bg-[#F8FAFC]">
           {children}

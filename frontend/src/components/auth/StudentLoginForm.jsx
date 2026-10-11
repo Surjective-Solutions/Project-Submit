@@ -14,8 +14,15 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import GoogleIcon from './GoogleIcon';
 import { studentLoginSchema } from '@/lib/validations/student';
-import { studentLogin } from '@/lib/api-client';
-import { consumeSessionExpiredFlag } from '@/lib/auth';
+import { studentLogin, verifyStudentDevice } from '@/lib/api-client';
+import {
+  consumeSessionExpiredFlag,
+  consumeAccountDeactivatedFlag,
+  getUserSeq,
+  getDeviceId,
+  saveDeviceId,
+  canStoreDeviceId,
+} from '@/lib/auth';
 
 export default function StudentLoginForm() {
   const router = useRouter();
@@ -35,6 +42,9 @@ export default function StudentLoginForm() {
     if (consumeSessionExpiredFlag()) {
       toast.error('Session expired. Please log in again.');
     }
+    if (consumeAccountDeactivatedFlag()) {
+      toast.error('Your account has been disabled. Please contact the institute.');
+    }
   }, []);
 
   async function onSubmit(data) {
@@ -42,14 +52,42 @@ export default function StudentLoginForm() {
     try {
       const result = await studentLogin(data.identifier, data.password);
       if (result.isSuccess) {
+        // the device check is a protected call, so the token has to be stored first
         sessionStorage.setItem('token', result.token);
         sessionStorage.setItem('role', result.role);
+
+        // On first login (or the first one after an admin re-activates a blocked account) the
+        // backend generates a new device id for this browser to keep; later logins send it back.
+        const userSeq = getUserSeq();
+        if (result.isFirstLogin && !canStoreDeviceId()) {
+          sessionStorage.removeItem('token');
+          sessionStorage.removeItem('role');
+          toast.error("This browser is blocking site storage, so it can't be registered as your device.");
+          return;
+        }
+
+        const deviceCheck = await verifyStudentDevice(result.isFirstLogin ? null : getDeviceId(userSeq));
+        if (!deviceCheck.isSuccess) {
+          sessionStorage.removeItem('token');
+          sessionStorage.removeItem('role');
+          toast.error(deviceCheck.message ?? 'This device is not allowed for this account.');
+          return;
+        }
+        if (deviceCheck.deviceId) {
+          saveDeviceId(userSeq, deviceCheck.deviceId);
+        }
+        // the login token only allowed the device check; this one carries the session id
+        sessionStorage.setItem('token', deviceCheck.token);
+
         toast.success(result.message ?? 'Logged in successfully');
         router.push('/student/dashboard');
       } else {
         toast.error(result.message ?? 'Invalid credentials');
       }
     } catch {
+      // don't leave a token behind if it was the device check that failed
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('role');
       toast.error('Login failed. Please check your credentials.');
     } finally {
       setIsLoading(false);

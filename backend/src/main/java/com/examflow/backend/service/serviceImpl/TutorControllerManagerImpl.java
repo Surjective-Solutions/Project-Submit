@@ -25,6 +25,7 @@ import com.examflow.backend.repository.InstructorRepository;
 import com.examflow.backend.repository.TutorInstructorRepository;
 import com.examflow.backend.repository.TutorRepository;
 import com.examflow.backend.repository.StudentClassesRepository;
+import com.examflow.backend.service.RefreshTokenControllerManager;
 import com.examflow.backend.service.TutorControllermanager;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -38,6 +39,7 @@ public class TutorControllerManagerImpl implements TutorControllermanager {
     private final TutorInstructorRepository tutorInstructorRepository;
     private final ClassesRepository classesRepository;
     private final StudentClassesRepository studentClassesRepository;
+    private final RefreshTokenControllerManager refreshTokenControllerManager;
     private HttpServletRequest request;
 
     private static final java.util.regex.Pattern USERNAME_PATTERN =
@@ -57,7 +59,8 @@ private static final java.util.regex.Pattern STRONG_PASSWORD_PATTERN =
             ClassesRepository classesRepository,
             InstructorRepository instructorRepository,
             PasswordEncoder passwordEncoder,
-            StudentClassesRepository studentClassesRepository) {
+            StudentClassesRepository studentClassesRepository,
+            RefreshTokenControllerManager refreshTokenControllerManager) {
         this.tutorRepository = tutorRepository;
         this.passwordEncoder = passwordEncoder;
         this.request = request;
@@ -65,6 +68,7 @@ private static final java.util.regex.Pattern STRONG_PASSWORD_PATTERN =
         this.instructorRepository = instructorRepository;
         this.tutorInstructorRepository = tutorInstructorRepository;
         this.studentClassesRepository = studentClassesRepository;
+        this.refreshTokenControllerManager = refreshTokenControllerManager;
     }
 
     private boolean isBlank(String value) {
@@ -388,6 +392,10 @@ private static final java.util.regex.Pattern STRONG_PASSWORD_PATTERN =
         tutor.setLastModifiedBy(username);
         tutor.setLastModifiedDateTime(LocalDateTime.now());
         tutorRepository.save(tutor);
+        if (status != 2) {
+            // a deactivated account's open sessions end now, not when its refresh cookie expires
+            refreshTokenControllerManager.revokeAllSessions(tutorSeq, "tutor");
+        }
 
         response.setIsSuccess(true);
         response.setMessage(tutor.getName() + " " + actionLabel + " successfully.");
@@ -407,6 +415,7 @@ private static final java.util.regex.Pattern STRONG_PASSWORD_PATTERN =
 
         response = tutor.getName() + " Deleted Successfully.";
         tutorRepository.save(tutor);
+        refreshTokenControllerManager.revokeAllSessions(tutorSeq, "tutor");
 
         return response;
     }

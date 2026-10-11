@@ -88,7 +88,7 @@ public class AdminDashboardControllerManagerImpl implements AdminDashboardContro
     @Override
     public SlipQueueResponse getSlipQueue(Integer limit) {
 
-        // Oldest first: that is the order the admin should work through the queue.
+        // Oldest first
         int pageSize = Math.min(Math.max(limit, 1), MAX_SLIP_QUEUE_SIZE);
         List<StudentClassPaymentRecord> pendingSlips = studentClassPaymentRecordsRepository
                 .findByStatusAndIsForPaymentsAndIsApprovedIsNullOrderByPayedTimeAsc(OPEN_PAYMENT_RECORD_STATUS, true,

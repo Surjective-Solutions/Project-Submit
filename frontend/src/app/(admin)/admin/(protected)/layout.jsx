@@ -8,7 +8,7 @@ import styles from '@/components/admin/admin-console.module.css';
 
 export default function AdminLayout({ children }) {
   return (
-    <AuthGuard loginPath="/admin/login">
+    <AuthGuard loginPath="/admin/login" role="admin">
       <AdminConsoleProvider>
         <SidebarProvider data-admin-shell defaultOpen className={styles.shell}>
           <AdminSidebar />

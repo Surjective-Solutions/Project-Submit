@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { CreditCard, GraduationCap, UserCheck, LogOut } from 'lucide-react';
+import { logoutSession } from '@/lib/api-client';
 import {
   Sidebar,
   SidebarContent,
@@ -225,7 +226,10 @@ export default function CashierSidebar() {
               tooltip="Logout"
               className="h-8 rounded-lg text-[13px] mt-0.5 transition-colors"
               style={{ color: 'rgba(255,255,255,0.38)' }}
-              onClick={() => {}}
+              onClick={async () => {
+                await logoutSession('cashier');
+                window.location.href = '/cashier/login';
+              }}
             >
               <LogOut className="h-3.5 w-3.5 shrink-0" />
               {!collapsed && <span>Logout</span>}

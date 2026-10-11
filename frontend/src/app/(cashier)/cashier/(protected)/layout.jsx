@@ -8,7 +8,7 @@ import AuthGuard from '@/components/AuthGuard';
 
 export default function CashierLayout({ children }) {
   return (
-    <AuthGuard loginPath="/cashier/login">
+    <AuthGuard loginPath="/cashier/login" role="cashier">
       <div data-cashier-shell>
         <SidebarProvider defaultOpen={true}>
           <Suspense fallback={null}>

@@ -96,6 +96,7 @@ public class UserSignUpControllerManagerImpl implements UserSignUpControllermana
             student.setTermsAccepted(userSignUpRequest.getTermsAccepted());
             student.setFinalPassword(passwordEncoder.encode(userSignUpRequest.getConfirmPassword()));
             student.setStatus(2);// set status to approved status
+            student.setIsFirstLogin(true);
 
             studentRepository.save(student);
             System.out.println("Student saved successfully");

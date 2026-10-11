@@ -38,6 +38,7 @@ import com.examflow.backend.repository.UploadPaperQuestionRepository;
 import com.examflow.backend.repository.UploadPaperQuestionSubQuestionRepository;
 import com.examflow.backend.repository.UploadPaperRepository;
 import com.examflow.backend.service.InstructorControllerManager;
+import com.examflow.backend.service.RefreshTokenControllerManager;
 import com.examflow.backend.dto.GeneralResponse;
 import com.examflow.backend.dto.InstructorSignUpRequest;
 import com.examflow.backend.dto.InstructorTeacherClassesResponse;
@@ -64,6 +65,7 @@ public class InstructorControllerManagerImpl implements InstructorControllerMana
     private final TutorInstructorRepository tutorInstructorRepository;
     private HttpServletRequest request;
     private final InstructorRepository instructorRepository;
+    private final RefreshTokenControllerManager refreshTokenControllerManager;
     private final GradeEditService gradeEditService;
     private final RegradeRequestQueryService regradeRequestQueryService;
     private final SubmissionGradeSummaryService submissionGradeSummaryService;
@@ -93,7 +95,8 @@ public class InstructorControllerManagerImpl implements InstructorControllerMana
             GradeEditService gradeEditService,
             RegradeRequestQueryService regradeRequestQueryService,
             SubmissionGradeSummaryService submissionGradeSummaryService,
-            HttpServletRequest request) {
+            HttpServletRequest request,
+            RefreshTokenControllerManager refreshTokenControllerManager) {
         this.instructorRepository = instructorRepository;
         this.paperSubmissionRepository = paperSubmissionRepository;
         this.gradeSubmissionQuestionRepository = gradeSubmissionQuestionRepository;
@@ -108,6 +111,7 @@ public class InstructorControllerManagerImpl implements InstructorControllerMana
         this.regradeRequestQueryService = regradeRequestQueryService;
         this.submissionGradeSummaryService = submissionGradeSummaryService;
         this.request = request;
+        this.refreshTokenControllerManager = refreshTokenControllerManager;
     }
 
     @Override
@@ -694,6 +698,10 @@ public class InstructorControllerManagerImpl implements InstructorControllerMana
         instructor.setLastModifiedBy(username);
         instructor.setLastModifiedDateTime(LocalDateTime.now());
         instructorRepository.save(instructor);
+        if (status != 2) {
+            // a deactivated account's open sessions end now, not when its refresh cookie expires
+            refreshTokenControllerManager.revokeAllSessions(id, "instructor");
+        }
 
         response.setIsSuccess(true);
         response.setMessage(status == 2 ? "Instructor activated" : "Instructor deactivated");

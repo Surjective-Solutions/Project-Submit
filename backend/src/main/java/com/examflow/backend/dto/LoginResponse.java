@@ -6,6 +6,7 @@ public class LoginResponse {
     private String message;
     private String role;
     private Boolean isSuccess;
+    private Boolean isFirstLogin;
 
     public String getToken() {
         return token;
@@ -37,6 +38,14 @@ public class LoginResponse {
 
     public void setIsSuccess(Boolean isSuccess) {
         this.isSuccess = isSuccess;
+    }
+
+    public Boolean getIsFirstLogin() {
+        return isFirstLogin;
+    }
+
+    public void setIsFirstLogin(Boolean isFirstLogin) {
+        this.isFirstLogin = isFirstLogin;
     }
 
 }

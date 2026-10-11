@@ -1,3 +1,5 @@
+import { isTokenExpired, TOKEN_REFRESH_MARGIN_SECONDS, getLoginPath, markSessionExpired } from "./auth";
+
 // TODO: replace with actual microservice endpoint
 const API_BASE = "http://localhost:8080";
 
@@ -15,6 +17,8 @@ async function actualRequest(path, options = {}) {
 
   const response = await fetch(`${API_BASE}${path}`, {
     method,
+    // lets the browser store the refresh cookie that staff logins set
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
     },
@@ -28,18 +32,110 @@ async function actualRequest(path, options = {}) {
   return await response.json();
 }
 
+// ── Session (refresh token) ───────────────────────────────────────────────────
+// The refresh token is an HttpOnly cookie set by the backend, so JS never sees it. These calls
+// only need credentials: "include" for the browser to send and store it.
+
+let refreshInFlight = null;
+
+// Swaps the refresh cookie for a new JWT. Callers in the same tab share one request,
+// because every refresh rotates the cookie.
+export function refreshSession(role) {
+  if (!role) return Promise.resolve(false);
+  if (!refreshInFlight) {
+    refreshInFlight = requestNewToken(role).finally(() => {
+      refreshInFlight = null;
+    });
+  }
+  return refreshInFlight;
+}
+
+async function requestNewToken(role) {
+  try {
+    const response = await fetch(`${API_BASE}/api/auth/refresh`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role }),
+    });
+    if (!response.ok) return false;
+    const result = await response.json();
+    if (!result.isSuccess) return false;
+    sessionStorage.setItem("token", result.token);
+    sessionStorage.setItem("role", result.role);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Revokes the refresh cookie on the server (its row goes to status 0). Never throws.
+export async function endServerSession(role) {
+  try {
+    await fetch(`${API_BASE}/api/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role }),
+    });
+  } catch {
+    // still log out locally if the server can't be reached
+  }
+}
+
+// Ends the session on the server as well, then clears this tab.
+export async function logoutSession(role) {
+  await endServerSession(role);
+  sessionStorage.clear();
+}
+
+// Sends the JWT, renewing it first when it's about to expire, and once more if the backend
+// rejects it anyway (an expired JWT, or one whose session was revoked, comes back as 403).
+async function authorizedFetch(path, { headers = {}, ...init }) {
+  const role = sessionStorage.getItem("role");
+  if (isTokenExpired(TOKEN_REFRESH_MARGIN_SECONDS)) {
+    await refreshSession(role);
+  }
+
+  let response = await sendWithToken(path, headers, init);
+  if (response.status === 401 || response.status === 403) {
+    if (await refreshSession(role)) {
+      response = await sendWithToken(path, headers, init);
+    } else {
+      // The session was revoked on the server (status 0) or has run out, so nothing can renew it.
+      endSessionInTab(role);
+    }
+  }
+  return response;
+}
+
+function endSessionInTab(role) {
+  const loginPath = getLoginPath(role);
+  if (!loginPath) return;
+  sessionStorage.removeItem("token");
+  sessionStorage.removeItem("role");
+  markSessionExpired();
+  window.location.href = loginPath;
+}
+
+function sendWithToken(path, headers, init) {
+  return fetch(`${API_BASE}${path}`, {
+    ...init,
+    // lets the browser store the refresh cookie the student device check sets
+    credentials: "include",
+    headers: { ...headers, Authorization: `Bearer ${sessionStorage.getItem("token")}` },
+  });
+}
+
 //this is api endpoint calling  with method
 
 export async function protectedRequestPath(path, options = {}) {
-  const token = sessionStorage.getItem("token");
-
   const { method = "GET", body = null } = options;
 
-  const response = await fetch(`${API_BASE}${path}`, {
+  const response = await authorizedFetch(path, {
     method,
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
     },
     body: body ? JSON.stringify(body) : undefined,
   });
@@ -54,15 +150,12 @@ export async function protectedRequestPath(path, options = {}) {
 
 //this is for protected apis
 async function protectedRequest(path, options = {}) {
-  const token = sessionStorage.getItem("token");
-
   const { method = "POST", body } = options;
 
-  const response = await fetch(`${API_BASE}${path}`, {
+  const response = await authorizedFetch(path, {
     method,
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
     },
     body: body ? JSON.stringify(body) : undefined,
   });
@@ -76,20 +169,16 @@ async function protectedRequest(path, options = {}) {
 
 //protected request with file handling for FormData
 async function protectedRequestWithFileHandling(path, options = {}) {
-  const token = sessionStorage.getItem("token");
-
   const { method = "POST", body } = options;
 
-  const headers = {
-    Authorization: `Bearer ${token}`,
-  };
+  const headers = {};
 
   // Only add Content-Type for JSON requests
   if (!(body instanceof FormData)) {
     headers["Content-Type"] = "application/json";
   }
 
-  const response = await fetch(`${API_BASE}${path}`, {
+  const response = await authorizedFetch(path, {
     method,
     headers,
     body:
@@ -155,6 +244,14 @@ export async function instructorRegister(data) {
 // poll whether the current session's account is still active
 export async function getSessionStatus() {
   return protectedRequestPath('/api/session/status', { method: 'GET' });
+}
+
+// right after a student logs in: registers this browser on first login, otherwise checks it's the registered one
+export async function verifyStudentDevice(deviceId) {
+  return protectedRequestPath('/api/device/verify', {
+    method: 'POST',
+    body: { deviceId },
+  });
 }
 
 // ── Admin ─────────────────────────────────────────────────────────────────────

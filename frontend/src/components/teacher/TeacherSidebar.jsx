@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { BookOpen, Users, BarChart2, LogOut, User } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getTokenPayload } from '@/lib/auth';
-import { getTutorById } from '@/lib/api-client';
+import { getTutorById, logoutSession } from '@/lib/api-client';
 import {
   Sidebar,
   SidebarContent,
@@ -255,9 +255,9 @@ export default function TeacherSidebar() {
               tooltip="Logout"
               className="h-8 rounded-lg text-[13px] mt-0.5 transition-colors"
               style={{ color: 'rgba(255,255,255,0.38)' }}
-              onClick={() => {
-                sessionStorage.clear();
-                window.location.href = '/teacher/login';                
+              onClick={async () => {
+                await logoutSession('tutor');
+                window.location.href = '/teacher/login';
               }}
             >
               <LogOut className="h-3.5 w-3.5 shrink-0" />

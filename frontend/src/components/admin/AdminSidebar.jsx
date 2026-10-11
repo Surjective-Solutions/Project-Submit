@@ -19,6 +19,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import styles from './admin-console.module.css';
+import { logoutSession } from '@/lib/api-client';
 
 // `badge: 'pendingSlips'` shows the live count of bank slips waiting.
 const NAV_ITEMS = [
@@ -39,8 +40,8 @@ export default function AdminSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
 
-  function handleLogout() {
-    sessionStorage.clear();
+  async function handleLogout() {
+    await logoutSession('admin');
     window.location.href = '/admin/login';
   }
 

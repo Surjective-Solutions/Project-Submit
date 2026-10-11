@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { Users, CalendarDays, HelpCircle, User, LogOut } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getTokenPayload } from '@/lib/auth';
-import { getInstructorById } from '@/lib/api-client';
+import { getInstructorById, logoutSession } from '@/lib/api-client';
 import {
   Sidebar,
   SidebarContent,
@@ -235,9 +235,9 @@ export default function InstructorSidebar() {
               tooltip="Logout"
               className="h-8 rounded-lg text-[13px] mt-0.5 transition-colors"
               style={{ color: 'rgba(255,255,255,0.38)' }}
-              onClick={() => {
-                sessionStorage.clear();
-                window.location.href = '/instructor/login';                
+              onClick={async () => {
+                await logoutSession('instructor');
+                window.location.href = '/instructor/login';
               }}
             >
               <LogOut className="h-3.5 w-3.5 shrink-0" />

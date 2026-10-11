@@ -24,11 +24,26 @@ export function getUserIdentifier() {
   return payload?.sub ?? null;
 }
 
-export function isTokenExpired() {
+// Renew the JWT this long before it actually expires, so requests don't race the expiry.
+export const TOKEN_REFRESH_MARGIN_SECONDS = 60;
+
+export function isTokenExpired(marginSeconds = 0) {
   const payload = getTokenPayload();
   if (!payload?.exp) return true;
   const now = Math.floor(Date.now() / 1000);
-  return payload.exp < now;
+  return payload.exp < now + marginSeconds;
+}
+
+const LOGIN_PATHS = {
+  student: '/login',
+  tutor: '/teacher/login',
+  instructor: '/instructor/login',
+  cashier: '/cashier/login',
+  admin: '/admin/login',
+};
+
+export function getLoginPath(role) {
+  return LOGIN_PATHS[role] ?? null;
 }
 
 const SESSION_EXPIRED_KEY = 'sessionExpired';
@@ -57,4 +72,36 @@ export function consumeAccountDeactivatedFlag() {
     sessionStorage.removeItem(ACCOUNT_DEACTIVATED_KEY);
   }
   return wasDeactivated;
+}
+
+// Device id for the one-device-per-student rule. The backend generates it on first login (and
+// again after an admin re-activates a blocked account); the browser only keeps it. Stored per
+// account so students sharing a computer don't overwrite each other's id, and in localStorage
+// (not sessionStorage) so logout, which only clears sessionStorage, leaves it in place.
+function deviceIdKey(userSeq) {
+  return `deviceId:${userSeq}`;
+}
+
+export function getDeviceId(userSeq) {
+  try {
+    return localStorage.getItem(deviceIdKey(userSeq));
+  } catch {
+    return null;
+  }
+}
+
+export function saveDeviceId(userSeq, deviceId) {
+  localStorage.setItem(deviceIdKey(userSeq), deviceId);
+}
+
+// Checked before registering: if this browser can't keep the id, the next login would look like
+// another device and get the account blocked.
+export function canStoreDeviceId() {
+  try {
+    localStorage.setItem('deviceId:test', '1');
+    localStorage.removeItem('deviceId:test');
+    return true;
+  } catch {
+    return false;
+  }
 }

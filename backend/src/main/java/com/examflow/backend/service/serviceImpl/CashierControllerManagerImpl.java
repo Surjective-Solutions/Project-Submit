@@ -17,12 +17,14 @@ import com.examflow.backend.dto.GeneralResponse;
 import com.examflow.backend.entity.Cashier;
 import com.examflow.backend.repository.CashierRepository;
 import com.examflow.backend.service.CashierControllerManager;
+import com.examflow.backend.service.RefreshTokenControllerManager;
 
 @Service
 public class CashierControllerManagerImpl implements CashierControllerManager {
 
     private final CashierRepository cashierRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RefreshTokenControllerManager refreshTokenControllerManager;
 
     private static final java.util.regex.Pattern USERNAME_PATTERN = java.util.regex.Pattern.compile("^[a-zA-Z0-9_]+$");
     private static final java.util.regex.Pattern EMAIL_PATTERN = java.util.regex.Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
@@ -35,9 +37,11 @@ public class CashierControllerManagerImpl implements CashierControllerManager {
 
     @Autowired
     public CashierControllerManagerImpl(CashierRepository cashierRepository,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            RefreshTokenControllerManager refreshTokenControllerManager) {
         this.cashierRepository = cashierRepository;
         this.passwordEncoder = passwordEncoder;
+        this.refreshTokenControllerManager = refreshTokenControllerManager;
     }
 
     @Override
@@ -199,6 +203,7 @@ public class CashierControllerManagerImpl implements CashierControllerManager {
 
         response = cashier.getFullName() + " Deleted Successfully.";
         cashierRepository.save(cashier);
+        refreshTokenControllerManager.revokeAllSessions(CashierSeq, "cashier");
 
         return response;
     }
@@ -305,6 +310,10 @@ public class CashierControllerManagerImpl implements CashierControllerManager {
         cashier.setLastModifiedBy(username);
         cashier.setLastModifiedDateTime(LocalDateTime.now());
         cashierRepository.save(cashier);
+        if (status != 2) {
+            // a deactivated account's open sessions end now, not when its refresh cookie expires
+            refreshTokenControllerManager.revokeAllSessions(cashierSeq, "cashier");
+        }
 
         response.setIsSuccess(true);
         response.setMessage(cashier.getFullName() + " was " + action + ".");

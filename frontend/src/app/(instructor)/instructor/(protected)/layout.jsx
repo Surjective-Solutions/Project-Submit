@@ -8,7 +8,7 @@ import AuthGuard from '@/components/AuthGuard';
 
 export default function InstructorLayout({ children }) {
   return (
-    <AuthGuard loginPath="/instructor/login">
+    <AuthGuard loginPath="/instructor/login" role="instructor">
       <div data-instructor-shell>
         <SidebarProvider defaultOpen={true}>
           <Suspense fallback={null}>

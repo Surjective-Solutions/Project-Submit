@@ -11,9 +11,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.examflow.backend.dto.SessionStatusResponse;
 import com.examflow.backend.entity.Cashier;
 import com.examflow.backend.entity.Instructor;
+import com.examflow.backend.entity.Student;
 import com.examflow.backend.entity.Tutor;
 import com.examflow.backend.repository.CashierRepository;
 import com.examflow.backend.repository.InstructorRepository;
+import com.examflow.backend.repository.StudentRepository;
 import com.examflow.backend.repository.TutorRepository;
 
 @RestController
@@ -24,14 +26,17 @@ public class SessionStatusController {
     private final TutorRepository tutorRepository;
     private final InstructorRepository instructorRepository;
     private final CashierRepository cashierRepository;
+    private final StudentRepository studentRepository;
 
     @Autowired
     public SessionStatusController(TutorRepository tutorRepository,
             InstructorRepository instructorRepository,
-            CashierRepository cashierRepository) {
+            CashierRepository cashierRepository,
+            StudentRepository studentRepository) {
         this.tutorRepository = tutorRepository;
         this.instructorRepository = instructorRepository;
         this.cashierRepository = cashierRepository;
+        this.studentRepository = studentRepository;
     }
 
     // Polled by AuthGuard to catch an account being deactivated mid-session.
@@ -62,8 +67,13 @@ public class SessionStatusController {
                 Cashier cashier = cashierRepository.findByCashierSeq(userSeq);
                 response.setActive(cashier != null && cashier.getStatus() != null && cashier.getStatus() == 2);
                 return response;
+            case "student":
+                // students get disabled when their account is used on a second device
+                Student student = studentRepository.findByStudentSeq(userSeq);
+                response.setActive(student != null && student.getStatus() != null && student.getStatus() == 2);
+                return response;
             default:
-                // other roles (student, admin) aren't covered by this feature
+                // admin isn't covered by this feature
                 response.setActive(true);
                 return response;
         }

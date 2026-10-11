@@ -37,6 +37,8 @@ public class Student {
     private Boolean marketingConsent;
     private Boolean termsAccepted;
     private Integer status;
+    private Boolean isFirstLogin;
+    private String deviceId;
 
     private LocalDateTime registerDateTime;
 
@@ -246,6 +248,33 @@ public class Student {
 
     public void setStudentNo(String studentNo) {
         this.studentNo = studentNo;
+    }
+
+    // true until a device is registered, and set back to true when the student is blocked for using
+    // another device; null on rows created before this column existed
+    @Column(name = "is_first_login")
+    public Boolean getIsFirstLogin() {
+        return isFirstLogin;
+    }
+
+    public void setIsFirstLogin(Boolean isFirstLogin) {
+        this.isFirstLogin = isFirstLogin;
+    }
+
+    // browser-generated id of the one device this account is locked to
+    @Column(name = "device_id")
+    public String getDeviceId() {
+        return deviceId;
+    }
+
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
+    }
+
+    // Not a getter, so JPA and Jackson leave it alone. A null flag (pre-existing rows) or
+    // a cleared device both count as "bind the next device that logs in".
+    public boolean needsDeviceRegistration() {
+        return !Boolean.FALSE.equals(isFirstLogin) || deviceId == null;
     }
 
 }

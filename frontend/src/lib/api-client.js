@@ -1,4 +1,4 @@
-import { isTokenExpired, TOKEN_REFRESH_MARGIN_SECONDS, getLoginPath, markSessionExpired } from "./auth";
+import { isTokenExpired, TOKEN_REFRESH_MARGIN_SECONDS, getLoginPath, markSessionExpired, markPasswordReset, markAccountDeactivated } from "./auth";
 
 // TODO: replace with actual microservice endpoint
 const API_BASE = "http://localhost:8080";
@@ -60,11 +60,16 @@ async function requestNewToken(role) {
     });
     if (!response.ok) return false;
     const result = await response.json();
-    if (!result.isSuccess) return false;
+    if (!result.isSuccess) {
+      // an admin reset this account's password, so the login page can say why
+      if (result.reason === "PASSWORD_RESET") markPasswordReset();
+      else if (result.reason === "ACCOUNT_DEACTIVATED") markAccountDeactivated();
+      return false;
+    }
     sessionStorage.setItem("token", result.token);
     sessionStorage.setItem("role", result.role);
     return true;
-  } catch {
+  } catch (error) {
     return false;
   }
 }

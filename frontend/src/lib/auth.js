@@ -49,6 +49,11 @@ export function getLoginPath(role) {
 const SESSION_EXPIRED_KEY = 'sessionExpired';
 
 export function markSessionExpired() {
+  // a password reset or deactivation already explains the logout, so don't also show "session expired"
+  if (
+    sessionStorage.getItem(PASSWORD_RESET_KEY) === 'true' ||
+    sessionStorage.getItem(ACCOUNT_DEACTIVATED_KEY) === 'true'
+  ) return;
   sessionStorage.setItem(SESSION_EXPIRED_KEY, 'true');
 }
 
@@ -72,6 +77,20 @@ export function consumeAccountDeactivatedFlag() {
     sessionStorage.removeItem(ACCOUNT_DEACTIVATED_KEY);
   }
   return wasDeactivated;
+}
+
+const PASSWORD_RESET_KEY = 'passwordReset';
+
+export function markPasswordReset() {
+  sessionStorage.setItem(PASSWORD_RESET_KEY, 'true');
+}
+
+export function consumePasswordResetFlag() {
+  const wasReset = sessionStorage.getItem(PASSWORD_RESET_KEY) === 'true';
+  if (wasReset) {
+    sessionStorage.removeItem(PASSWORD_RESET_KEY);
+  }
+  return wasReset;
 }
 
 // Device id for the one-device-per-student rule. The backend generates it on first login (and

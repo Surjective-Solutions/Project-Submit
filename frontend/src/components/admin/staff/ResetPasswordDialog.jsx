@@ -78,7 +78,7 @@ export default function ResetPasswordDialog({ open, person, onClose, onSubmit })
         </div>
 
         <p className={styles.dialogNote} style={{ marginTop: 0 }}>
-          Set a new password for <strong>{person.fullName}</strong>. They&rsquo;ll need to use it the next time they sign in.
+          Set a new password for <strong>{person.fullName}</strong>. They&rsquo;ll be signed out everywhere and need to use it the next time they sign in.
         </p>
 
         <form onSubmit={handleSubmit} className={styles.dialogForm}>

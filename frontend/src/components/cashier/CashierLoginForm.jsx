@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import PasswordField from '@/components/admin/PasswordField';
 import { cashierLoginSchema } from '@/lib/validations/admin';
 import { cashierLogin } from '@/lib/api-client';
-import { consumeSessionExpiredFlag, consumeAccountDeactivatedFlag } from '@/lib/auth';
+import { consumeSessionExpiredFlag, consumeAccountDeactivatedFlag, consumePasswordResetFlag } from '@/lib/auth';
 
 export default function CashierLoginForm() {
   const [isLoading, setIsLoading] = useState(false);
@@ -30,12 +30,21 @@ export default function CashierLoginForm() {
   });
 
   useEffect(() => {
+    const messages = [];
     if (consumeSessionExpiredFlag()) {
-      toast.error('Session expired. Please log in again.');
+      messages.push('Session expired. Please log in again.');
     }
     if (consumeAccountDeactivatedFlag()) {
-      toast.error('Your account has been deactivated by an admin.');
+      messages.push('Your account has been deactivated by an admin.');
     }
+    if (consumePasswordResetFlag()) {
+      messages.push('Your password was reset by an administrator. Please sign in again.');
+    }
+    if (messages.length === 0) return;
+
+    // Strict Mode runs this effect twice in dev. The flags are consumed on the first run, so the
+    // timer must NOT be cleared on cleanup, or the toast would be cancelled and never shown.
+    setTimeout(() => messages.forEach((message) => toast.error(message)), 0);
   }, []);
 
   async function onSubmit(data) {

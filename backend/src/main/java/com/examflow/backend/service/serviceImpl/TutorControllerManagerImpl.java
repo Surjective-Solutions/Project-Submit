@@ -360,6 +360,7 @@ private static final java.util.regex.Pattern STRONG_PASSWORD_PATTERN =
         tutor.setLastModifiedDateTime(LocalDateTime.now());
 
         tutorRepository.save(tutor);
+        refreshTokenControllerManager.revokeAllSessions(tutorSeq, "tutor");
 
         response.setIsSuccess(true);
         response.setMessage("Password reset successfully.");

@@ -16,6 +16,7 @@ import com.examflow.backend.dto.CashierResponse;
 import com.examflow.backend.dto.GeneralResponse;
 import com.examflow.backend.dto.TutorRequest;
 import com.examflow.backend.dto.AdminUpdateCashierRequest;
+import com.examflow.backend.dto.AdminResetStaffPasswordRequest;
 import com.examflow.backend.repository.CashierRepository;
 import com.examflow.backend.service.CashierControllerManager;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -78,6 +79,11 @@ public class CashierController {
     @PutMapping("/admin/deactivate/{id}")
     public GeneralResponse deactivateCashier(@PathVariable Integer id) {
         return cashierControllerManager.deactivateCashier(id);
+    }
+
+    @PutMapping("/admin/reset-password/{id}")
+    public GeneralResponse adminResetCashierPassword(@PathVariable Integer id, @RequestBody AdminResetStaffPasswordRequest request) {
+        return cashierControllerManager.adminResetCashierPassword(id, request);
     }
 
 }

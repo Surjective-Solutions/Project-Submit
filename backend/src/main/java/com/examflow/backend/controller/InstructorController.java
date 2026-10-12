@@ -22,6 +22,7 @@ import com.examflow.backend.dto.RegradeRequestResponse;
 import com.examflow.backend.dto.SubmitGradeResponse;
 import com.examflow.backend.dto.InstructorRequest;
 import com.examflow.backend.dto.AdminUpdateInstructorRequest;
+import com.examflow.backend.dto.AdminResetStaffPasswordRequest;
 
 @RestController
 @RequestMapping("/api/instructor")
@@ -96,5 +97,10 @@ public class InstructorController {
     @PutMapping("/admin/deactivate/{id}")
     public GeneralResponse deactivateInstructor(@PathVariable Integer id) {
         return instructorControllerManager.deactivateInstructor(id);
+    }
+
+    @PutMapping("/admin/reset-password/{id}")
+    public GeneralResponse adminResetInstructorPassword(@PathVariable Integer id, @RequestBody AdminResetStaffPasswordRequest request) {
+        return instructorControllerManager.adminResetInstructorPassword(id, request);
     }
 }

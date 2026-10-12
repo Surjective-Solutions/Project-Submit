@@ -14,6 +14,7 @@ import com.examflow.backend.dto.AdminUpdateCashierRequest;
 import com.examflow.backend.dto.CashierRequest;
 import com.examflow.backend.dto.CashierResponse;
 import com.examflow.backend.dto.GeneralResponse;
+import com.examflow.backend.dto.AdminResetStaffPasswordRequest;
 import com.examflow.backend.entity.Cashier;
 import com.examflow.backend.repository.CashierRepository;
 import com.examflow.backend.service.CashierControllerManager;
@@ -281,6 +282,51 @@ public class CashierControllerManagerImpl implements CashierControllerManager {
 
         response.setIsSuccess(true);
         response.setMessage("Cashier profile updated successfully.");
+        return response;
+    }
+
+    @Override
+    public GeneralResponse adminResetCashierPassword(Integer cashierSeq, AdminResetStaffPasswordRequest request) {
+        GeneralResponse response = new GeneralResponse();
+
+        Cashier cashier = cashierRepository.findByCashierSeq(cashierSeq);
+        if (cashier == null) {
+            response.setIsSuccess(false);
+            response.setMessage("Cashier not found.");
+            return response;
+        }
+
+        if (isBlank(request.getNewPassword()) || isBlank(request.getConfirmNewPassword())) {
+            response.setIsSuccess(false);
+            response.setMessage("Please fill all the fields.");
+            return response;
+        }
+
+        if (!STRONG_PASSWORD_PATTERN.matcher(request.getNewPassword()).matches()) {
+            response.setIsSuccess(false);
+            response.setMessage("Password must be at least 8 characters and include an uppercase letter, a lowercase letter, a number, and a special character.");
+            return response;
+        }
+
+        if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
+            response.setIsSuccess(false);
+            response.setMessage("Passwords do not match.");
+            return response;
+        }
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+
+        cashier.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        cashier.setConfirmPassword(passwordEncoder.encode(request.getConfirmNewPassword()));
+        cashier.setFinalPassword(passwordEncoder.encode(request.getConfirmNewPassword()));
+        cashier.setLastModifiedBy(username);
+        cashier.setLastModifiedDateTime(LocalDateTime.now());
+        cashierRepository.save(cashier);
+        refreshTokenControllerManager.revokeAllSessions(cashier.getCashierSeq(), "cashier");
+
+        response.setIsSuccess(true);
+        response.setMessage("Password reset for " + cashier.getFullName() + ".");
         return response;
     }
 

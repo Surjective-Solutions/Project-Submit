@@ -50,6 +50,7 @@ import com.examflow.backend.dto.SubmissionPaperInstructorTutorResponse;
 import com.examflow.backend.dto.SubmitGradeQuestionsResponse;
 import com.examflow.backend.dto.SubmitGradeResponse;
 import com.examflow.backend.dto.InstructorRequest;
+import com.examflow.backend.dto.AdminResetStaffPasswordRequest;
 
 @Service
 public class InstructorControllerManagerImpl implements InstructorControllerManager {
@@ -669,6 +670,51 @@ public class InstructorControllerManagerImpl implements InstructorControllerMana
 
         response.setIsSuccess(true);
         response.setMessage("Instructor updated successfully");
+        return response;
+    }
+
+    @Override
+    public GeneralResponse adminResetInstructorPassword(Integer id, AdminResetStaffPasswordRequest request) {
+        GeneralResponse response = new GeneralResponse();
+
+        Instructor instructor = instructorRepository.findByInstructorSeq(id);
+        if (instructor == null) {
+            response.setIsSuccess(false);
+            response.setMessage("Instructor not found");
+            return response;
+        }
+
+        if (isBlank(request.getNewPassword()) || isBlank(request.getConfirmNewPassword())) {
+            response.setIsSuccess(false);
+            response.setMessage("Please fill all the fields.");
+            return response;
+        }
+
+        if (!STRONG_PASSWORD_PATTERN.matcher(request.getNewPassword()).matches()) {
+            response.setIsSuccess(false);
+            response.setMessage("Password must be at least 8 characters and include an uppercase letter, a lowercase letter, a number, and a special character.");
+            return response;
+        }
+
+        if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
+            response.setIsSuccess(false);
+            response.setMessage("Passwords do not match.");
+            return response;
+        }
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+
+        instructor.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        instructor.setConfirmPassword(passwordEncoder.encode(request.getConfirmNewPassword()));
+        instructor.setFinalPassword(passwordEncoder.encode(request.getConfirmNewPassword()));
+        instructor.setLastModifiedBy(username);
+        instructor.setLastModifiedDateTime(LocalDateTime.now());
+        instructorRepository.save(instructor);
+        refreshTokenControllerManager.revokeAllSessions(id, "instructor");
+
+        response.setIsSuccess(true);
+        response.setMessage("Password reset for " + instructor.getFullName() + ".");
         return response;
     }
 

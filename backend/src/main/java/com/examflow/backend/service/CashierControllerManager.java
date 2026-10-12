@@ -8,6 +8,7 @@ import com.examflow.backend.dto.CashierRequest;
 import com.examflow.backend.dto.CashierResponse;
 import com.examflow.backend.dto.GeneralResponse;
 import com.examflow.backend.dto.AdminUpdateCashierRequest; 
+import com.examflow.backend.dto.AdminResetStaffPasswordRequest;
 
 @Service
 public interface CashierControllerManager {
@@ -25,6 +26,8 @@ public interface CashierControllerManager {
     GeneralResponse activateCashier(Integer cashierSeq);
 
     GeneralResponse deactivateCashier(Integer cashierSeq);
+
+    GeneralResponse adminResetCashierPassword(Integer cashierSeq, AdminResetStaffPasswordRequest request);
 
 }
 

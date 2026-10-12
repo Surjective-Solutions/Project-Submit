@@ -13,6 +13,7 @@ import com.examflow.backend.dto.RegradeRequestResponse;
 import com.examflow.backend.dto.SubmitGradeResponse;
 import com.examflow.backend.dto.InstructorRequest;
 import com.examflow.backend.dto.AdminUpdateInstructorRequest;
+import com.examflow.backend.dto.AdminResetStaffPasswordRequest;
 
 @Service
 public interface InstructorControllerManager {
@@ -38,4 +39,6 @@ public interface InstructorControllerManager {
     GeneralResponse activateInstructor(Integer id);
 
     GeneralResponse deactivateInstructor(Integer id);
+
+    GeneralResponse adminResetInstructorPassword(Integer id, AdminResetStaffPasswordRequest request);
 }

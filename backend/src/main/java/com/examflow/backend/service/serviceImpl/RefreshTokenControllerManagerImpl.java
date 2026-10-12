@@ -46,7 +46,10 @@ public class RefreshTokenControllerManagerImpl implements RefreshTokenController
     // window is treated as a copied token.
     private static final long ROTATION_GRACE_SECONDS = 60;
     private static final String SESSION_ENDED_MESSAGE = "Session expired. Please log in again.";
-
+    private static final String PASSWORD_RESET_MESSAGE =
+        "Your password was reset by an administrator. Please sign in again.";
+    private static final String ACCOUNT_DEACTIVATED_MESSAGE = 
+        "Your account has been deactivated by an admin.";
     private final SecureRandom secureRandom = new SecureRandom();
 
     private final RefreshTokenRepository refreshTokenRepository;
@@ -142,6 +145,13 @@ public class RefreshTokenControllerManagerImpl implements RefreshTokenController
                 return loginResponse;
             }
         } else if (current.getStatus() != RefreshToken.STATUS_ACTIVE) {
+            if (RefreshToken.REASON_PASSWORD_RESET.equals(current.getRevokeReason())) {
+                loginResponse.setReason(RefreshToken.REASON_PASSWORD_RESET);
+                loginResponse.setMessage(PASSWORD_RESET_MESSAGE);
+            } else if (RefreshToken.REASON_ACCOUNT_DEACTIVATED.equals(current.getRevokeReason())) {
+                loginResponse.setReason(RefreshToken.REASON_ACCOUNT_DEACTIVATED);
+                loginResponse.setMessage(ACCOUNT_DEACTIVATED_MESSAGE);
+            }
             clearCookie(role);
             return loginResponse;
         }
@@ -197,6 +207,20 @@ public class RefreshTokenControllerManagerImpl implements RefreshTokenController
     @Transactional
     public void revokeAllSessions(Integer userSeq, String role) {
         revokeUserSessions(userSeq, role, LocalDateTime.now());
+    }
+
+    @Override
+    @Transactional
+    public void revokeAllSessions(Integer userSeq, String role, String reason) {
+        LocalDateTime now = LocalDateTime.now();
+        List<RefreshToken> tokens = refreshTokenRepository
+                .findByUserSeqAndUserRoleAndStatusNot(userSeq, role, RefreshToken.STATUS_REVOKED);
+        for (RefreshToken token : tokens) {
+            token.setStatus(RefreshToken.STATUS_REVOKED);
+            token.setRevokedDateTime(now);
+            token.setRevokeReason(reason);
+        }
+        refreshTokenRepository.saveAll(tokens);
     }
 
     @Override

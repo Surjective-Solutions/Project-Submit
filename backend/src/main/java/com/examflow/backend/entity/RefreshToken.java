@@ -20,6 +20,8 @@ public class RefreshToken {
     public static final int STATUS_REVOKED = 0;
     public static final int STATUS_ROTATED = 1;
     public static final int STATUS_ACTIVE = 2;
+    public static final String REASON_PASSWORD_RESET = "PASSWORD_RESET";
+    public static final String REASON_ACCOUNT_DEACTIVATED = "ACCOUNT_DEACTIVATED";
 
     private Integer refreshTokenSeq;
 
@@ -44,6 +46,8 @@ public class RefreshToken {
     private LocalDateTime rotatedDateTime;
 
     private LocalDateTime revokedDateTime;
+
+    private String revokeReason;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -156,6 +160,16 @@ public class RefreshToken {
 
     public void setRevokedDateTime(LocalDateTime revokedDateTime) {
         this.revokedDateTime = revokedDateTime;
+    }
+
+    // why the session was revoked (null = ordinary logout / expiry), so the login screen can explain it
+    @Column(name = "revoke_reason", length = 30)
+    public String getRevokeReason() {
+        return revokeReason;
+    }
+
+    public void setRevokeReason(String revokeReason) {
+        this.revokeReason = revokeReason;
     }
 
 }

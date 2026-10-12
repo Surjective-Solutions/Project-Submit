@@ -28,6 +28,7 @@ import com.examflow.backend.entity.TutorInstructor;
 import com.examflow.backend.entity.UplaodPaper;
 import com.examflow.backend.entity.UploadPaperQuestion;
 import com.examflow.backend.entity.UploadPaperQuestionSubQuestion;
+import com.examflow.backend.entity.RefreshToken;
 import com.examflow.backend.repository.ClassesRepository;
 import com.examflow.backend.repository.GradeSubmissionQuestionRepository;
 import com.examflow.backend.repository.GradeSubmissionRepository;
@@ -711,7 +712,7 @@ public class InstructorControllerManagerImpl implements InstructorControllerMana
         instructor.setLastModifiedBy(username);
         instructor.setLastModifiedDateTime(LocalDateTime.now());
         instructorRepository.save(instructor);
-        refreshTokenControllerManager.revokeAllSessions(id, "instructor");
+        refreshTokenControllerManager.revokeAllSessions(instructor.getInstructorSeq(), "instructor", RefreshToken.REASON_PASSWORD_RESET);
 
         response.setIsSuccess(true);
         response.setMessage("Password reset for " + instructor.getFullName() + ".");
@@ -746,7 +747,7 @@ public class InstructorControllerManagerImpl implements InstructorControllerMana
         instructorRepository.save(instructor);
         if (status != 2) {
             // a deactivated account's open sessions end now, not when its refresh cookie expires
-            refreshTokenControllerManager.revokeAllSessions(id, "instructor");
+            refreshTokenControllerManager.revokeAllSessions(instructor.getInstructorSeq(), "instructor", RefreshToken.REASON_ACCOUNT_DEACTIVATED);
         }
 
         response.setIsSuccess(true);

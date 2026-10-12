@@ -7,6 +7,7 @@ public class LoginResponse {
     private String role;
     private Boolean isSuccess;
     private Boolean isFirstLogin;
+    private String reason;
 
     public String getToken() {
         return token;
@@ -46,6 +47,14 @@ public class LoginResponse {
 
     public void setIsFirstLogin(Boolean isFirstLogin) {
         this.isFirstLogin = isFirstLogin;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
     }
 
 }

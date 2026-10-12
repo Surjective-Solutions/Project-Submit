@@ -16,6 +16,7 @@ import com.examflow.backend.dto.CashierResponse;
 import com.examflow.backend.dto.GeneralResponse;
 import com.examflow.backend.dto.AdminResetStaffPasswordRequest;
 import com.examflow.backend.entity.Cashier;
+import com.examflow.backend.entity.RefreshToken;
 import com.examflow.backend.repository.CashierRepository;
 import com.examflow.backend.service.CashierControllerManager;
 import com.examflow.backend.service.RefreshTokenControllerManager;
@@ -323,7 +324,7 @@ public class CashierControllerManagerImpl implements CashierControllerManager {
         cashier.setLastModifiedBy(username);
         cashier.setLastModifiedDateTime(LocalDateTime.now());
         cashierRepository.save(cashier);
-        refreshTokenControllerManager.revokeAllSessions(cashier.getCashierSeq(), "cashier");
+        refreshTokenControllerManager.revokeAllSessions(cashier.getCashierSeq(), "cashier", RefreshToken.REASON_PASSWORD_RESET);
 
         response.setIsSuccess(true);
         response.setMessage("Password reset for " + cashier.getFullName() + ".");
@@ -358,7 +359,7 @@ public class CashierControllerManagerImpl implements CashierControllerManager {
         cashierRepository.save(cashier);
         if (status != 2) {
             // a deactivated account's open sessions end now, not when its refresh cookie expires
-            refreshTokenControllerManager.revokeAllSessions(cashierSeq, "cashier");
+            refreshTokenControllerManager.revokeAllSessions(cashier.getCashierSeq(), "cashier", RefreshToken.REASON_ACCOUNT_DEACTIVATED);
         }
 
         response.setIsSuccess(true);

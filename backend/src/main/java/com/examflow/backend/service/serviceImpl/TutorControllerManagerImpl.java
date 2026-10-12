@@ -20,6 +20,7 @@ import com.examflow.backend.entity.Classes;
 import com.examflow.backend.entity.Instructor;
 import com.examflow.backend.entity.Tutor;
 import com.examflow.backend.entity.TutorInstructor;
+import com.examflow.backend.entity.RefreshToken;
 import com.examflow.backend.repository.ClassesRepository;
 import com.examflow.backend.repository.InstructorRepository;
 import com.examflow.backend.repository.TutorInstructorRepository;
@@ -360,7 +361,7 @@ private static final java.util.regex.Pattern STRONG_PASSWORD_PATTERN =
         tutor.setLastModifiedDateTime(LocalDateTime.now());
 
         tutorRepository.save(tutor);
-        refreshTokenControllerManager.revokeAllSessions(tutorSeq, "tutor");
+        refreshTokenControllerManager.revokeAllSessions(tutorSeq, "tutor", RefreshToken.REASON_PASSWORD_RESET);
 
         response.setIsSuccess(true);
         response.setMessage("Password reset successfully.");
@@ -395,7 +396,7 @@ private static final java.util.regex.Pattern STRONG_PASSWORD_PATTERN =
         tutorRepository.save(tutor);
         if (status != 2) {
             // a deactivated account's open sessions end now, not when its refresh cookie expires
-            refreshTokenControllerManager.revokeAllSessions(tutorSeq, "tutor");
+            refreshTokenControllerManager.revokeAllSessions(tutorSeq, "tutor", RefreshToken.REASON_ACCOUNT_DEACTIVATED);
         }
 
         response.setIsSuccess(true);

@@ -19,6 +19,8 @@ public interface RefreshTokenControllerManager {
     // ends every session of one user, e.g. when the account is blocked, deactivated or deleted
     void revokeAllSessions(Integer userSeq, String role);
 
+    void revokeAllSessions(Integer userSeq, String role, String reason);
+
     // marks sessions past their hard expiry as revoked (browser closed without logging out)
     void revokeExpiredSessions();
 }

@@ -18,4 +18,6 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Inte
     List<RefreshToken> findByStatusNotAndExpiresDateTimeBefore(Integer status, LocalDateTime dateTime);
 
     boolean existsByFamilyIdAndStatusAndExpiresDateTimeAfter(String familyId, Integer status, LocalDateTime dateTime);
+
+    boolean existsByFamilyIdAndRevokeReason(String familyId, String revokeReason);
 }

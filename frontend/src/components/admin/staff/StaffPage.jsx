@@ -17,6 +17,8 @@ import {
   activateTutor, 
   deactivateTutor, 
   adminResetTutorPassword, 
+  adminResetInstructorPassword,
+  adminResetCashierPassword,
   adminUpdateTutor, 
   createInstructor, 
   getInstructors, 
@@ -189,16 +191,22 @@ export default function StaffPage() {
 
   const selectedPerson = people.find((p) => p.id === selectedId) ?? null;
 
-  function handleResetPassword(person) {
-    if (categoryKey !== 'teachers') {
-      showToast("Password reset isn't wired up for this role yet.");
-      return;
-    }
+  function handleResetPassword() {
     setResetPasswordOpen(true);
   }
 
   async function handleSubmitResetPassword(personId, payload) {
-    const result = await adminResetTutorPassword(personId, payload);
+    let result;
+    if (categoryKey === 'teachers') {
+      result = await adminResetTutorPassword(personId, payload);
+    } else if (categoryKey === 'instructors') {
+      result = await adminResetInstructorPassword(personId, payload);
+    } else if (categoryKey === 'cashiers') {
+      result = await adminResetCashierPassword(personId, payload);
+    } else {
+      return { isSuccess: false, message: "Password reset isn't available for this role." };
+    }
+
     if (result?.isSuccess !== false) {
       showToast(result?.message || `Password reset for ${selectedPerson?.fullName ?? 'the account'}.`);
     }
@@ -433,7 +441,7 @@ export default function StaffPage() {
     <div className={styles.page}>
       <div className={styles.headerRow}>
         <div>
-          <h1 className={styles.h1}>Staff</h1>
+          <h2 className="text-xl font-semibold text-gray-900">Staff</h2> 
           <p className={styles.subtitle}>Teachers, instructors and cashiers with access to the academy.</p>
         </div>
         <button type="button" className={styles.addButton} onClick={() => setAddOpen(true)}>

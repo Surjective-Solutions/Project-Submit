@@ -607,6 +607,22 @@ export async function adminResetTutorPassword(id, data) {
   });
 }
 
+// admin resets an instructor's password directly, no current password required
+export async function adminResetInstructorPassword(id, data) {
+  return protectedRequestPath(`/api/instructor/admin/reset-password/${id}`, {
+    method: "PUT",
+    body: data,
+  });
+}
+
+// admin resets a cashier's password directly, no current password required
+export async function adminResetCashierPassword(id, data) {
+  return protectedRequestPath(`/api/cashier/admin/reset-password/${id}`, {
+    method: "PUT",
+    body: data,
+  });
+}
+
 // admin activates a tutor account
 export async function activateTutor(id) {
   return protectedRequestPath(`/api/tutor/admin/activate/${id}`, {

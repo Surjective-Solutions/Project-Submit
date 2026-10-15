@@ -11,6 +11,7 @@ import Toast from './Toast';
 import styles from './staff.module.css';
 import EditStaffDialog from './EditStaffDialog';
 import ResetPasswordDialog from './ResetPasswordDialog';
+import ConfirmStatusDialog from './ConfirmStatusDialog';
 import { 
   getTutors, 
   createTutor, 
@@ -95,6 +96,7 @@ export default function StaffPage() {
   const [teachersLoading, setTeachersLoading] = useState(true);
   const [teachersError, setTeachersError] = useState('');
   const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
+  const [statusConfirmOpen, setStatusConfirmOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'active' | 'inactive'
 
   const category = CATEGORIES.find((c) => c.key === categoryKey);
@@ -213,7 +215,11 @@ export default function StaffPage() {
     return result;
   }
 
-  async function handleToggleActive(person) {
+  function handleToggleActive() {
+    setStatusConfirmOpen(true);
+  }
+
+  async function performToggleActive(person) {
     if (categoryKey === 'teachers') {
       try {
         const result =
@@ -545,6 +551,13 @@ export default function StaffPage() {
         person={selectedPerson}
         onClose={() => setResetPasswordOpen(false)}
         onSubmit={handleSubmitResetPassword}
+      />
+
+      <ConfirmStatusDialog
+        open={statusConfirmOpen}
+        person={selectedPerson}
+        onClose={() => setStatusConfirmOpen(false)}
+        onConfirm={performToggleActive}
       />
 
       <Toast message={toastMessage} />

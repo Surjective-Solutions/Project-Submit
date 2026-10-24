@@ -233,7 +233,7 @@ export default function StudentsPage() {
     <div className="space-y-5">
       {/* Page header */}
       <div>
-        <h2 className="text-xl font-semibold text-gray-900">Students</h2>
+        <h2 className="text-2xl font-semibold tracking-tight text-gray-900">Students</h2>
         <p className="text-sm text-gray-500 mt-0.5">
           Search by registered mobile number or email to view and manage a student account.
         </p>

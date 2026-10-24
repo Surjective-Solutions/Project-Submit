@@ -447,7 +447,7 @@ export default function StaffPage() {
     <div className={styles.page}>
       <div className={styles.headerRow}>
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">Staff</h2> 
+          <h2 className="text-2xl font-semibold tracking-tight text-gray-900">Staff</h2>
           <p className={styles.subtitle}>Teachers, instructors and cashiers with access to the academy.</p>
         </div>
         <button type="button" className={styles.addButton} onClick={() => setAddOpen(true)}>

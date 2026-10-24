@@ -101,7 +101,7 @@ export default function ReportsPage() {
   return (
     <div className={styles.page}>
       <header>
-        <h2 className="text-xl font-semibold text-gray-900">Reports</h2> 
+        <h2 className="text-2xl font-semibold tracking-tight text-gray-900">Reports</h2> 
       </header>
 
       {/* Step 1 */}

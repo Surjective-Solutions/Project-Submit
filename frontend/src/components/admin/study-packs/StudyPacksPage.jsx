@@ -2,15 +2,20 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Icon from '@/components/admin/Icon';
-import { createPack, getPacks, getTeachers, updatePack } from '@/study-packs/api';
-import { teacherName } from '@/study-packs/utils';
+import { getPackItems, getPacks, getTeachers, savePackWithSessions } from '@/study-packs/api';
+import { formToValues, packToForm, teacherName } from '@/study-packs/utils';
+import AddRecordingsPage from './AddRecordingsPage';
 import PackCard from './PackCard';
 import PackFilters from './PackFilters';
-import StudyPackForm from './StudyPackForm.jsx';
+import StudyPackForm from './StudyPackForm';
 import Toast from './Toast';
 import styles from './study-packs.module.css';
 
 const TOAST_MS = 6000;
+
+function revokeBlob(url) {
+  if (typeof url === 'string' && url.startsWith('blob:')) URL.revokeObjectURL(url);
+}
 
 export default function StudyPacksPage() {
   const [packs, setPacks] = useState([]);
@@ -18,8 +23,12 @@ export default function StudyPacksPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
 
-  const [view, setView] = useState('list'); // 'list' | 'form'
+  // 'list' | 'settings' (step 1) | 'recordings' (step 2)
+  const [view, setView] = useState('list');
   const [editingId, setEditingId] = useState(null);
+  // The pack being built or edited: { form, coverFile, items }. It lives only in memory
+  // and is saved from step 2; leaving the flow without saving throws it away.
+  const [draft, setDraft] = useState(null);
 
   const [status, setStatus] = useState('all'); // 'all' | 'published' | 'draft'
   const [search, setSearch] = useState('');
@@ -84,55 +93,94 @@ export default function StudyPacksPage() {
 
   function openCreate() {
     setEditingId(null);
-    setView('form');
+    setDraft({ form: packToForm(null), coverFile: null, items: [] });
+    setView('settings');
   }
 
   function openEdit(pack) {
     setEditingId(pack.id);
-    setView('form');
+    setDraft({ form: packToForm(pack), coverFile: null, items: getPackItems(pack) });
+    setView('settings');
   }
 
-  function closeForm() {
-    setView('list');
+  // Leave the flow without saving. `liveCoverUrl` is the cover preview step 1 is showing right now.
+  function discardDraft(liveCoverUrl) {
+    revokeBlob(draft?.form.coverUrl);
+    revokeBlob(liveCoverUrl);
+    setDraft(null);
     setEditingId(null);
+    setView('list');
   }
 
-  // Throws when the save fails, so the form stays open and shows the message.
-  async function handleSave({ intent, values, coverFile, removeCover }) {
+  // Step 1 -> step 2: keep the settings in the draft.
+  function handleNext({ form, coverFile }) {
+    setDraft((prev) => ({ ...prev, form, coverFile }));
+    setView('recordings');
+  }
+
+  // Step 2 -> step 1: the sessions stay in the draft.
+  function handleBackToSettings() {
+    setView('settings');
+  }
+
+  function handleItemsChange(next) {
+    setDraft((prev) => ({ ...prev, items: typeof next === 'function' ? next(prev.items) : next }));
+  }
+
+  // Throws when the save fails, so step 2 stays open and shows the message.
+  async function handleSave({ intent, items }) {
     const publish = intent === 'publish';
-    const saved = editingPack
-      ? await updatePack(editingPack.id, values, { coverFile, removeCover, publish })
-      : await createPack(values, { coverFile, publish });
+    const saved = await savePackWithSessions(
+      {
+        id: editingPack?.id ?? null,
+        values: formToValues(draft.form),
+        items: items.map(({ recordingCode, title, order }) => ({ recordingCode, title, order })),
+        coverFile: draft.coverFile,
+        // an existing cover was taken away and nothing replaced it
+        removeCover: Boolean(editingPack?.coverUrl) && !draft.form.coverUrl,
+      },
+      { publish }
+    );
 
     setPacks((prev) => (editingPack ? prev.map((p) => (p.id === saved.id ? saved : p)) : [saved, ...prev]));
 
-    let message;
-    if (editingPack) {
-      message =
-        editingPack.status === 'draft' && publish
-          ? `“${saved.name}” saved and published.`
-          : `Changes to “${saved.name}” saved.`;
-    } else if (publish) {
-      message = `“${saved.name}” is published and students can buy it now. Next, add class recordings to it.`;
-    } else {
-      message = `“${saved.name}” saved as a draft. Next, add class recordings, then publish when ready.`;
-    }
+    const noun = saved.sessions === 1 ? 'session' : 'sessions';
+    const message =
+      saved.status === 'published' && publish
+        ? `“${saved.name}” is published with ${saved.sessions} ${noun}. Students can buy it now.`
+        : `“${saved.name}” saved with ${saved.sessions} ${noun}.`;
 
     // back to the full list so the saved pack is visible
     setStatus('all');
     setSearch('');
     setSubject('');
-    closeForm();
+    discardDraft();
     setToast({ id: Date.now(), message });
   }
 
-  if (view === 'form') {
+  if (view === 'settings' && draft) {
     return (
       <StudyPackForm
         key={editingId ?? 'new'}
         pack={editingPack}
+        draft={draft}
         teachers={teachers}
-        onCancel={closeForm}
+        onCancel={discardDraft}
+        onNext={handleNext}
+      />
+    );
+  }
+
+  if (view === 'recordings' && draft) {
+    return (
+      <AddRecordingsPage
+        key={editingId ?? 'new'}
+        pack={editingPack}
+        draft={draft}
+        teachers={teachers}
+        onItemsChange={handleItemsChange}
+        onBackToSettings={handleBackToSettings}
+        onCancel={() => discardDraft()}
         onSave={handleSave}
       />
     );
@@ -165,15 +213,15 @@ export default function StudyPacksPage() {
     <div className={styles.page}>
       <div className={styles.headerRow}>
         <div className={styles.headerText}>
-          <h2 className="text-2xl font-semibold tracking-tight text-gray-900">Study Packs</h2>
+          <h1 className={styles.h1}>Study Packs</h1>
           <p className={styles.subtitle}>
             Bundles of past class recordings for one lesson or unit, so students who join late can catch up on what
             they missed.
           </p>
         </div>
         <button type="button" className={styles.primaryButton} onClick={openCreate}>
-          <Icon name="add" size={20} weight={600} />
-          New study pack
+          <Icon name="add" size={18} weight={600} />
+          Create study pack
         </button>
       </div>
 

@@ -1,100 +1,132 @@
-// Study Packs API: a mock for now, shaped for the real backend.
+// Study Packs API — stubbed with an in-memory store until the backend exists.
 //
-// Every function returns what the server is expected to return, and throws an Error with a
-// readable message when something fails, so the page needs no change when this file switches to
-// the real endpoints. When that happens, send the calls through `protectedRequestPath` /
-// `protectedRequestWithFileHandling` in `@/lib/api-client` (they handle the login token and
-// session refresh), and turn a response with `isSuccess: false` into `throw new Error(message)`.
+// Every function returns a Promise and throws an Error (with a message that is safe to show
+// to the admin) on failure, so the pages never need to change when real calls replace these.
 //
-// Rules the real server must enforce itself (the page's checks can be bypassed):
-//  - only an admin may call these
-//  - Publish, and Save on an already published pack, need name, description, teacher, grade,
-//    subject, price > 0, valid custom days and shares totalling exactly 100
-//  - a draft needs only a name
-//  - the cover (JPG, PNG or WebP, under 2 MB) is checked again and stored under a generated name
+// Planned endpoints (admin-only, via protectedRequestPath):
+//   GET    /api/study-pack/get-all
+//   POST   /api/study-pack/create        multipart: pack JSON (with items) + optional cover file
+//   PUT    /api/study-pack/update/{id}   multipart: pack JSON (with items) + optional cover file
 //
-// Planned endpoints (names follow the other modules, e.g. /api/tutor/..., /api/class/...):
-//   GET  /api/study-pack/get-all
-//   POST /api/study-pack/create          multipart: pack fields + optional cover file
-//   PUT  /api/study-pack/update/{id}     multipart: pack fields + optional cover file
-// The cover travels with the pack in one request, so cancelling the form never leaves an
-// orphaned upload behind. Teachers come from the tutors API (getTutors).
+// The server must repeat every rule the page checks, because the page can be bypassed:
+//   - the caller is an admin
+//   - name is present; a draft needs nothing else
+//   - publishing (and saving a pack that is already published) needs teacher, grade, subject,
+//     price > 0, valid custom days, revenue shares totalling exactly 100, and at least one session
+//   - every item's recordingCode exists in Class Recordings, appears once, and has a non-empty title
+//   - `order`, `sessions` and `totalDuration` are computed on the server, not trusted from the page
+//   - the cover is JPG, PNG or WebP and under 2 MB (check the file contents, not only the name)
+//
+// Study packs never copy video files. A session only stores a link (recordingCode) to a recording.
 
 import { SEED_PACKS, SEED_TEACHERS } from './mockData';
+import { findRecording, listRecordingsFor } from './mockRecordings';
 
 const LATENCY_MS = 250;
 
-// Kept at module level so a pack created here is still there after navigating away and back.
-let store = SEED_PACKS.map((pack) => ({ ...pack }));
+const clone = (value) => JSON.parse(JSON.stringify(value));
+
+const store = { packs: clone(SEED_PACKS) };
 
 function respond(value) {
-  return new Promise((resolve) => setTimeout(() => resolve(JSON.parse(JSON.stringify(value))), LATENCY_MS));
+  return new Promise((resolve) => setTimeout(() => resolve(clone(value)), LATENCY_MS));
 }
 
-// Mock only: the real server returns a hosted URL instead of the image data.
-function readAsDataUrl(file) {
+function wait() {
+  return new Promise((resolve) => setTimeout(resolve, LATENCY_MS));
+}
+
+function nextId() {
+  return String(Math.max(0, ...store.packs.map((p) => Number(p.id) || 0)) + 1);
+}
+
+// Mock only: the real server stores the file and returns its address.
+function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error('Could not read the cover image.'));
+    reader.onerror = () => reject(new Error('Could not read the cover image. Please try another file.'));
     reader.readAsDataURL(file);
   });
 }
 
-/** @returns {Promise<Array>} every study pack */
-export async function getPacks() {
-  return respond(store);
+export function getPacks() {
+  return respond(store.packs);
 }
 
-/** @returns {Promise<Array<{ id: string, name: string, subject?: string }>>} */
-export async function getTeachers() {
+export function getTeachers() {
   return respond(SEED_TEACHERS);
 }
 
-/**
- * New packs start with no recordings; sessions are added later from Class Recordings.
- * @param {object} values   name, description, teacherId, grade, subject, price, validity, customDays?, shares
- * @param {{ coverFile?: File, publish?: boolean }} options
- * @returns {Promise<object>} the full saved pack
- */
-export async function createPack(values, { coverFile, publish = false } = {}) {
-  const coverUrl = coverFile ? await readAsDataUrl(coverFile) : undefined;
-  const pack = {
-    ...values,
-    id: `sp-${Date.now()}`,
-    coverUrl,
-    status: publish ? 'published' : 'draft',
-    sessions: 0,
-    totalDuration: 0,
-    updatedAt: new Date().toISOString(),
-  };
-  store = [pack, ...store];
-  return respond(pack);
+// The sessions of a pack, each with its recording attached (the page shows date and duration).
+// Mock: packs that were never saved with sessions get the oldest recordings of their teacher
+// and subject, so the sample packs have something to edit. A real list endpoint would return
+// the items (with their recordings) together with each pack.
+export function getPackItems(pack) {
+  if (Array.isArray(pack.items)) {
+    return pack.items
+      .map((item, index) => ({
+        recordingCode: item.recordingCode,
+        title: item.title,
+        order: index + 1,
+        recording: findRecording(item.recordingCode),
+      }))
+      .filter((item) => item.recording);
+  }
+  return listRecordingsFor(pack.teacherId, pack.subject)
+    .slice(0, pack.sessions || 0)
+    .map((recording, index) => ({
+      recordingCode: recording.code,
+      title: recording.title,
+      order: index + 1,
+      recording,
+    }));
 }
 
-/**
- * Sends the whole pack, not just the changed fields, and returns the whole saved pack.
- * A published pack stays published; `publish: true` publishes a draft.
- * @param {string} id
- * @param {object} values
- * @param {{ coverFile?: File, removeCover?: boolean, publish?: boolean }} options
- * @returns {Promise<object>} the full saved pack
- */
-export async function updatePack(id, values, { coverFile, removeCover = false, publish = false } = {}) {
-  const current = store.find((pack) => pack.id === id);
-  if (!current) throw new Error('This study pack no longer exists.');
+// Creates a pack (id null) or updates one, together with its sessions, in one request.
+// `values` comes from formToValues(); `items` is [{ recordingCode, title, order }].
+// Returns the full saved pack.
+export async function savePackWithSessions({ id, values, items, coverFile, removeCover }, { publish }) {
+  await wait();
 
-  let coverUrl = current.coverUrl;
-  if (coverFile) coverUrl = await readAsDataUrl(coverFile);
-  else if (removeCover) coverUrl = undefined;
+  if (!values.name?.trim()) throw new Error('Give the pack a name.');
+  if (items.some((item) => !item.title?.trim())) {
+    throw new Error('Every session needs a lesson title so students know which topic it covers.');
+  }
+  if (new Set(items.map((item) => item.recordingCode)).size !== items.length) {
+    throw new Error('A recording can only be added to a pack once.');
+  }
+  const recordings = items.map((item) => findRecording(item.recordingCode));
+  if (recordings.some((recording) => !recording)) {
+    throw new Error('One of the recordings could not be found. Remove it and add it again.');
+  }
+  if (publish && items.length === 0) {
+    throw new Error('A pack needs at least one session before it can be published.');
+  }
 
-  const updated = {
-    ...current,
+  const existing = id ? store.packs.find((p) => String(p.id) === String(id)) : null;
+  if (id && !existing) throw new Error('This study pack no longer exists.');
+
+  let coverUrl = existing?.coverUrl ?? null;
+  if (coverFile) coverUrl = await fileToDataUrl(coverFile);
+  else if (removeCover) coverUrl = null;
+
+  const saved = {
+    ...(existing ?? {}),
     ...values,
+    id: existing ? existing.id : nextId(),
     coverUrl,
-    status: publish ? 'published' : current.status,
+    status: publish || existing?.status === 'published' ? 'published' : 'draft',
+    items: items.map((item, index) => ({
+      recordingCode: item.recordingCode,
+      title: item.title.trim(),
+      order: index + 1,
+    })),
+    sessions: items.length,
+    totalDuration: recordings.reduce((sum, recording) => sum + recording.durationMins, 0),
     updatedAt: new Date().toISOString(),
   };
-  store = store.map((pack) => (pack.id === id ? updated : pack));
-  return respond(updated);
+
+  store.packs = existing ? store.packs.map((p) => (p === existing ? saved : p)) : [saved, ...store.packs];
+  return clone(saved);
 }

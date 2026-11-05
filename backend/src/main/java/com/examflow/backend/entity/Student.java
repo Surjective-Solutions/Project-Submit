@@ -39,6 +39,12 @@ public class Student {
     private Integer status;
     private Boolean isFirstLogin;
     private String deviceId;
+    private String city;
+    private String postalCode;
+    private String nic;
+    private String medium;
+    private Integer examYear;
+    private String profilePhoto;
 
     private LocalDateTime registerDateTime;
 
@@ -245,9 +251,56 @@ public class Student {
     public String getStudentNo() {
         return studentNo;
     }
-
     public void setStudentNo(String studentNo) {
         this.studentNo = studentNo;
+    }
+
+    @Column(name = "city", length = 60)
+    public String getCity() {
+        return city;
+    }
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    @Column(name = "postal_code", length = 5)
+    public String getPostalCode() {
+        return postalCode;
+    }
+    public void setPostalCode(String postalCode) {
+        this.postalCode = postalCode;
+    }
+
+    @Column(name = "nic", length = 12)
+    public String getNic() {
+        return nic;
+    }
+    public void setNic(String nic) {
+        this.nic = nic;
+    }
+
+    @Column(name = "medium", length = 20)
+    public String getMedium() {
+        return medium;
+    }
+    public void setMedium(String medium) {
+        this.medium = medium;
+    }
+
+    @Column(name = "exam_year")
+    public Integer getExamYear() {
+        return examYear;
+    }
+    public void setExamYear(Integer examYear) {
+        this.examYear = examYear;
+    }
+
+    @Column(name = "profile_photo")
+    public String getProfilePhoto() {
+        return profilePhoto;
+    }
+    public void setProfilePhoto(String profilePhoto) {
+        this.profilePhoto = profilePhoto;
     }
 
     // true until a device is registered, and set back to true when the student is blocked for using

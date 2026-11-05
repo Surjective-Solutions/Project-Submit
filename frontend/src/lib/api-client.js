@@ -823,3 +823,13 @@ export async function getInstructorRegradeRequestById(regradeRequestSeq) {
   return protectedRequestPath(`/api/instructor/regrade-requests/${regradeRequestSeq}`, { method: "GET" });
 }
 
+
+// ── Study Packs ───────────────────────────────────────────────────────────────
+
+// Creates a study pack together with its sessions, as an admin. `formData` is multipart:
+// the form fields, an `items` JSON array of sessions, and an optional `cover` image.
+export async function createStudyPack(formData) {
+  return protectedRequestWithFileHandling("/api/study-pack/create", {
+    body: formData,
+  });
+}

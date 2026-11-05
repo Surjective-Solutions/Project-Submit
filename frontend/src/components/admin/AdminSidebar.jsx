@@ -28,7 +28,7 @@ const NAV_ITEMS = [
   { label: 'Students', icon: 'school', href: '/admin/students' },
   { label: 'Reports', icon: 'monitoring', href: '/admin/reports' },
   { label: 'Payments', icon: 'payments', href: '/admin/payments', badge: 'pendingSlips' },
-  { label: 'User Registration', icon: 'person_add', href: '/admin/user-registration' },
+  { label: 'Student Registration', icon: 'person_add', href: '/admin/student-registration' },
   { label: 'Study Packs', icon: 'inventory_2', href: '/admin/study-packs' },
   { label: 'Class Recordings', icon: 'video_library', href: '/admin/class-recordings' },
   { label: 'Attendance', icon: 'how_to_reg', href: '/admin/attendance' },

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { DISTRICTS, EMPTY_FORM, GRADES, MEDIUMS, STREAMS } from '@/student-registration/constants';
-import { peekStudentId, students } from '@/student-registration/api';
+import { STUDENT_ID_PENDING, students } from '@/student-registration/api';
 import { PASSWORD_ROUTE } from '@/student-registration/routes';
 import {
   examYearOptions,
@@ -114,7 +114,7 @@ export default function RegistrationPage() {
         return;
       }
       // Nothing is saved yet: the details wait in memory while the admin sets the password (page 2).
-      setPending({ form, sameWhatsapp, photo, studentId: peekStudentId(form.grade) });
+      setPending({ form, sameWhatsapp, photo, studentId: STUDENT_ID_PENDING });
       router.push(PASSWORD_ROUTE);
     } catch (err) {
       setSubmitError(err?.message || 'Could not check the contact number. Please try again.');
@@ -402,7 +402,7 @@ export default function RegistrationPage() {
           submitted={submitted}
           sameWhatsapp={sameWhatsapp}
           photoUrl={photo?.dataUrl || ''}
-          studentId={peekStudentId(form.grade)}
+          studentId={STUDENT_ID_PENDING}
           submitting={submitting}
           submitError={submitError}
           onClear={reset}

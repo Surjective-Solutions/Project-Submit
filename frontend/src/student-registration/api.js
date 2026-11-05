@@ -1,89 +1,49 @@
-// Student registration API — stubbed in memory until the backend exists.
+// Student registration API, wired to the backend (admin only):
+//   GET  /api/admin/student/check-duplicate?contactNumber=0771234567
+//                                      -> { duplicate, name, studentId }
+//   POST /api/admin/student/register   multipart: the registration fields, the password and an
+//                                      optional `photo` image -> { isSuccess, message, studentId }
+//   GET  /api/admin/student/registered-today -> { count }   (no page uses it yet)
 //
 // Every function returns a Promise and throws an Error (with a message that is safe to show to
-// the admin) on failure, so the page never needs to change when real calls replace these.
+// the admin) on failure, so the pages never need to change.
 //
-// Planned endpoints (admin-only, via protectedRequestPath):
-//   GET  /api/student/check-duplicate?contactNumber=0771234567   -> { name, studentId } or 404
-//   POST /api/student/register          JSON StudentRegistration + password  -> { studentId }
-//        (called from the Set Password page, after the photo upload)
-
-//   POST /api/upload/profile-photo      multipart file            -> { url }
-//   GET  /api/student/registered-today                            -> { count }
+// The server repeats every rule the page checks, because the page can be bypassed: the caller is
+// an admin, the required fields and phone numbers, age 10 to 30, a unique contact number and email,
+// the photo's type and size (it reads the file's contents), and the eight password rules in
+// password.js. It assigns the student ID, hashes the password, and never returns it.
 //
-// The server must repeat every rule the page checks, because the page can be bypassed:
-//   - the caller is an admin
-//   - names, contact number, date of birth, gender, address, guardian name and guardian contact are present
-//   - phone numbers are Sri Lankan mobile numbers (7 followed by 8 digits); age is 10 to 30
-//   - email and WhatsApp number are valid when given
-//   - the contact number is not already registered (return 409 with the existing student)
-//   - the photo is JPG, PNG or WebP and under 2 MB (check the file contents, not only the name)
-//   - the student ID (prefix by grade + 5-digit running number) is assigned on the server
-//   - the password meets the same 8 rules as the page (see password.js), is hashed (e.g. BCrypt) and
-//     never returned, logged or stored in plain text
-
 // Numbers are sent in local format: "0771234567".
 
-import { passwordRules, unmetCount } from './password';
-import { formatStudentId, normalizePhone } from './utils';
+import { checkStudentDuplicate, registerStudentAsAdmin } from '@/lib/api-client';
 
-const LATENCY_MS = 350;
-
-const wait = (ms = LATENCY_MS) => new Promise((resolve) => setTimeout(resolve, ms));
-
-// Mock data: 077 123 4567 already belongs to a student.
-const registered = [{ contact: '771234567', name: 'Kavindi S. Dissanayake', studentId: 'SY-26-04821' }];
-let nextNumber = 4822;
-let todayCount = 12;
-
-// Mock only: the page shows the ID the next student will get. The real server assigns it on
-// registration, so remove this when the backend exists.
-export function peekStudentId(grade) {
-  return formatStudentId(grade, nextNumber);
-}
+// The student ID is assigned by the server when the account is created, so the pages can only
+// say that it is coming until then.
+export const STUDENT_ID_PENDING = 'Assigned on registration';
 
 export const students = {
+  // Returns { name, studentId } when the contact number already belongs to a student, else null.
   async checkDuplicate(contactNumber) {
-    await wait(250);
-    const key = normalizePhone(contactNumber);
-    const match = registered.find((student) => student.contact === key);
-    return match ? { name: match.name, studentId: match.studentId } : null;
+    const result = await checkStudentDuplicate(contactNumber);
+    if (!result?.isSuccess) {
+      throw new Error(result?.message || 'Could not check the contact number. Please try again.');
+    }
+    return result.duplicate ? { name: result.name, studentId: result.studentId } : null;
   },
 
-  async register(payload) {
-    await wait();
-    if (!payload.firstName || !payload.lastName || !payload.contactNumber) {
-      throw new Error('Some required details are missing.');
-    }
-    // The server repeats the password rules. The password is never logged or kept (this mock drops it).
-    const rules = passwordRules(String(payload.password ?? ''), {
-      firstName: payload.firstName,
-      lastName: payload.lastName,
-      contactDigits: payload.contactNumber,
+  // `payload` is buildPayload() plus `password` and an optional `photo` File.
+  // Returns { studentId }.
+  async register({ photo, ...fields }) {
+    const body = new FormData();
+    Object.entries(fields).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) body.append(key, String(value));
     });
-    if (unmetCount(rules) > 0) throw new Error('The password does not meet the requirements.');
-    const key = normalizePhone(payload.contactNumber);
-    if (registered.some((student) => student.contact === key)) {
-      throw new Error('This contact number is already registered.');
+    if (photo) body.append('photo', photo);
+
+    const result = await registerStudentAsAdmin(body);
+    if (!result?.isSuccess) {
+      throw new Error(result?.message || 'Could not create the account. Please try again.');
     }
-    const studentId = formatStudentId(payload.grade, nextNumber);
-    nextNumber += 1;
-    todayCount += 1;
-    registered.push({ contact: key, name: `${payload.firstName} ${payload.lastName}`, studentId });
-    return { studentId };
-  },
-
-};
-
-export const uploads = {
-  // Mock: returns the file as a data URL. The real call returns the stored file's address.
-  async profilePhoto(file) {
-    await wait(200);
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = () => reject(new Error('Could not upload the photo. Please try again.'));
-      reader.readAsDataURL(file);
-    });
+    return { studentId: result.studentId };
   },
 };

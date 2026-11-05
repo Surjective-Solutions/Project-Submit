@@ -833,3 +833,29 @@ export async function createStudyPack(formData) {
     body: formData,
   });
 }
+
+// ── Admin: student registration ─────────────────────────────────────────────────
+
+// Returns { isSuccess, message, duplicate, name, studentId } — name and studentId describe the
+// existing student when the contact number is already registered. `contactNumber` is "0771234567".
+export async function checkStudentDuplicate(contactNumber) {
+  return protectedRequest(
+    `/api/admin/student/check-duplicate?contactNumber=${encodeURIComponent(contactNumber)}`,
+    { method: "GET" }
+  );
+}
+
+// Registers a student as an admin. `formData` is multipart: the registration fields, the
+// password, and an optional `photo` image. Returns { isSuccess, message, studentId, studentSeq }.
+export async function registerStudentAsAdmin(formData) {
+  return protectedRequestWithFileHandling("/api/admin/student/register", {
+    body: formData,
+  });
+}
+
+// Returns { count } — students registered since midnight (Sri Lanka time)
+export async function getAdminStudentsRegisteredToday() {
+  return protectedRequest("/api/admin/student/registered-today", {
+    method: "GET",
+  });
+}

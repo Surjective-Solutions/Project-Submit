@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Icon from '@/components/admin/Icon';
-import { students, uploads } from '@/student-registration/api';
+import { students } from '@/student-registration/api';
 import {
   mismatchShown,
   passwordRules,
@@ -91,7 +91,8 @@ export default function SetPasswordPage() {
     setSubmitting(true);
     try {
       const payload = { ...buildPayload(pending.form, { sameWhatsapp: pending.sameWhatsapp }), password };
-      if (pending.photo?.file) payload.photo = await uploads.profilePhoto(pending.photo.file);
+      // The photo travels in the same request as the details, so the account and its photo are saved together.
+      if (pending.photo?.file) payload.photo = pending.photo.file;
       const { studentId } = await students.register(payload);
 
       finished.current = true;

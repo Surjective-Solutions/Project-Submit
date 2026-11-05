@@ -124,10 +124,10 @@ export default function RegistrationSummary({
 
         <div className={styles.actions}>
           <button type="submit" className={styles.primaryButton} disabled={submitting} aria-busy={submitting || undefined}>
+            {submitting ? 'Checking…' : 'Next'}
             <span className={submitting ? styles.spin : styles.iconSlot}>
-              <Icon name={submitting ? 'progress_activity' : 'how_to_reg'} size={21} weight={600} />
+              <Icon name={submitting ? 'progress_activity' : 'arrow_forward'} size={21} weight={600} />
             </span>
-            {submitting ? 'Registering…' : 'Register student'}
           </button>
           <button type="button" className={styles.neutralButton} onClick={onClear} disabled={submitting}>
             Clear form

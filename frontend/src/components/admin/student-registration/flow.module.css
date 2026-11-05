@@ -1,0 +1,389 @@
+/* Student registration — step indicator, Set Password page and Account Ready page.
+   Shared pieces (page, cards, buttons, aside, success card) come from registration.module.css. */
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--syz-ink, #151a2e);
+}
+
+.req {
+  color: #b3141a;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+/* ── Step indicator ──────────────────────────────────────────────────── */
+
+.steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 0;
+}
+
+.step {
+  display: inline-flex;
+  align-items: center;
+}
+
+.stepLine {
+  width: 40px;
+  height: 2px;
+  margin: 0 10px;
+  flex-shrink: 0;
+  background: #dadfe9;
+}
+
+.stepLineDone {
+  background: #08a5e1;
+}
+
+.stepCircle {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #dadfe9;
+  border-radius: 50%;
+  background: #fff;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--syz-muted, #5b6178);
+}
+
+.stepCircleDone {
+  border-color: #08a5e1;
+  background: #08a5e1;
+  color: #fff;
+}
+
+.stepCircleCurrent {
+  border-color: #223385;
+  background: #223385;
+  color: #fff;
+}
+
+.stepLabel {
+  margin-left: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--syz-muted, #5b6178);
+  white-space: nowrap;
+}
+
+.stepLabelCurrent {
+  font-weight: 800;
+  color: var(--syz-ink, #151a2e);
+}
+
+@media (max-width: 520px) {
+  .stepLine {
+    width: 16px;
+    margin: 0 6px;
+  }
+
+  .stepLabel {
+    margin-left: 6px;
+    font-size: 12px;
+  }
+}
+
+/* ── Password fields ─────────────────────────────────────────────────── */
+
+.pwGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+.pwColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.pwField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.pwWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 46px;
+  padding-left: 12px;
+  border: 1.5px solid #dadfe9;
+  border-radius: 11px;
+  background: #fff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pwWrap:focus-within {
+  border-color: #223385;
+  box-shadow: var(--syz-focus, 0 0 0 3px rgba(8, 165, 225, 0.28));
+}
+
+.pwWrapError,
+.pwWrapError:focus-within {
+  border-color: #e5242b;
+}
+
+.pwWrapOk,
+.pwWrapOk:focus-within {
+  border-color: #08a5e1;
+}
+
+.pwLead {
+  display: inline-flex;
+  color: var(--syz-muted, #5b6178);
+}
+
+.pwInput {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  color: var(--syz-ink, #151a2e);
+}
+
+.eyeButton {
+  align-self: stretch;
+  width: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 0 9px 9px 0;
+  background: transparent;
+  color: var(--syz-muted, #5b6178);
+  cursor: pointer;
+}
+
+.eyeButton:hover {
+  color: #223385;
+}
+
+.eyeButton:focus-visible {
+  outline: 0;
+  box-shadow: inset 0 0 0 2px #08a5e1;
+}
+
+.meter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.meterBars {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.meterBar {
+  height: 5px;
+  border-radius: 999px;
+  background: #eef0f4;
+  transition: background-color 0.2s ease;
+}
+
+.meterLabel {
+  min-width: 52px;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+  color: var(--syz-muted, #5b6178);
+}
+
+.confirmMessage {
+  min-height: 18px;
+}
+
+.confirmMessage p {
+  margin: 0;
+}
+
+.matchOk {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0b4f6e;
+}
+
+/* ── Rules checklist ─────────────────────────────────────────────────── */
+
+.rulesBox {
+  padding: 14px 16px;
+  border: 1px solid #eef0f4;
+  border-radius: 14px;
+  background: #fafbfc;
+}
+
+.rulesTitle {
+  margin: 0 0 10px;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--syz-muted, #5b6178);
+}
+
+.rulesList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 18px;
+}
+
+.rule {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--syz-ink, #151a2e);
+}
+
+.ruleDot {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #dadfe9;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.ruleMet .ruleDot {
+  border-color: #e4f5fc;
+  background: #e4f5fc;
+  color: #0b4f6e;
+}
+
+.ruleFailed .ruleDot {
+  border-color: #fdecec;
+  background: #fdecec;
+  color: #b3141a;
+}
+
+.ruleFailed {
+  color: #9e1117;
+}
+
+@media (max-width: 560px) {
+  .rulesList {
+    grid-template-columns: 1fr;
+  }
+}
+
+.formFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* ── Summary aside ───────────────────────────────────────────────────── */
+
+.sumRows {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sumRow dt {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--syz-muted, #5b6178);
+}
+
+.sumRow dd {
+  margin: 2px 0 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--syz-ink, #151a2e);
+  overflow-wrap: anywhere;
+}
+
+/* ── Account ready ───────────────────────────────────────────────────── */
+
+.ready {
+  padding: 40px 24px;
+}
+
+.readyAvatar {
+  box-shadow: 0 0 0 3px #fff, 0 0 0 5px #08a5e1;
+}
+
+.readyBox {
+  width: 100%;
+  max-width: 620px;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--syz-border, #e3e6ee);
+  border-radius: 14px;
+  background: var(--syz-border, #e3e6ee);
+  text-align: left;
+}
+
+.readyCell {
+  padding: 12px 16px;
+  background: #fff;
+}
+
+.readyCell dt {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--syz-muted, #5b6178);
+}
+
+.readyCell dd {
+  margin: 3px 0 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--syz-ink, #151a2e);
+  overflow-wrap: anywhere;
+}

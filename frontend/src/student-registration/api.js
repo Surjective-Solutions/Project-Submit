@@ -5,7 +5,9 @@
 //
 // Planned endpoints (admin-only, via protectedRequestPath):
 //   GET  /api/student/check-duplicate?contactNumber=0771234567   -> { name, studentId } or 404
-//   POST /api/student/register          JSON StudentRegistration  -> { studentId }
+//   POST /api/student/register          JSON StudentRegistration + password  -> { studentId }
+//        (called from the Set Password page, after the photo upload)
+
 //   POST /api/upload/profile-photo      multipart file            -> { url }
 //   GET  /api/student/registered-today                            -> { count }
 //
@@ -17,9 +19,12 @@
 //   - the contact number is not already registered (return 409 with the existing student)
 //   - the photo is JPG, PNG or WebP and under 2 MB (check the file contents, not only the name)
 //   - the student ID (prefix by grade + 5-digit running number) is assigned on the server
-//
+//   - the password meets the same 8 rules as the page (see password.js), is hashed (e.g. BCrypt) and
+//     never returned, logged or stored in plain text
+
 // Numbers are sent in local format: "0771234567".
 
+import { passwordRules, unmetCount } from './password';
 import { formatStudentId, normalizePhone } from './utils';
 
 const LATENCY_MS = 350;
@@ -50,6 +55,13 @@ export const students = {
     if (!payload.firstName || !payload.lastName || !payload.contactNumber) {
       throw new Error('Some required details are missing.');
     }
+    // The server repeats the password rules. The password is never logged or kept (this mock drops it).
+    const rules = passwordRules(String(payload.password ?? ''), {
+      firstName: payload.firstName,
+      lastName: payload.lastName,
+      contactDigits: payload.contactNumber,
+    });
+    if (unmetCount(rules) > 0) throw new Error('The password does not meet the requirements.');
     const key = normalizePhone(payload.contactNumber);
     if (registered.some((student) => student.contact === key)) {
       throw new Error('This contact number is already registered.');

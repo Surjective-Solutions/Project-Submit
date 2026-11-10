@@ -163,6 +163,26 @@ export function normalizeBarcode(value) {
   return String(value ?? '').toLowerCase().replace(/[\s-]+/g, '');
 }
 
+// ── Phone numbers ──
+
+// A Sri Lankan mobile number typed any way ("077 123 4567", "+94 77 123 4567", "94771234567",
+// "771234567") -> its 9 digits "771234567", or '' when it is not one.
+export function normalizePhone(value) {
+  let digits = String(value ?? '').replace(/\D/g, '');
+  if (digits.startsWith('94')) digits = digits.slice(2);
+  if (digits.startsWith('0')) digits = digits.slice(1);
+  return /^7\d{8}$/.test(digits) ? digits : '';
+}
+
+// The phone field as the user types or pastes: digits only, without a leading 0 or 94, grouped "77 123 4567".
+export function formatPhoneInput(value) {
+  let digits = String(value ?? '').replace(/\D/g, '');
+  if (digits.startsWith('94') && digits.length > 9) digits = digits.slice(2);
+  if (digits.startsWith('0')) digits = digits.slice(1);
+  digits = digits.slice(0, 9);
+  return [digits.slice(0, 2), digits.slice(2, 5), digits.slice(5)].filter(Boolean).join(' ');
+}
+
 // ── Tutors ──
 
 export function surname(name) {

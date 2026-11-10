@@ -2,15 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { attendance, students, tutors as tutorsApi } from '@/attendance/api';
-import { RECENT_LIMIT } from '@/attendance/constants';
 import { loadSaved, save } from '@/attendance/storage';
 import {
   clampDate,
   fallbackSince,
-  firstName,
   isIsoDate,
   monthKey,
+  formatPhoneInput,
   normalizeBarcode,
+  normalizePhone,
   sortTutors,
   todayIso,
 } from '@/attendance/utils';
@@ -27,10 +27,11 @@ export default function AttendancePage() {
   const [ready, setReady] = useState(false); // saved state has been read
   const [tutors, setTutors] = useState([]);
   const [tutorId, setTutorId] = useState('');
+  const [mode, setMode] = useState('barcode'); // how staff are searching: 'barcode' or 'phone'
   const [barcode, setBarcode] = useState('');
+  const [phone, setPhone] = useState(''); // as typed, e.g. "77 123 4567"
   const [student, setStudent] = useState(null);
   const [lookup, setLookup] = useState({ busy: false, error: null });
-  const [recents, setRecents] = useState([]);
   const [date, setDate] = useState('');
   const [month, setMonth] = useState('');
   const [fetched, setFetched] = useState({ key: '', rows: null, failed: false });
@@ -41,27 +42,41 @@ export default function AttendancePage() {
   const lookupSeq = useRef(0);
   const savedMonth = useRef('');
 
-  const runLookup = useCallback(async (raw, { restore = false } = {}) => {
-    const code = normalizeBarcode(raw);
-    if (!code) {
-      setLookup({ busy: false, error: { type: 'empty' } });
-      return;
+  // Look a student up by barcode (student ID) or by phone number, depending on `by`.
+  const runLookup = useCallback(async ({ by, value, restore = false }) => {
+    const seq = ++lookupSeq.current; // any newer submit makes older, slower lookups irrelevant
+    let code;
+    if (by === 'phone') {
+      if (!String(value).trim()) {
+        setLookup({ busy: false, error: { type: 'empty', by } });
+        return;
+      }
+      const digits = normalizePhone(value);
+      if (!digits) {
+        setLookup({ busy: false, error: { type: 'invalid', by } });
+        return;
+      }
+      code = `0${digits}`; // sent in local form, e.g. 0771234567
+    } else {
+      code = normalizeBarcode(value);
+      if (!code) {
+        setLookup({ busy: false, error: { type: 'empty', by } });
+        return;
+      }
     }
-    const seq = ++lookupSeq.current;
     setLookup({ busy: true, error: null });
     try {
-      const found = await students.byBarcode(code);
+      const found = await (by === 'phone' ? students.byPhone(code) : students.byBarcode(code));
       if (seq !== lookupSeq.current) return; // a newer scan has replaced this one
       if (!found) {
-        setLookup({ busy: false, error: restore ? null : { type: 'notfound', code: String(raw).trim() } });
+        const shown = by === 'phone' ? `+94 ${formatPhoneInput(value)}` : String(value).trim();
+        setLookup({ busy: false, error: restore ? null : { type: 'notfound', by, code: shown } });
         return;
       }
       setStudent(found);
       setScanToken(seq);
       setBarcode(found.id);
-      setRecents((list) =>
-        [{ id: found.id, firstName: firstName(found) }, ...list.filter((r) => r.id !== found.id)].slice(0, RECENT_LIMIT),
-      );
+      setPhone(formatPhoneInput(found.phone));
       setLookup({ busy: false, error: null });
     } catch {
       if (seq === lookupSeq.current) setLookup({ busy: false, error: { type: 'network' } });
@@ -89,12 +104,17 @@ export default function AttendancePage() {
     const finish = () => {
       if (!cancelled) setReady(true);
     };
-    if (saved.studentId) runLookup(saved.studentId, { restore: true }).then(finish, finish);
+    if (saved.studentId) runLookup({ by: 'barcode', value: saved.studentId, restore: true }).then(finish, finish);
     else finish();
     return () => {
       cancelled = true;
     };
   }, [runLookup]);
+
+  // Put the cursor in whichever field is showing when the search mode changes.
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, [mode]);
 
   // Forget a remembered tutor that no longer exists.
   useEffect(() => {
@@ -158,7 +178,14 @@ export default function AttendancePage() {
 
   function handleSubmit(event) {
     event.preventDefault();
-    runLookup(barcode);
+    runLookup(mode === 'phone' ? { by: 'phone', value: phone } : { by: 'barcode', value: barcode });
+  }
+
+  function changeMode(next) {
+    if (next === mode) return;
+    lookupSeq.current += 1; // a lookup still running for the other mode is dropped
+    setMode(next);
+    setLookup({ busy: false, error: null });
   }
 
   const enrolledWithTutor = !student || !tutor || student.enrolledClasses.some((c) => c.tutor === tutor.name);
@@ -175,8 +202,12 @@ export default function AttendancePage() {
       </header>
 
       <LookupCard
+        mode={mode}
+        onModeChange={changeMode}
         barcode={barcode}
         onBarcodeChange={setBarcode}
+        phone={phone}
+        onPhoneChange={(value) => setPhone(formatPhoneInput(value))}
         inputRef={inputRef}
         tutors={tutors}
         tutorId={tutorId}
@@ -188,9 +219,6 @@ export default function AttendancePage() {
         onSubmit={handleSubmit}
         busy={lookup.busy}
         error={lookup.error}
-        recents={recents}
-        currentId={student?.id}
-        onPickRecent={(id) => runLookup(id)}
       />
 
       {!student ? (

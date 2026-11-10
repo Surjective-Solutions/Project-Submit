@@ -6,6 +6,9 @@
 //        :code is sent normalised (lower case, no spaces or dashes); compare it with the student ID
 //        normalised the same way. weekday is 0–6 (Sunday = 0) or "Thu"; startTime is "HH:mm" (24 h).
 //        enrolledSince ("YYYY-MM-DD", optional) is the earliest class date the page lets staff pick.
+//   GET /students/by-phone/:number
+//        -> the same student object, or 404 when no student has that contact number
+//        :number is sent in local form, "0771234567". Contact numbers are unique per student.
 //   GET /tutors
 //        -> [{ id, name, subjects: [..] }]
 //   GET /attendance?studentId&from&to&tutorId
@@ -15,9 +18,18 @@
 //        10 minutes after the start, Late = later, Absent = no scan, scannedAt null). Leave out
 //        classes that have not started yet.
 //
-// Return null from students.byBarcode for an unknown code and throw for any other failure.
+// Return null from students.byBarcode / byPhone for an unknown code and throw for any other failure.
 
-import { addDays, minutesOf, normalizeBarcode, statusFromScan, todayIso, weekdayIndex, weekdayOf } from './utils';
+import {
+  addDays,
+  minutesOf,
+  normalizeBarcode,
+  normalizePhone,
+  statusFromScan,
+  todayIso,
+  weekdayIndex,
+  weekdayOf,
+} from './utils';
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -31,7 +43,7 @@ const TUTORS = [
 const STUDENTS = [
   {
     id: 'SY-26-04821',
-    name: 'Newith Senmal',
+    name: 'Kavindi S. Dissanayake',
     initials: 'KD',
     phone: '0771234567',
     address: 'No. 12, Lake Road, Peradeniya',
@@ -45,7 +57,7 @@ const STUDENTS = [
   },
   {
     id: 'SY-27-01234',
-    name: 'Minidu Anupama',
+    name: 'Sahan Rajapaksha',
     initials: 'SR',
     phone: '0714567890',
     address: '45/2, Temple Road, Matale',
@@ -58,7 +70,7 @@ const STUDENTS = [
   },
   {
     id: 'SY-OL-00512',
-    name: 'Thisun Jayasinghe',
+    name: 'Anushka Wickramasinghe',
     initials: 'AW',
     phone: '0756815439',
     address: 'No. 7, Galle Road, Kalutara',
@@ -101,6 +113,13 @@ export const students = {
     await wait(220);
     const wanted = normalizeBarcode(code);
     const found = STUDENTS.find((s) => normalizeBarcode(s.id) === wanted);
+    return found ? structuredClone(found) : null;
+  },
+
+  async byPhone(phone) {
+    await wait(220);
+    const wanted = normalizePhone(phone);
+    const found = wanted ? STUDENTS.find((s) => normalizePhone(s.phone) === wanted) : null;
     return found ? structuredClone(found) : null;
   },
 };

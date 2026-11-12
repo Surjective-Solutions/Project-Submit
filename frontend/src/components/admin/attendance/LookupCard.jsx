@@ -9,9 +9,6 @@ const MODES = [
 
 function errorText(error) {
   if (!error) return '';
-  if (error.type === 'empty') {
-    return error.by === 'phone' ? 'Type the student’s phone number first.' : 'Enter a student barcode first.';
-  }
   if (error.type === 'invalid') return 'Enter a valid mobile number, e.g. 77 123 4567.';
   if (error.type === 'notfound' && error.by === 'phone') {
     return `No student found for phone number “${error.code}”. Check the number and try again.`;
@@ -36,12 +33,16 @@ export default function LookupCard({
   maxDate,
   onDateChange,
   onSubmit,
+  onClear,
+  canClear,
   busy,
   error,
 }) {
   const phoneMode = mode === 'phone';
   const inputInvalid = error?.type === 'empty' || error?.type === 'notfound' || error?.type === 'invalid';
   const inputId = phoneMode ? 'att-phone' : 'att-barcode';
+  // An empty search has no banner: the page below shows the "Enter barcode or phone number" prompt instead.
+  const showBanner = error && error.type !== 'empty';
 
   return (
     <section className={styles.card} aria-label="Look up a student">
@@ -90,7 +91,7 @@ export default function LookupCard({
                     placeholder="77 123 4567"
                     autoComplete="off"
                     aria-invalid={inputInvalid || undefined}
-                    aria-describedby={error ? 'att-lookup-error' : undefined}
+                    aria-describedby={showBanner ? 'att-lookup-error' : undefined}
                   />
                 </>
               ) : (
@@ -160,15 +161,21 @@ export default function LookupCard({
             </div>
           </div>
 
-          <button type="submit" className={styles.primaryButton} disabled={busy} aria-busy={busy || undefined}>
-            <span className={busy ? styles.spin : undefined}>
-              <Icon name={busy ? 'progress_activity' : 'search'} size={21} weight={600} />
-            </span>
-            {busy ? 'Checking…' : 'Check attendance'}
-          </button>
-        </div>
-
-        {error && (
+          <div className={styles.actions}>
+            <button type="submit" className={styles.primaryButton} disabled={busy} aria-busy={busy || undefined}>
+              <span className={busy ? styles.spin : undefined}>
+                <Icon name={busy ? 'progress_activity' : 'search'} size={21} weight={600} />
+              </span>
+              {busy ? 'Checking…' : 'Check attendance'}
+            </button>
+            <button type="button" className={styles.clearButton} disabled={!canClear} onClick={onClear}>
+              <Icon name="close" size={20} weight={600} />
+              Clear
+            </button>
+          </div>
+         </div>
+  
+        {showBanner && (
           <div id="att-lookup-error" className={styles.banner} role="alert">
             <Icon name="error" size={20} weight={600} fill={1} />
             <span className={styles.bannerText}>{errorText(error)}</span>

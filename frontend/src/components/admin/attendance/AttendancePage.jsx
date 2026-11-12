@@ -40,15 +40,19 @@ export default function AttendancePage() {
 
   const inputRef = useRef(null);
   const lookupSeq = useRef(0);
-  const savedMonth = useRef('');
 
   // Look a student up by barcode (student ID) or by phone number, depending on `by`.
-  const runLookup = useCallback(async ({ by, value, restore = false }) => {
+  const runLookup = useCallback(async ({ by, value }) => {
     const seq = ++lookupSeq.current; // any newer submit makes older, slower lookups irrelevant
+    // Searching with nothing typed clears the screen back to the "Enter barcode or phone number" prompt.
+    const showEmpty = () => {
+      setStudent(null);
+      setLookup({ busy: false, error: { type: 'empty', by } });
+    };
     let code;
     if (by === 'phone') {
       if (!String(value).trim()) {
-        setLookup({ busy: false, error: { type: 'empty', by } });
+        showEmpty();
         return;
       }
       const digits = normalizePhone(value);
@@ -60,7 +64,7 @@ export default function AttendancePage() {
     } else {
       code = normalizeBarcode(value);
       if (!code) {
-        setLookup({ busy: false, error: { type: 'empty', by } });
+        showEmpty();
         return;
       }
     }
@@ -70,7 +74,7 @@ export default function AttendancePage() {
       if (seq !== lookupSeq.current) return; // a newer scan has replaced this one
       if (!found) {
         const shown = by === 'phone' ? `+94 ${formatPhoneInput(value)}` : String(value).trim();
-        setLookup({ busy: false, error: restore ? null : { type: 'notfound', by, code: shown } });
+        setLookup({ busy: false, error: { type: 'notfound', by, code: shown } });
         return;
       }
       setStudent(found);
@@ -83,14 +87,14 @@ export default function AttendancePage() {
     }
   }, []);
 
-  // First load: read what was remembered, fetch the tutors, and look the last student up again.
+// First load: read the remembered tutor and date, and fetch the tutors. No student is remembered,
+// the page always opens on the empty prompt. 
   useEffect(() => {
     const now = todayIso();
     const saved = loadSaved();
     setToday(now);
     setTutorId(saved.tutorId || '');
     setDate(saved.date ? clampDate(saved.date, '', now) : now);
-    savedMonth.current = saved.month || '';
     inputRef.current?.focus();
 
     let cancelled = false;
@@ -101,15 +105,11 @@ export default function AttendancePage() {
       })
       .catch(() => {});
 
-    const finish = () => {
-      if (!cancelled) setReady(true);
-    };
-    if (saved.studentId) runLookup({ by: 'barcode', value: saved.studentId, restore: true }).then(finish, finish);
-    else finish();
+    setReady(true);
     return () => {
       cancelled = true;
     };
-  }, [runLookup]);
+  }, []);
 
   // Put the cursor in whichever field is showing when the search mode changes.
   useEffect(() => {
@@ -133,9 +133,7 @@ export default function AttendancePage() {
     if (!student || !today) return;
     const nextDate = clampDate(date || today, minDate, today);
     setDate(nextDate);
-    const wanted = savedMonth.current;
-    savedMonth.current = '';
-    setMonth(wanted && wanted >= monthKey(minDate) && wanted <= monthKey(today) ? wanted : monthKey(nextDate));
+    setMonth(monthKey(nextDate));
     inputRef.current?.focus();
     inputRef.current?.select();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -164,11 +162,11 @@ export default function AttendancePage() {
   const records = fresh && !fetched.failed ? fetched.rows : null; // null while loading
   const recordsError = fresh && fetched.failed;
 
-  // Remember the last student, tutor, date and month between visits.
+  // Remember the last tutor and class date between visits (never a student).
   useEffect(() => {
     if (!ready) return;
-    save({ studentId: student?.id || '', tutorId, date, month });
-  }, [ready, student, tutorId, date, month]);
+    save({ tutorId, date });
+  }, [ready, tutorId, date]);
 
   function changeDate(iso) {
     const next = clampDate(iso, minDate, today);
@@ -179,6 +177,18 @@ export default function AttendancePage() {
   function handleSubmit(event) {
     event.preventDefault();
     runLookup(mode === 'phone' ? { by: 'phone', value: phone } : { by: 'barcode', value: barcode });
+  }
+
+  // Back to empty fields and the "Enter barcode or phone number" prompt. The tutor and class date stay,
+  // so the next student can be checked for the same class.
+  function handleClear() {
+    lookupSeq.current += 1; // drop any lookup still running
+    setStudent(null);
+    setBarcode('');
+    setPhone('');
+    setMonth('');
+    setLookup({ busy: false, error: null });
+    inputRef.current?.focus();
   }
 
   function changeMode(next) {
@@ -217,6 +227,8 @@ export default function AttendancePage() {
         maxDate={today}
         onDateChange={changeDate}
         onSubmit={handleSubmit}
+        onClear={handleClear}
+        canClear={!!student && !lookup.busy}
         busy={lookup.busy}
         error={lookup.error}
       />

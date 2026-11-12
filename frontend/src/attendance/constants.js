@@ -22,5 +22,5 @@ export const MONTHS_LONG = [
 // The record starts in June when the student has no enrolment start date.
 export const FALLBACK_SINCE_MONTH = 6;
 
-// Remembered between visits: the last student ID, tutor, class date and month (nothing else).
+// Remembered between visits: the last tutor and class date (nothing about students).
 export const STORAGE_KEY = 'syzygy.attendance.v1';

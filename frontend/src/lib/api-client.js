@@ -1,7 +1,7 @@
 import { isTokenExpired, TOKEN_REFRESH_MARGIN_SECONDS, getLoginPath, markSessionExpired, markPasswordReset, markAccountDeactivated } from "./auth";
 
 // TODO: replace with actual microservice endpoint
-const API_BASE = "http://localhost:8080";
+export const API_BASE = "http://localhost:8080";
 
 async function request(path, options = {}) {
   const { method = "POST", body } = options;
@@ -857,5 +857,27 @@ export async function registerStudentAsAdmin(formData) {
 export async function getAdminStudentsRegisteredToday() {
   return protectedRequest("/api/admin/student/registered-today", {
     method: "GET",
+  });
+}
+
+// ── Admin: my account ───────────────────────────────────────────────────────────
+
+// Returns { isSuccess, fullName, username, email, phone, role, photoUrl } for the signed-in admin.
+export async function getAdminAccount() {
+  return protectedRequest("/api/admin/account/me", { method: "GET" });
+}
+
+// Saves the signed-in admin's details. 
+export async function updateAdminAccount(formData) {
+  return protectedRequestWithFileHandling("/api/admin/account/update", {
+    body: formData,
+  });
+}
+
+// Changes the signed-in admin's password. Returns { isSuccess, message, field } — `field` is
+// "currentPassword" when the current password was wrong.
+export async function changeAdminPassword({ currentPassword, newPassword }) {
+  return protectedRequest("/api/admin/account/change-password", {
+    body: { currentPassword, newPassword },
   });
 }

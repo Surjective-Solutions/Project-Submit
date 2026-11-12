@@ -617,3 +617,21 @@
     padding-right: 20px;
   }
 }
+
+.profileLink {
+  color: inherit;
+  text-decoration: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.profileLink:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.profileLink:focus-visible {
+  outline: 2px solid var(--syz-cyan-light, #6fd0f5);
+  outline-offset: 2px;
+}
+.profileLinkActive {
+  background: rgba(8, 165, 225, 0.16);
+}

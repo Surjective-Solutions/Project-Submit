@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/sidebar';
 import styles from './admin-console.module.css';
 import { logoutSession } from '@/lib/api-client';
+import { photoSrc } from '@/admin-account/utils';
 
 // `badge: 'pendingSlips'` shows the live count of bank slips waiting.
 const NAV_ITEMS = [
@@ -34,11 +35,15 @@ const NAV_ITEMS = [
   { label: 'Attendance', icon: 'how_to_reg', href: '/admin/attendance' },
 ];
 
+const ACCOUNT_HREF = '/admin/account';
+
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const onAccountPage = pathname === ACCOUNT_HREF || pathname.startsWith(`${ACCOUNT_HREF}/`);
   const { profile, pendingSlipCount } = useAdminConsole();
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
+  const avatarPhoto = photoSrc(profile.photoUrl);
 
   async function handleLogout() {
     await logoutSession('admin');
@@ -121,21 +126,36 @@ export default function AdminSidebar() {
           className={styles.profile}
           style={collapsed ? { padding: '8px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 } : undefined}
         >
-          <div className={styles.profileRow} style={collapsed ? { justifyContent: 'center' } : undefined}>
+          <Link
+            href={ACCOUNT_HREF}
+            className={`${styles.profileRow} ${styles.profileLink} ${onAccountPage ? styles.profileLinkActive : ''}`}
+            style={collapsed ? { justifyContent: 'center' } : undefined}
+            aria-label={`My account — ${profile.fullName}`}
+            aria-current={onAccountPage ? 'page' : undefined}
+            title="My account"
+          >
             <span
               className={styles.avatar}
               aria-hidden="true"
-              style={collapsed ? { width: 32, height: 32, fontSize: 11.5 } : undefined}
+              style={{
+                ...(collapsed ? { width: 32, height: 32, fontSize: 11.5 } : null),
+                ...(avatarPhoto
+                  ? { backgroundImage: `url(${avatarPhoto})`, backgroundSize: 'cover', backgroundPosition: 'center', color: 'transparent' }
+                  : null),
+              }}
             >
               {profile.initials}
             </span>
             {!collapsed && (
-              <span className={styles.profileText}>
-                <span className={styles.profileName}>{profile.fullName}</span>
-                <span className={styles.roleChip}>{profile.role}</span>
-              </span>
+              <>
+                <span className={styles.profileText}>
+                  <span className={styles.profileName}>{profile.fullName}</span>
+                  <span className={styles.roleChip}>{profile.role}</span>
+                </span>
+                <Icon name="chevron_right" size={18} style={{ marginLeft: 'auto', color: 'rgba(214, 222, 240, 0.55)' }} />
+              </>
             )}
-          </div>
+          </Link>
           <button
             type="button"
             className={styles.logout}

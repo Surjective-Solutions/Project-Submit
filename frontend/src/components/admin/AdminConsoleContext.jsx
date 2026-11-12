@@ -1,9 +1,11 @@
 'use client';
 
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import Icon from '@/components/admin/Icon';
 import { ADMIN_PROFILE, PENDING_SLIPS } from '@/components/admin/dashboard/dashboard-data';
+import { getAdminAccount } from '@/lib/api-client';
+import { mergeProfile } from '@/admin-account/utils';
 
 // Shared state for the admin shell. The slip queue lives here (not in the
 // dashboard) because the sidebar, header greeting and KPI cards all show
@@ -14,6 +16,30 @@ const byOldestFirst = (a, b) => b.waitingMinutes - a.waitingMinutes;
 
 export function AdminConsoleProvider({ children }) {
   const [slips, setSlips] = useState(PENDING_SLIPS);
+
+  // The signed-in admin. It starts as the placeholder profile and is replaced by the real account once
+  // it loads; `profileStatus` is 'loading' | 'ready' | 'error' (the My Account page waits for 'ready').
+  const [profile, setProfile] = useState(ADMIN_PROFILE);
+  const [profileStatus, setProfileStatus] = useState('loading');
+
+  const refreshProfile = useCallback(async () => {
+    setProfileStatus('loading');
+    try {
+      const res = await getAdminAccount();
+      if (!res?.isSuccess) throw new Error('Could not load the admin account.');
+      setProfile((prev) => mergeProfile(prev, res));
+      setProfileStatus('ready');
+    } catch {
+      setProfileStatus('error');
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshProfile();
+  }, [refreshProfile]);
+
+  // Called by the My Account page after a save, so the sidebar and header update straight away.
+  const updateProfile = useCallback((res) => setProfile((prev) => mergeProfile(prev, res)), []);
 
   const resolveSlip = useCallback(
     (id, outcome) => {
@@ -54,13 +80,16 @@ export function AdminConsoleProvider({ children }) {
 
   const value = useMemo(
     () => ({
-      profile: ADMIN_PROFILE,
+      profile,
+      profileStatus,
+      refreshProfile,
+      updateProfile,
       slips,
       pendingSlipCount: slips.length,
       approveSlip: (id) => resolveSlip(id, 'approved'),
       rejectSlip: (id) => resolveSlip(id, 'rejected'),
     }),
-    [slips, resolveSlip],
+    [profile, profileStatus, refreshProfile, updateProfile, slips, resolveSlip],
   );
 
   return <AdminConsoleContext.Provider value={value}>{children}</AdminConsoleContext.Provider>;

@@ -27,6 +27,8 @@ public class AdminUser {
 
     private Integer status;
 
+    private String profilePhoto;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "adminUserSeq")
@@ -99,6 +101,14 @@ public class AdminUser {
 
     public void setFinalPassword(String finalPassword) {
         this.finalPassword = finalPassword;
+    }
+
+    @Column(name = "profilePhoto")
+    public String getProfilePhoto() {
+        return profilePhoto;
+    }
+    public void setProfilePhoto(String profilePhoto) {
+        this.profilePhoto = profilePhoto;
     }
 
 }

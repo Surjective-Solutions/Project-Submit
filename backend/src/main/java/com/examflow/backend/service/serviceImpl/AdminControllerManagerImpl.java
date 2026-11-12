@@ -14,14 +14,21 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.examflow.backend.config.NoConfig;
+import com.examflow.backend.dto.AdminAccountResponse;
+import com.examflow.backend.dto.AdminAccountUpdateRequest;
 import com.examflow.backend.dto.AdminStudentRegistrationRequest;
 import com.examflow.backend.dto.AdminStudentRegistrationResponse;
+import com.examflow.backend.dto.ChangeAdminPasswordRequest;
+import com.examflow.backend.dto.ChangeAdminPasswordResponse;
 import com.examflow.backend.dto.RegisteredTodayResponse;
 import com.examflow.backend.dto.StudentDuplicateCheckResponse;
+import com.examflow.backend.entity.AdminUser;
 import com.examflow.backend.entity.Student;
+import com.examflow.backend.repository.AdminUserRepository;
 import com.examflow.backend.repository.StudentRepository;
 import com.examflow.backend.service.AdminControllerManager;
 import com.examflow.backend.service.FileStorageService;
+import com.examflow.backend.service.RefreshTokenControllerManager;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -63,23 +70,35 @@ public class AdminControllerManagerImpl implements AdminControllerManager {
 
     private static final String STUDENT_NUMBER_CONFIG = "student";
 
+    // My account
+    private static final String ADMIN_ROLE = "admin";
+    private static final String ADMIN_ROLE_LABEL = "Administrator";
+    private static final int FULL_NAME_MAX = 100;
+    private static final int FULL_NAME_MIN_LETTERS = 2;
+
     private final HttpServletRequest request;
     private final StudentRepository studentRepository;
+    private final AdminUserRepository adminUserRepository;
     private final FileStorageService fileStorageService;
     private final BCryptPasswordEncoder passwordEncoder;
     private final NoConfig noConfig;
+    private final RefreshTokenControllerManager refreshTokenControllerManager;
 
     @Autowired
     public AdminControllerManagerImpl(HttpServletRequest request,
             StudentRepository studentRepository,
+            AdminUserRepository adminUserRepository,
             FileStorageService fileStorageService,
             BCryptPasswordEncoder passwordEncoder,
-            NoConfig noConfig) {
+            NoConfig noConfig,
+            RefreshTokenControllerManager refreshTokenControllerManager) {
         this.request = request;
         this.studentRepository = studentRepository;
+        this.adminUserRepository = adminUserRepository;
         this.fileStorageService = fileStorageService;
         this.passwordEncoder = passwordEncoder;
         this.noConfig = noConfig;
+        this.refreshTokenControllerManager = refreshTokenControllerManager;
     }
 
     // Student registration ----------------------------------------------
@@ -220,6 +239,129 @@ public class AdminControllerManagerImpl implements AdminControllerManager {
         return response;
     }
 
+    // My account: the signed-in admin's own details -----------------------
+
+    @Override
+    public AdminAccountResponse getMyAccount() {
+
+        AdminAccountResponse response = new AdminAccountResponse();
+
+        AdminUser admin = currentAdmin();
+        if (admin == null) {
+            return accountFailed(response, "Only an admin can view this account.");
+        }
+        return accountOf(admin, response, null);
+    }
+
+    @Override
+    @Transactional
+    public AdminAccountResponse updateMyAccount(AdminAccountUpdateRequest update, MultipartFile photo) {
+
+        AdminAccountResponse response = new AdminAccountResponse();
+
+        AdminUser admin = currentAdmin();
+        if (admin == null) {
+            return accountFailed(response, "Only an admin can update this account.");
+        }
+
+        // Repeats every rule the page checks, because the page can be bypassed.
+        String fullName = collapseSpaces(update.getFullName());
+        long letters = fullName.codePoints().filter(Character::isLetter).count();
+        if (fullName.isEmpty() || letters < FULL_NAME_MIN_LETTERS) {
+            return accountFailed(response, "Enter your full name.");
+        }
+        if (fullName.length() > FULL_NAME_MAX) {
+            return accountFailed(response, "Keep your name under " + FULL_NAME_MAX + " characters.");
+        }
+
+        String email = trim(update.getEmail());
+        if (isBlank(email) || email.length() > 254 || !EMAIL.matcher(email).matches()) {
+            return accountFailed(response, "Enter a valid email address, e.g. name@example.com.");
+        }
+        for (AdminUser other : adminUserRepository.findByEmailIgnoreCase(email)) {
+            if (!other.getAdminUserSeq().equals(admin.getAdminUserSeq())) {
+                return accountFailed(response, "That email is already used by another account.");
+            }
+        }
+
+        // The phone number is optional; a blank one clears it.
+        String contact = null;
+        if (!isBlank(update.getPhone())) {
+            String phone = normalizePhone(update.getPhone());
+            if (!PHONE.matcher(phone).matches()) {
+                return accountFailed(response, "Enter a valid mobile number, e.g. 077 123 4567.");
+            }
+            contact = toLocalNumber(phone);
+        }
+
+        String photoProblem = fileStorageService.validateProfilePhoto(photo);
+        if (photoProblem != null) {
+            return accountFailed(response, photoProblem);
+        }
+
+        // One text box on the page, two columns in the table: the first word is the first name.
+        int space = fullName.indexOf(' ');
+        admin.setFirstName(space < 0 ? fullName : fullName.substring(0, space));
+        admin.setLastName(space < 0 ? null : fullName.substring(space + 1));
+        admin.setEmail(email);
+        admin.setContactNo(contact);
+
+
+        // A replaced or removed picture is deleted from the disk once the new details are saved.
+        String oldPhoto = admin.getProfilePhoto();
+        if (photo != null && !photo.isEmpty()) {
+            admin.setProfilePhoto(fileStorageService.saveProfilePhoto(photo));
+        } else if (Boolean.TRUE.equals(update.getRemovePhoto())) {
+            admin.setProfilePhoto(null);
+        }
+
+        adminUserRepository.save(admin);
+        if (!isBlank(oldPhoto) && !oldPhoto.equals(admin.getProfilePhoto())) {
+            fileStorageService.deleteProfilePhoto(oldPhoto);
+        }
+        return accountOf(admin, response, "Account updated");
+    }
+
+    @Override
+    @Transactional
+    public ChangeAdminPasswordResponse changeMyPassword(ChangeAdminPasswordRequest change) {
+
+        ChangeAdminPasswordResponse response = new ChangeAdminPasswordResponse();
+
+        AdminUser admin = currentAdmin();
+        if (admin == null) {
+            return passwordFailed(response, null, "Only an admin can change this password.");
+        }
+
+        // None of these values is ever logged or returned.
+        String current = change.getCurrentPassword();
+        String next = change.getNewPassword();
+
+        if (isBlank(current)) {
+            return passwordFailed(response, "currentPassword", "Enter your current password.");
+        }
+        if (admin.getFinalPassword() == null || !passwordEncoder.matches(current, admin.getFinalPassword())) {
+            return passwordFailed(response, "currentPassword", "Your current password is incorrect.");
+        }
+        if (next == null || !meetsPasswordRules(next, admin.getFirstName(), admin.getLastName(), admin.getContactNo())) {
+            return passwordFailed(response, "newPassword", "The new password does not meet the requirements.");
+        }
+        if (passwordEncoder.matches(next, admin.getFinalPassword())) {
+            return passwordFailed(response, "newPassword", "Choose a password that is different from your current one.");
+        }
+
+        admin.setFinalPassword(passwordEncoder.encode(next));
+        adminUserRepository.save(admin);
+
+        // Every login session of this admin ends, this one included, so a stolen session cannot outlive the
+       // old password. The page signs the admin out and sends them to the login page.
+        refreshTokenControllerManager.revokeAllSessions(admin.getAdminUserSeq(), ADMIN_ROLE);
+
+        response.setIsSuccess(true);
+        response.setMessage("Password changed");
+        return response;
+    }
+
     // Validation ---------------------------------------------------------
 
     // Repeats every rule the registration page checks, because the page can be bypassed.
@@ -339,10 +481,93 @@ public class AdminControllerManagerImpl implements AdminControllerManager {
                 && password.contains(digits.substring(digits.length() - PHONE_TAIL_DIGITS));
     }
 
+    // The admin named by the login token, or null when the caller is not an admin.
+    private AdminUser currentAdmin() {
+        if (!isAdmin()) {
+            return null;
+        }
+        Object userId = request.getAttribute("userId");
+        if (!(userId instanceof Integer)) {
+            return null;
+        }
+        return adminUserRepository.findById((Integer) userId).orElse(null);
+    }
+
+    private AdminAccountResponse accountOf(AdminUser admin, AdminAccountResponse response, String message) {
+        response.setIsSuccess(true);
+        response.setMessage(message);
+        response.setFullName(joinName(admin.getFirstName(), admin.getLastName()));
+        response.setUsername(admin.getUserName() != null ? admin.getUserName() : "");
+        response.setEmail(admin.getEmail() != null ? admin.getEmail() : "");
+        response.setPhone(admin.getContactNo() != null ? admin.getContactNo() : "");
+        response.setRole(ADMIN_ROLE_LABEL);
+        response.setPhotoUrl(photoUrl(admin.getProfilePhoto()));
+        return response;
+    }
+
+    private AdminAccountResponse accountFailed(AdminAccountResponse response, String message) {
+        response.setIsSuccess(false);
+        response.setMessage(message);
+        return response;
+    }
+
+    private ChangeAdminPasswordResponse passwordFailed(ChangeAdminPasswordResponse response, String field,
+            String message) {
+        response.setIsSuccess(false);
+        response.setField(field);
+        response.setMessage(message);
+        return response;
+    }
+
+    // The page loads the picture from /uploads (public in SecurityConfig). Whatever the file service stored
+    // is turned into a path starting with "/", or an absolute URL is left alone; no picture is "".
+    private String photoUrl(String stored) {
+        if (isBlank(stored)) {
+            return "";
+        }
+        String value = stored.trim().replace('\\', '/');
+        if (value.startsWith("http://") || value.startsWith("https://") || value.startsWith("/")) {
+            return value;
+        }
+        return value.startsWith("uploads/") ? "/" + value : "/uploads/" + value;
+    }
+
+    // The same eight rules as the registration page, for an admin's own name and number.
+    private boolean meetsPasswordRules(String password, String firstName, String lastName, String contactNo) {
+        String lower = password.toLowerCase();
+
+        boolean valid = password.length() >= PASSWORD_MIN_LENGTH
+                && password.chars().anyMatch(Character::isUpperCase)
+                && password.chars().anyMatch(Character::isLowerCase)
+                && password.chars().anyMatch(Character::isDigit)
+                && password.codePoints().anyMatch(cp -> !Character.isLetterOrDigit(cp) && !Character.isWhitespace(cp))
+                && password.chars().noneMatch(Character::isWhitespace)
+                && COMMON_PASSWORDS.stream().noneMatch(lower::contains);
+        if (!valid) {
+            return false;
+        }
+
+        for (String name : new String[] { firstName, lastName }) {
+            String compact = name != null ? name.replaceAll("\\s+", "").toLowerCase() : "";
+            long letters = compact.codePoints().filter(Character::isLetter).count();
+            if (letters >= MIN_NAME_LETTERS && lower.contains(compact)) {
+                return false;
+            }
+        }
+        String digits = normalizePhone(contactNo);
+        return !(digits.length() >= PHONE_TAIL_DIGITS
+                && password.contains(digits.substring(digits.length() - PHONE_TAIL_DIGITS)));
+    }
+
+    // Trims and collapses runs of spaces: " Nimal   Perera " becomes "Nimal Perera".
+    private String collapseSpaces(String value) {
+        return value != null ? value.trim().replaceAll("\\s+", " ") : "";
+    }
+
     // Small helpers ------------------------------------------------------
 
     private boolean isAdmin() {
-        return "admin".equals(request.getAttribute("role"));
+        return ADMIN_ROLE.equals(request.getAttribute("role"));
     }
 
     private AdminStudentRegistrationResponse failed(AdminStudentRegistrationResponse response, String message) {

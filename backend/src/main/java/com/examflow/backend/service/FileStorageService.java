@@ -161,6 +161,35 @@ public class FileStorageService {
         }
     }
 
+    // Deletes a stored profile photo, given the address saveProfilePhoto returned. It removes only a file
+    // that sits directly in the profile photo folder; any other value is ignored. A missing file is fine,
+    // and this never throws, so a failed clean-up can't undo the change that called it.
+    public void deleteProfilePhoto(String storedAddress) {
+        if (storedAddress == null || storedAddress.isBlank()) {
+            return;
+        }
+        try {
+            String address = storedAddress.trim().replace('\\', '/');
+            String prefix = "/uploads/profile_photos/";
+            if (!address.startsWith(prefix)) {
+                return;
+            }
+            String name = address.substring(prefix.length());
+            if (name.isEmpty() || name.contains("/") || name.contains("..")) {
+                return;
+            }
+
+            java.nio.file.Path directory = java.nio.file.Paths.get(UPLOAD_PROFILE_PHOTO_DIR).toAbsolutePath().normalize();
+            java.nio.file.Path file = directory.resolve(name).normalize();
+            if (!directory.equals(file.getParent())) {
+                return;
+            }
+            java.nio.file.Files.deleteIfExists(file);
+        } catch (Exception e) {
+            System.out.println("Could not delete profile photo " + storedAddress);
+        }
+    }
+
     // Reads the file's first bytes: JPEG (FF D8 FF), PNG (89 'PNG') or WebP ('RIFF'....'WEBP').
     // Returns the matching extension, or null for anything else.
     private String detectImageExtension(MultipartFile file) {

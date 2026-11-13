@@ -27,6 +27,7 @@ const NAV_ITEMS = [
   { label: 'Dashboard', icon: 'space_dashboard', href: '/admin/dashboard' },
   { label: 'Staff', icon: 'badge', href: '/admin/staff' },
   { label: 'Students', icon: 'school', href: '/admin/students' },
+  { label: 'Classes', icon: 'class', href: '/admin/classes' },
   { label: 'Reports', icon: 'monitoring', href: '/admin/reports' },
   { label: 'Payments', icon: 'payments', href: '/admin/payments', badge: 'pendingSlips' },
   { label: 'Student Registration', icon: 'person_add', href: '/admin/student-registration' },

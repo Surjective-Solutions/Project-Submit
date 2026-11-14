@@ -14,59 +14,11 @@ import {
   validateSession,
 } from '@/classes/sessionUtils';
 import Dialog from './Dialog';
+import { ChoiceGroup, Field } from './FormParts';
 import RecordingField from './RecordingField';
 import ShareFields from './ShareFields';
 import styles from './classes.module.css';
 import s from './sessions.module.css';
-
-function ChoiceGroup({ legend, name, options, value, onChange }) {
-  return (
-    <fieldset className={s.choiceSet}>
-      <legend className={styles.label}>{legend}</legend>
-      <div className={s.choices}>
-        {options.map((option) => (
-          <label key={option.value} className={`${s.choice} ${value === option.value ? s.choiceOn : ''}`}>
-            <input
-              type="radio"
-              name={name}
-              value={option.value}
-              checked={value === option.value}
-              onChange={() => onChange(option.value)}
-              className={s.srOnly}
-            />
-            {option.icon && <Icon name={option.icon} size={20} weight={500} />}
-            <span className={s.choiceText}>
-              <span className={s.choiceLabel}>{option.label}</span>
-              <span className={s.choiceHint}>{option.hint}</span>
-            </span>
-          </label>
-        ))}
-      </div>
-    </fieldset>
-  );
-}
-
-function Field({ id, label, required, error, children, hint }) {
-  return (
-    <div className={styles.field}>
-      <label htmlFor={id} className={styles.label}>
-        {label}{' '}
-        {required && (
-          <span className={styles.req} aria-hidden="true">
-            *
-          </span>
-        )}
-      </label>
-      {children}
-      {hint && !error && <p className={s.hint}>{hint}</p>}
-      {error && (
-        <p className={s.fieldError} role="alert">
-          {error}
-        </p>
-      )}
-    </div>
-  );
-}
 
 // Create or edit one session. `session` is given when editing. Attendance is not here; it has its own dialog.
 // onSave(payload) must return a promise; if it rejects the dialog stays open and shows an error.

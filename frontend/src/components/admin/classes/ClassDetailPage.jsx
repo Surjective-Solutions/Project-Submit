@@ -12,11 +12,16 @@ import {
   sessionsInMonth,
   sortSessions,
 } from '@/classes/sessionUtils';
-import { plural, tutorHref } from '@/classes/utils';
+import { classTitle, plural, tutorHref } from '@/classes/utils';
+import ClassEditDialog from './ClassEditDialog';
 import ClassOverview from './ClassOverview';
+import ClassPanelDialog from './ClassPanelDialog';
+import ManageStudentsDialog from './ManageStudentsDialog';
+import NoticesDialog from './NoticesDialog';
 import ConfirmDialog from './ConfirmDialog';
 import MonthPicker from './MonthPicker';
 import ParticipantsDialog from './ParticipantsDialog';
+import ResourcesDialog from './ResourcesDialog';
 import SessionDialog from './SessionDialog';
 import SessionsTable from './SessionsTable';
 import styles from './classes.module.css';
@@ -27,6 +32,9 @@ export default function ClassDetailPage({ tutorId, classId }) {
   const [data, setData] = useState({ status: 'loading', cls: null, sessions: [], halls: [] });
   const [dialog, setDialog] = useState(null); // { mode: 'create' } or { mode: 'edit', id }
   const [participantsId, setParticipantsId] = useState(null);
+  const [resourcesId, setResourcesId] = useState(null);
+  const [editingClass, setEditingClass] = useState(false);
+  const [panel, setPanel] = useState(null); // 'notices' | 'students' | 'analytics'
   const [period, setPeriod] = useState(() => defaultMonth([], new Date())); // the month of sessions being shown
   const [removing, setRemoving] = useState(null); // { session, busy, error }
   const now = useMemo(() => new Date(), []);
@@ -56,7 +64,27 @@ export default function ClassDetailPage({ tutorId, classId }) {
   const { cls, halls } = data;
   const sessions = useMemo(() => sortSessions(sessionsInMonth(data.sessions, period)), [data.sessions, period]);
   const participantsSession = participantsId ? data.sessions.find((x) => x.id === participantsId) : null;
+  const resourcesSession = resourcesId ? data.sessions.find((x) => x.id === resourcesId) : null;
   const editingSession = dialog?.mode === 'edit' ? data.sessions.find((x) => x.id === dialog.id) : null;
+
+  async function saveClass(payload) {
+    const { cls: updated } = await classesApi.update(classId, payload);
+    setData((current) => ({ ...current, cls: updated }));
+    setEditingClass(false);
+    toast.success('Class saved.');
+  }
+
+  function openOption(key) {
+    if (key === 'edit') setEditingClass(true);
+    else setPanel(key);
+  }
+
+  function setResourceCount(sessionId, count) {
+    setData((current) => ({
+      ...current,
+      sessions: current.sessions.map((x) => (x.id === sessionId ? { ...x, resourceCount: count } : x)),
+    }));
+  }
 
   async function saveSession(payload) {
     if (dialog.mode === 'create') {
@@ -120,7 +148,7 @@ export default function ClassDetailPage({ tutorId, classId }) {
 
       {data.status === 'ready' && (
         <>
-          <ClassOverview cls={cls} onCreateSession={() => setDialog({ mode: 'create' })} />
+          <ClassOverview cls={cls} onCreateSession={() => setDialog({ mode: 'create' })} onOption={openOption} />
 
           <section className={s.card} aria-labelledby="sessions-title">
             <header className={s.cardHeader}>
@@ -157,6 +185,7 @@ export default function ClassDetailPage({ tutorId, classId }) {
                 now={now}
                 onEdit={(session) => setDialog({ mode: 'edit', id: session.id })}
                 onParticipants={(session) => setParticipantsId(session.id)}
+                onResources={(session) => setResourcesId(session.id)}
                 onDelete={(session) => setRemoving({ session, busy: false, error: '' })}
               />
             )}
@@ -175,12 +204,39 @@ export default function ClassDetailPage({ tutorId, classId }) {
         />
       )}
 
-      {participantsSession && <ParticipantsDialog session={participantsSession} onClose={() => setParticipantsId(null)} />}
+      {participantsSession && <ParticipantsDialog key={participantsSession.id} classId={classId} session={participantsSession} onClose={() => setParticipantsId(null)} />}
+
+      {resourcesSession && (
+        <ResourcesDialog
+          key={resourcesSession.id}
+          classId={classId}
+          session={resourcesSession}
+          onCountChange={(count) => setResourceCount(resourcesSession.id, count)}
+          onClose={() => setResourcesId(null)}
+        />
+      )}
+
+      {editingClass && <ClassEditDialog cls={cls} now={now} onSave={saveClass} onClose={() => setEditingClass(false)} />}
+
+      {panel === 'notices' && (
+        <NoticesDialog classId={classId} className={classTitle(cls, cls.tutor)} enrollments={cls.enrollments} onClose={() => setPanel(null)} />
+      )}
+
+      {panel === 'students' && (
+        <ManageStudentsDialog
+          classId={classId}
+          className={classTitle(cls, cls.tutor)}
+          onEnrollmentsChange={(enrollments) => setData((current) => ({ ...current, cls: { ...current.cls, enrollments } }))}
+          onClose={() => setPanel(null)}
+        />
+      )}
+
+      {panel === 'analytics' && <ClassPanelDialog panel={panel} name={classTitle(cls, cls.tutor)} onClose={() => setPanel(null)} />}
 
       {removing && (
         <ConfirmDialog
           title="Delete session?"
-          message={`“${removing.session.name}” will be deleted, including its recording link, revenue shares and attendance. This can’t be undone.`}
+          message={`“${removing.session.name}” will be deleted, including its recording link, resources, revenue shares and attendance. This can’t be undone.`}
           confirmLabel="Delete session"
           busy={removing.busy}
           error={removing.error}

@@ -7,6 +7,11 @@ import styles from './classes.module.css';
 const FOCUSABLE =
   'button:not([disabled]), select:not([disabled]), input:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])';
 
+// Dialogs can be open together (a confirmation over a form), and can close in the same moment. The page's
+// scroll is locked while any is open and restored once, by the last one to close.
+let scrollLocks = 0;
+let scrollBefore = '';
+
 // A dialog shell: dark overlay, header with an icon tile and a close button, scrolling body, footer.
 // Focus goes into the dialog (the element marked data-autofocus, else the first control), Tab stays inside,
 // Escape closes it, the page behind stops scrolling, and focus returns to what opened it.
@@ -28,7 +33,8 @@ export default function Dialog({
 
   useEffect(() => {
     const opener = document.activeElement;
-    const previousOverflow = document.body.style.overflow;
+    if (scrollLocks === 0) scrollBefore = document.body.style.overflow;
+    scrollLocks += 1;
     document.body.style.overflow = 'hidden';
     const root = dialogRef.current;
     const target =
@@ -36,7 +42,8 @@ export default function Dialog({
       [...(root?.querySelectorAll(FOCUSABLE) || [])].find((el) => !el.closest('[hidden]') && el.getAttribute('aria-label') !== 'Close');
     target?.focus();
     return () => {
-      document.body.style.overflow = previousOverflow;
+      scrollLocks -= 1;
+      if (scrollLocks === 0) document.body.style.overflow = scrollBefore;
       if (opener && typeof opener.focus === 'function') opener.focus();
     };
   }, []);
@@ -72,7 +79,7 @@ export default function Dialog({
       <div
         ref={dialogRef}
         className={styles.modal}
-        style={{ maxWidth: size === 'lg' ? 680 : size === 'sm' ? 440 : undefined }}
+        style={{ maxWidth: size === 'xxl' ? 920 : size === 'xl' ? 760 : size === 'lg' ? 680 : size === 'sm' ? 440 : undefined }}
         role={role}
         aria-modal="true"
         aria-labelledby={titleId}

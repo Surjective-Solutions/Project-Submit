@@ -1,26 +1,15 @@
 import Icon from '@/components/admin/Icon';
-import { MONTH_NAMES, formatMonth, shiftMonth, yearOptions } from '@/classes/sessionUtils';
+import { MONTH_NAMES, yearOptions } from '@/classes/sessionUtils';
 import styles from './classes.module.css';
 import s from './sessions.module.css';
 
-// Chooses which month of sessions is listed: a month dropdown, a year dropdown, and arrows to step to the
-// previous or next month.
+// Chooses which month of sessions is listed: a month dropdown and a year dropdown.
 export default function MonthPicker({ sessions, period, onChange }) {
-  
   const years = yearOptions(sessions, period);
   const set = (patch) => onChange({ ...period, ...patch });
 
   return (
     <div className={s.picker} role="group" aria-label="Choose the month to show">
-      <button
-        type="button"
-        className={s.stepButton}
-        onClick={() => onChange(shiftMonth(period, -1))}
-        aria-label={`Previous month, ${formatMonth(shiftMonth(period, -1))}`}
-      >
-        <Icon name="chevron_left" size={22} weight={500} />
-      </button>
-
       <div className={s.pickerSelect}>
         <select
           className={s.pickerField}
@@ -56,15 +45,6 @@ export default function MonthPicker({ sessions, period, onChange }) {
           <Icon name="expand_more" size={20} weight={500} />
         </span>
       </div>
-
-      <button
-        type="button"
-        className={s.stepButton}
-        onClick={() => onChange(shiftMonth(period, 1))}
-        aria-label={`Next month, ${formatMonth(shiftMonth(period, 1))}`}
-      >
-        <Icon name="chevron_right" size={22} weight={500} />
-      </button>
     </div>
   );
 }

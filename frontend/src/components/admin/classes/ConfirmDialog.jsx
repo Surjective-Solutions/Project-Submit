@@ -5,12 +5,23 @@ import sessionStyles from './sessions.module.css';
 import styles from './classes.module.css';
 
 // Asks before something is deleted. Focus starts on Cancel so Enter never deletes by accident.
-export default function ConfirmDialog({ title, message, confirmLabel, busy = false, error = '', onConfirm, onCancel }) {
+export default function ConfirmDialog({
+  title,
+  message,
+  confirmLabel,
+  cancelLabel = 'Cancel',
+  busyLabel = 'Deleting…',
+  icon = 'delete',
+  busy = false,
+  error = '',
+  onConfirm,
+  onCancel,
+}) {
   return (
     <Dialog
       title={title}
       titleId="confirm-title"
-      icon="delete"
+      icon={icon}
       tone="red"
       role="alertdialog"
       size="sm"
@@ -19,10 +30,10 @@ export default function ConfirmDialog({ title, message, confirmLabel, busy = fal
       footer={
         <>
           <button type="button" className={styles.secondaryButton} onClick={onCancel} disabled={busy} data-autofocus>
-            Cancel
+            {cancelLabel}
           </button>
           <button type="button" className={sessionStyles.dangerButton} onClick={onConfirm} disabled={busy}>
-            {busy ? 'Deleting…' : confirmLabel}
+            {busy ? busyLabel : confirmLabel}
           </button>
         </>
       }

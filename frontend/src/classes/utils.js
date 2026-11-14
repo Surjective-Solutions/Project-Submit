@@ -157,7 +157,7 @@ export function packageDetails(pkg, allClasses) {
     .filter(Boolean)
     .sort((a, b) => typeRank(a.type) - typeRank(b.type));
   const complete = items.length > 0 && items.length === ids.length;
-  const regular = complete ? items.reduce((sum, c) => sum + (Number(c.monthlyFee) || 0), 0) : 0;
+  const regular = complete ? items.reduce((sum, c) => sum + payablePrice(c), 0) : 0;
   const price = Number(pkg.monthlyFee);
   const saving = complete && Number.isFinite(price) && regular > price ? regular - price : 0;
   return { items, regularFee: saving > 0 ? regular : null, saving };
@@ -188,6 +188,24 @@ export function formatLkr(amount) {
   const value = Number(amount);
   if (!Number.isFinite(value)) return '';
   return `LKR ${value.toLocaleString('en-US')}`;
+}
+
+// What a class costs a student: its price, or the special price when the teacher has given one.
+// (Older data only has monthlyFee, which is the price.)
+export const usualPrice = (cls) => Number(cls.price ?? cls.monthlyFee) || 0;
+export function payablePrice(cls) {
+  const usual = usualPrice(cls);
+  const special = Number(cls.specialPrice);
+  return special > 0 && special < usual ? special : usual;
+}
+export const hasSpecialPrice = (cls) => payablePrice(cls) < usualPrice(cls);
+
+const FEE_UNIT = { daily: '/ day', monthly: '/ month', 'one-time': 'one-time' };
+
+// "LKR 3,500 / month", "LKR 300 / day" or "LKR 25,000 one-time"
+export function feeText(amount, format = 'monthly') {
+  const text = formatLkr(amount);
+  return text ? `${text} ${FEE_UNIT[format] || FEE_UNIT.monthly}` : '';
 }
 
 export function formatFee(amount) {

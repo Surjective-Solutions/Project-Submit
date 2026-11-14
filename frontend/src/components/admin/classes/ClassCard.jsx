@@ -5,12 +5,16 @@ import {
   batchKey,
   classHref,
   classTitle,
+  feeText,
   formatFee,
   formatLkr,
+  hasSpecialPrice,
   isPackage,
   modeText,
   packageDetails,
+  payablePrice,
   scheduleText,
+  usualPrice,
 } from '@/classes/utils';
 import styles from './classes.module.css';
 
@@ -22,6 +26,8 @@ export default function ClassCard({ cls, tutor, catalog = [] }) {
   const bundle = isPackage(cls);
   const online = cls.mode === 'online';
   const details = bundle ? packageDetails(cls, catalog) : null;
+  const special = !bundle && hasSpecialPrice(cls);
+  const info = !bundle && cls.description ? cls.description.trim() : '';
 
   return (
     <article className={styles.classCard} data-type={cls.type}>
@@ -44,6 +50,12 @@ export default function ClassCard({ cls, tutor, catalog = [] }) {
       <p className={styles.classSub}>
         {batchKey(cls)} · {cls.medium} medium
       </p>
+
+      {info && (
+        <p className={styles.classInfo} data-testid="class-info">
+          {info}
+        </p>
+      )}
 
       {bundle ? (
         <div className={styles.packageIncludes}>
@@ -79,7 +91,15 @@ export default function ClassCard({ cls, tutor, catalog = [] }) {
 
       <div className={styles.classFooter}>
         <span className={styles.classFeeGroup}>
-          <span className={styles.classFee}>{formatFee(cls.monthlyFee)}</span>
+          <span className={styles.classFee}>
+            {bundle ? formatFee(cls.monthlyFee) : feeText(payablePrice(cls), cls.paymentFormat)}
+          </span>
+          {special && (
+            <span className={styles.feeWas} data-testid="usual-price">
+              <span className={styles.srOnly}>Instead of </span>
+              {formatLkr(usualPrice(cls))}
+            </span>
+          )}
           {bundle && details.regularFee != null && (
             <span className={styles.feeWas}>
               <span className={styles.srOnly}>Instead of </span>
@@ -88,6 +108,7 @@ export default function ClassCard({ cls, tutor, catalog = [] }) {
           )}
         </span>
         {bundle && details.saving > 0 && <span className={styles.saveBadge}>Save {formatLkr(details.saving)}</span>}
+        {special && <span className={styles.saveBadge}>Special price</span>}
       </div>
     </article>
   );

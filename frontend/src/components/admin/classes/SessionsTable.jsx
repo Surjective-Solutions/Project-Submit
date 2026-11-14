@@ -1,5 +1,6 @@
 import Icon from '@/components/admin/Icon';
 import { accessLabel, formatDateParts, isExpired, modeSummary } from '@/classes/sessionUtils';
+import { plural } from '@/classes/utils';
 import styles from './classes.module.css';
 import s from './sessions.module.css';
 
@@ -16,7 +17,7 @@ function DateTime({ value }) {
   );
 }
 
-export default function SessionsTable({ sessions, now, onEdit, onParticipants, onDelete }) {
+export default function SessionsTable({ sessions, now, onEdit, onParticipants, onResources, onDelete }) {
   return (
     <div className={s.tableWrap}>
       <table className={s.table}>
@@ -82,6 +83,19 @@ export default function SessionsTable({ sessions, now, onEdit, onParticipants, o
                       aria-label={`Participants of ${session.name}`}
                     >
                       <Icon name="groups" size={19} weight={500} />
+                    </button>
+                    <button
+                      type="button"
+                      className={s.rowButton}
+                      onClick={() => onResources(session)}
+                      aria-label={`Resources of ${session.name}${session.resourceCount ? `, ${plural(session.resourceCount, 'resource')}` : ''}`}
+                    >
+                      <Icon name="folder_open" size={19} weight={500} />
+                      {session.resourceCount > 0 && (
+                        <span className={s.badge} aria-hidden="true">
+                          {session.resourceCount}
+                        </span>
+                      )}
                     </button>
                     <button
                       type="button"

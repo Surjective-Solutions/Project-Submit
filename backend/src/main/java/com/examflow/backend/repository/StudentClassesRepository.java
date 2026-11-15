@@ -30,4 +30,11 @@ public interface StudentClassesRepository extends JpaRepository<StudentClass, In
             @Param("enrollmentStatus") Integer enrollmentStatus,
             @Param("classStatus") Integer classStatus);
 
+    // [tutorSeq, distinct enrolled students] for every tutor, same rules as the single-tutor count above.
+    @Query("SELECT sc.classes.tutor.tutorSeq, COUNT(DISTINCT sc.student) FROM StudentClass sc " +
+           "WHERE sc.statusSeq = :enrollmentStatus AND sc.classes.status = :classStatus " +
+           "GROUP BY sc.classes.tutor.tutorSeq")
+    List<Object[]> countDistinctEnrolledStudentsGroupedByTutor(@Param("enrollmentStatus") Integer enrollmentStatus,
+            @Param("classStatus") Integer classStatus);
+
 }

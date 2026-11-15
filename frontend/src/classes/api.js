@@ -79,6 +79,7 @@
 //   Business errors should come back as 200 + { isSuccess: false, message } like the rest of the app, because
 //   a 401/403 is read as an expired login.
 
+import { getAdminClassTutors } from '@/lib/api-client';
 import { registerRecording } from './recordings';
 import { nowLocal } from './sessionUtils';
 
@@ -198,9 +199,9 @@ const TUTORS = TUTOR_BASE.map(({ hall, ...t }) => ({
 
 export const tutors = {
   // GET /tutors
+  // Backed by GET /api/admin-class/tutors: active tutors only.
   async list() {
-    await wait();
-    return TUTORS.map((t) => ({ ...t, mediums: [...t.mediums] }));
+    return getAdminClassTutors();
   },
   // GET /tutors/:id/classes
   async classes(id) {

@@ -783,6 +783,12 @@ export async function getAdminStudentsByStream() {
   });
 }
 
+// Returns [{ id, name, photoUrl, description, subject, level, mediums, phone, classCount, studentCount }]
+// Active tutors only; shown in the admin Classes directory.
+export async function getAdminClassTutors() {
+  return protectedRequest("/api/admin-class/tutors", { method: "GET" });
+}
+
 // ── Instructors ──────────────────────────────────────────────────────────────────
 
 //get single instrctor by ID for profile display

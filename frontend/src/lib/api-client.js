@@ -789,6 +789,16 @@ export async function getAdminClassTutors() {
   return protectedRequest("/api/admin-class/tutors", { method: "GET" });
 }
 
+// Returns [{ id, tutorId, title, batchYear, level, type, medium, paymentFormat, price, monthlyFee, description, enrolledCount }]
+export async function getAdminTutorClasses(tutorId) {
+  return protectedRequest(`/api/admin-class/tutors/${tutorId}/classes`, { method: "GET" });
+}
+
+// Returns the class with its tutor and enrollments ({ total, paidThisMonth, free }); an empty body when not found.
+export async function getAdminClassDetail(classId) {
+  return protectedRequest(`/api/admin-class/classes/${classId}`, { method: "GET" });
+}
+
 // ── Instructors ──────────────────────────────────────────────────────────────────
 
 //get single instrctor by ID for profile display

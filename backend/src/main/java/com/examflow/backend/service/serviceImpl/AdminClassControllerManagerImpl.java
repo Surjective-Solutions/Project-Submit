@@ -1,5 +1,7 @@
 package com.examflow.backend.service.serviceImpl;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -9,9 +11,13 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.examflow.backend.dto.AdminClassDetailResponse;
 import com.examflow.backend.dto.AdminClassTutorResponse;
+import com.examflow.backend.dto.AdminTutorClassResponse;
+import com.examflow.backend.entity.Classes;
 import com.examflow.backend.entity.Tutor;
 import com.examflow.backend.repository.ClassesRepository;
+import com.examflow.backend.repository.StudentClassPaymentRecordsRepository;
 import com.examflow.backend.repository.StudentClassesRepository;
 import com.examflow.backend.repository.TutorRepository;
 import com.examflow.backend.service.AdminClassControllerManager;
@@ -22,18 +28,25 @@ public class AdminClassControllerManagerImpl implements AdminClassControllerMana
     // Tutors, classes and enrollments all use status 2 for "active".
     private static final Integer ACTIVE = 2;
 
+    // The academy runs on Sri Lanka time, so "this month" follows the Colombo calendar.
+    private static final ZoneId ACADEMY_ZONE = ZoneId.of("Asia/Colombo");
+
     private final TutorRepository tutorRepository;
 
     private final ClassesRepository classesRepository;
 
     private final StudentClassesRepository studentClassesRepository;
 
+    private final StudentClassPaymentRecordsRepository studentClassPaymentRecordsRepository;
+
     @Autowired
     public AdminClassControllerManagerImpl(TutorRepository tutorRepository, ClassesRepository classesRepository,
-            StudentClassesRepository studentClassesRepository) {
+            StudentClassesRepository studentClassesRepository,
+            StudentClassPaymentRecordsRepository studentClassPaymentRecordsRepository) {
         this.tutorRepository = tutorRepository;
         this.classesRepository = classesRepository;
         this.studentClassesRepository = studentClassesRepository;
+        this.studentClassPaymentRecordsRepository = studentClassPaymentRecordsRepository;
     }
 
     @Override
@@ -60,6 +73,89 @@ public class AdminClassControllerManagerImpl implements AdminClassControllerMana
             result.add(card);
         }
         return result;
+    }
+
+    @Override
+    public List<AdminTutorClassResponse> getTutorClasses(Integer tutorSeq) {
+        List<AdminTutorClassResponse> result = new ArrayList<>();
+        Tutor tutor = tutorRepository.findByTutorSeq(tutorSeq);
+        if (tutor == null) {
+            return result;
+        }
+        Map<Integer, Integer> enrolled = toCountMap(
+                studentClassesRepository.countEnrolledStudentsGroupedByClass(tutor, ACTIVE));
+        String level = toLevelCode(tutor.getExamLevel());
+        List<String> mediums = toMediums(tutor.getMedium());
+
+        for (Classes cls : classesRepository.findByStatusAndTutor(ACTIVE, tutor)) {
+            AdminTutorClassResponse card = new AdminTutorClassResponse();
+            card.setId(String.valueOf(cls.getClassSeq()));
+            card.setTutorId(String.valueOf(tutorSeq));
+            card.setTitle(cls.getDisplayName());
+            card.setDescription(cls.getDescription());
+            card.setLevel(level);
+            card.setMedium(mediums.isEmpty() ? null : mediums.get(0));
+            // A class does not store these yet: it is treated as a monthly Theory class, in the
+            // batch of the year it was created.
+            card.setType("Theory");
+            card.setPaymentFormat("monthly");
+            card.setBatchYear(cls.getCreatedDateTime() != null ? cls.getCreatedDateTime().getYear() : null);
+            card.setPrice(cls.getMonthlyFee());
+            card.setMonthlyFee(cls.getMonthlyFee());
+            card.setEnrolledCount(enrolled.getOrDefault(cls.getClassSeq(), 0));
+            result.add(card);
+        }
+        return result;
+    }
+
+    @Override
+    public AdminClassDetailResponse getClassDetail(Integer classSeq) {
+        Classes cls = classesRepository.findByClassSeqAndStatus(classSeq, ACTIVE);
+        if (cls == null || cls.getTutor() == null) {
+            return null;
+        }
+        Tutor tutor = cls.getTutor();
+        List<String> mediums = toMediums(tutor.getMedium());
+
+        AdminClassDetailResponse detail = new AdminClassDetailResponse();
+        detail.setId(String.valueOf(cls.getClassSeq()));
+        detail.setTutorId(String.valueOf(tutor.getTutorSeq()));
+        detail.setTitle(cls.getDisplayName());
+        detail.setSubject(cls.getSubjectName() != null ? cls.getSubjectName() : tutor.getSubject());
+        detail.setDescription(cls.getDescription());
+        detail.setLevel(toLevelCode(tutor.getExamLevel()));
+        detail.setMedium(mediums.isEmpty() ? null : mediums.get(0));
+        // Same placeholders as the tutor's class list until classes store these.
+        detail.setType("Theory");
+        detail.setPaymentFormat("monthly");
+        detail.setBatchYear(cls.getCreatedDateTime() != null ? cls.getCreatedDateTime().getYear() : null);
+        detail.setPrice(cls.getMonthlyFee());
+        detail.setMonthlyFee(cls.getMonthlyFee());
+
+        int total = orZero(studentClassesRepository.countEnrolledStudentsInClass(cls, ACTIVE));
+        LocalDate today = LocalDate.now(ACADEMY_ZONE);
+        int paid = orZero(studentClassPaymentRecordsRepository.countPaidStudentsForMonth(cls,
+                today.getMonthValue(), today.getYear()));
+        detail.setEnrolledCount(total);
+
+        AdminClassDetailResponse.Enrollments enrollments = new AdminClassDetailResponse.Enrollments();
+        enrollments.setTotal(total);
+        enrollments.setPaidThisMonth(paid);
+        // Free enrollments are not recorded yet.
+        enrollments.setFree(0);
+        detail.setEnrollments(enrollments);
+
+        AdminClassDetailResponse.Tutor tutorInfo = new AdminClassDetailResponse.Tutor();
+        tutorInfo.setId(String.valueOf(tutor.getTutorSeq()));
+        tutorInfo.setName(tutor.getName());
+        tutorInfo.setSubject(tutor.getSubject());
+        tutorInfo.setMediums(mediums);
+        detail.setTutor(tutorInfo);
+        return detail;
+    }
+
+    private int orZero(Integer value) {
+        return value == null ? 0 : value;
     }
 
     private Map<Integer, Integer> toCountMap(List<Object[]> rows) {

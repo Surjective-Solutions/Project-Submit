@@ -79,7 +79,7 @@
 //   Business errors should come back as 200 + { isSuccess: false, message } like the rest of the app, because
 //   a 401/403 is read as an expired login.
 
-import { getAdminClassTutors } from '@/lib/api-client';
+import { getAdminClassDetail, getAdminClassTutors, getAdminTutorClasses } from '@/lib/api-client';
 import { registerRecording } from './recordings';
 import { nowLocal } from './sessionUtils';
 
@@ -203,15 +203,9 @@ export const tutors = {
   async list() {
     return getAdminClassTutors();
   },
-  // GET /tutors/:id/classes
+  // Backed by GET /api/admin-class/tutors/:id/classes: the tutor's active classes. Packages are not served yet.
   async classes(id) {
-    await wait();
-    // A class carries what was set when it was edited: payment format, price, special price and class info.
-    const own = (CLASSES[id] || []).map((c) => {
-      const { description, paymentFormat, price, specialPrice, admissionFee, visible } = CLASS_EXTRA[c.id] || {};
-      return { ...c, ...(CLASS_EXTRA[c.id] ? { description, paymentFormat, price, specialPrice, admissionFee, visible } : {}) };
-    });
-    return [...own, ...(PACKAGES[id] || []).map((c) => ({ ...c, classIds: [...c.classIds] }))];
+    return getAdminTutorClasses(id);
   },
 };
 
@@ -333,10 +327,14 @@ export const halls = {
 
 Object.assign(classes, {
   // GET /classes/:id
+  // Backed by GET /api/admin-class/classes/:id. An unknown or inactive class comes back as an empty body.
   async get(classId) {
-    await wait();
-    const cls = findClass(classId);
-    return cls ? classView(cls) : null;
+    try {
+      return (await getAdminClassDetail(classId)) || null;
+    } catch (error) {
+      if (error instanceof SyntaxError) return null; // empty body: class not found
+      throw error;
+    }
   },
   // GET /classes/:id/sessions
   async sessions(classId) {

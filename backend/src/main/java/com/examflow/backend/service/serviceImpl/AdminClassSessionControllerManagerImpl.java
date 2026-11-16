@@ -4,7 +4,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -19,6 +21,7 @@ import com.examflow.backend.enums.SessionAccessLevel;
 import com.examflow.backend.enums.SessionMode;
 import com.examflow.backend.entity.Classes;
 import com.examflow.backend.repository.ClassSessionRepository;
+import com.examflow.backend.repository.ClassSessionResourceRepository;
 import com.examflow.backend.repository.ClassesRepository;
 import com.examflow.backend.service.AdminClassSessionControllerManager;
 
@@ -35,6 +38,9 @@ public class AdminClassSessionControllerManagerImpl implements AdminClassSession
 
     private static final Integer DELETED = 0;
 
+    // Resource status: 2 = active.
+    private static final Integer RESOURCE_ACTIVE = 2;
+
     private static final List<Integer> LIVE_STATUSES = List.of(APPROVED, OPEN);
 
     private static final int NAME_MAX = 90;
@@ -45,11 +51,15 @@ public class AdminClassSessionControllerManagerImpl implements AdminClassSession
 
     private final ClassSessionRepository classSessionRepository;
 
+    private final ClassSessionResourceRepository classSessionResourceRepository;
+
     @Autowired
     public AdminClassSessionControllerManagerImpl(ClassesRepository classesRepository,
-            ClassSessionRepository classSessionRepository) {
+            ClassSessionRepository classSessionRepository,
+            ClassSessionResourceRepository classSessionResourceRepository) {
         this.classesRepository = classesRepository;
         this.classSessionRepository = classSessionRepository;
+        this.classSessionResourceRepository = classSessionResourceRepository;
     }
 
     @Override
@@ -59,8 +69,17 @@ public class AdminClassSessionControllerManagerImpl implements AdminClassSession
         if (cls == null) {
             return result;
         }
-        for (ClassSession session : classSessionRepository.findByClassesAndStatusInOrderByStartsAtAsc(cls, LIVE_STATUSES)) {
-            result.add(toResponse(session));
+        List<ClassSession> sessions = classSessionRepository.findByClassesAndStatusInOrderByStartsAtAsc(cls,
+                LIVE_STATUSES);
+        // One query for every session's resource count.
+        Map<Integer, Integer> resourceCounts = new HashMap<>();
+        if (!sessions.isEmpty()) {
+            for (Object[] row : classSessionResourceRepository.countBySessions(sessions, RESOURCE_ACTIVE)) {
+                resourceCounts.put((Integer) row[0], ((Number) row[1]).intValue());
+            }
+        }
+        for (ClassSession session : sessions) {
+            result.add(toResponse(session, resourceCounts.getOrDefault(session.getSessionSeq(), 0)));
         }
         return result;
     }
@@ -182,7 +201,7 @@ public class AdminClassSessionControllerManagerImpl implements AdminClassSession
         return null;
     }
 
-    private AdminSessionResponse toResponse(ClassSession session) {
+    private AdminSessionResponse toResponse(ClassSession session, int resourceCount) {
         AdminSessionResponse response = new AdminSessionResponse();
         response.setId(String.valueOf(session.getSessionSeq()));
         response.setName(session.getName());
@@ -197,16 +216,20 @@ public class AdminClassSessionControllerManagerImpl implements AdminClassSession
         shares.setInstitute(session.getInstituteShare());
         shares.setSystem(session.getSystemShare());
         response.setShares(shares);
-        // Session resources are not stored yet.
-        response.setResourceCount(0);
+        response.setResourceCount(resourceCount);
         return response;
+    }
+
+    private int orZero(Integer value) {
+        return value == null ? 0 : value;
     }
 
     private AdminSessionSaveResponse success(ClassSession session, String message) {
         AdminSessionSaveResponse response = new AdminSessionSaveResponse();
         response.setIsSuccess(true);
         response.setMessage(message);
-        response.setSession(toResponse(session));
+        response.setSession(toResponse(session, orZero(
+                classSessionResourceRepository.countBySessionAndStatus(session, RESOURCE_ACTIVE))));
         return response;
     }
 

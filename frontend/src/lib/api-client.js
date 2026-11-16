@@ -817,6 +817,25 @@ export async function deleteAdminClassSession(classId, sessionId) {
   return protectedRequestPath(`/api/admin-class/classes/${classId}/sessions/${sessionId}`, { method: "DELETE" });
 }
 
+// Resources of a session. A resource is { id, type, title, kind, fileName, size, url }; a file's url is
+// an address on the backend ("/uploads/session_resources/...").
+export async function getAdminSessionResources(classId, sessionId) {
+  return protectedRequestPath(`/api/admin-class/classes/${classId}/sessions/${sessionId}/resources`, { method: "GET" });
+}
+
+// formData: type, title, kind and either file or url. Returns { isSuccess, message, resource }.
+export async function addAdminSessionResource(classId, sessionId, formData) {
+  return protectedRequestWithFileHandling(`/api/admin-class/classes/${classId}/sessions/${sessionId}/resources`, {
+    body: formData,
+  });
+}
+
+export async function deleteAdminSessionResource(classId, sessionId, resourceId) {
+  return protectedRequestPath(`/api/admin-class/classes/${classId}/sessions/${sessionId}/resources/${resourceId}`, {
+    method: "DELETE",
+  });
+}
+
 // ── Instructors ──────────────────────────────────────────────────────────────────
 
 //get single instrctor by ID for profile display

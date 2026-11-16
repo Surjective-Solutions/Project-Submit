@@ -92,10 +92,12 @@ export default function ResourcesDialog({ classId, session, onCountChange, onClo
       setAdding(false);
       toast.success(`“${resource.title}” added.`);
       document.getElementById('resource-title')?.focus();
-    } catch {
+    } catch (error) {
       if (mounted.current) {
         setAdding(false);
-        setAddError('Couldn’t add the resource. Check the connection and try again.');
+        // A reason from the server (such as a file that is too large) is shown as it is.
+        const reason = error instanceof Error && !error.message.startsWith('HTTP Error') ? error.message : '';
+        setAddError(reason || 'Couldn’t add the resource. Check the connection and try again.');
       }
     }
   }

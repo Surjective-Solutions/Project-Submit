@@ -80,13 +80,17 @@
 //   a 401/403 is read as an expired login.
 
 import {
+  addAdminSessionResource,
   createAdminClassSession,
+  deleteAdminSessionResource,
   deleteAdminClassSession,
   getAdminClassDetail,
   getAdminClassSessions,
   getAdminClassTutors,
+  getAdminSessionResources,
   getAdminTutorClasses,
   updateAdminClassSession,
+  API_BASE,
 } from '@/lib/api-client';
 import { registerRecording } from './recordings';
 import { nowLocal } from './sessionUtils';
@@ -335,6 +339,13 @@ export const halls = {
 
 // Business errors come back as 200 + { isSuccess: false, message }; turn them into a rejection so the
 // dialogs stay open and show their error.
+// A stored file's address starts with /uploads/; it is served by the backend, not by this site.
+function withFileAddress(resource) {
+  return resource.kind === 'file' && resource.url && resource.url.startsWith('/uploads/')
+    ? { ...resource, url: `${API_BASE}${resource.url}` }
+    : resource;
+}
+
 function checked(response) {
   if (response && response.isSuccess === false) throw new Error(response.message || 'Request failed');
   return { ok: true, ...response };
@@ -597,34 +608,22 @@ Object.assign(classes, {
 // ── Session resources ───────────────────────────────────────────────────────
 
 Object.assign(classes, {
-  // GET /classes/:id/sessions/:sessionId/resources
+  // Backed by /api/admin-class/classes/:id/sessions/:sessionId/resources. Files are kept on the backend,
+  // in a folder per resource type, so their address is made absolute to open from the admin page.
   async resources(classId, sessionId) {
-    await wait(250);
-    return resourcesOf(sessionId).map(copyResource);
+    return (await getAdminSessionResources(classId, sessionId)).map(withFileAddress);
   },
-  // POST /classes/:id/sessions/:sessionId/resources
   async addResource(classId, sessionId, payload) {
-    await wait(500);
-    resourceCounter += 1;
-    const file = payload.kind === 'file' ? payload.file : null;
-    const resource = {
-      id: `r-new-${resourceCounter}`,
-      type: payload.type,
-      title: payload.title,
-      kind: payload.kind,
-      fileName: file ? file.name : null,
-      size: file ? file.size : null,
-      url: file ? objectUrl(file) || '#' : payload.url,
-    };
-    resourcesOf(sessionId).push(resource);
-    return { ok: true, resource: copyResource(resource) };
+    const form = new FormData();
+    form.append('type', payload.type);
+    form.append('title', payload.title);
+    form.append('kind', payload.kind);
+    if (payload.kind === 'file' && payload.file) form.append('file', payload.file);
+    if (payload.kind === 'link') form.append('url', payload.url || '');
+    const response = checked(await addAdminSessionResource(classId, sessionId, form));
+    return { ...response, resource: withFileAddress(response.resource) };
   },
-  // DELETE /classes/:id/sessions/:sessionId/resources/:resourceId
   async deleteResource(classId, sessionId, resourceId) {
-    await wait(300);
-    const list = resourcesOf(sessionId);
-    const index = list.findIndex((r) => r.id === resourceId);
-    if (index >= 0) list.splice(index, 1);
-    return { ok: true };
+    return checked(await deleteAdminSessionResource(classId, sessionId, resourceId));
   },
 });

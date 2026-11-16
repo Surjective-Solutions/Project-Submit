@@ -799,6 +799,24 @@ export async function getAdminClassDetail(classId) {
   return protectedRequest(`/api/admin-class/classes/${classId}`, { method: "GET" });
 }
 
+// Sessions of a class. A session is { id, name, access, mode, startsAt, expiresAt, hall, recordingCode, shares, resourceCount }.
+export async function getAdminClassSessions(classId) {
+  return protectedRequestPath(`/api/admin-class/classes/${classId}/sessions`, { method: "GET" });
+}
+
+// The three below return { isSuccess, message, session }.
+export async function createAdminClassSession(classId, data) {
+  return protectedRequestPath(`/api/admin-class/classes/${classId}/sessions`, { method: "POST", body: data });
+}
+
+export async function updateAdminClassSession(classId, sessionId, data) {
+  return protectedRequestPath(`/api/admin-class/classes/${classId}/sessions/${sessionId}`, { method: "PUT", body: data });
+}
+
+export async function deleteAdminClassSession(classId, sessionId) {
+  return protectedRequestPath(`/api/admin-class/classes/${classId}/sessions/${sessionId}`, { method: "DELETE" });
+}
+
 // ── Instructors ──────────────────────────────────────────────────────────────────
 
 //get single instrctor by ID for profile display

@@ -79,7 +79,15 @@
 //   Business errors should come back as 200 + { isSuccess: false, message } like the rest of the app, because
 //   a 401/403 is read as an expired login.
 
-import { getAdminClassDetail, getAdminClassTutors, getAdminTutorClasses } from '@/lib/api-client';
+import {
+  createAdminClassSession,
+  deleteAdminClassSession,
+  getAdminClassDetail,
+  getAdminClassSessions,
+  getAdminClassTutors,
+  getAdminTutorClasses,
+  updateAdminClassSession,
+} from '@/lib/api-client';
 import { registerRecording } from './recordings';
 import { nowLocal } from './sessionUtils';
 
@@ -325,6 +333,13 @@ export const halls = {
   },
 };
 
+// Business errors come back as 200 + { isSuccess: false, message }; turn them into a rejection so the
+// dialogs stay open and show their error.
+function checked(response) {
+  if (response && response.isSuccess === false) throw new Error(response.message || 'Request failed');
+  return { ok: true, ...response };
+}
+
 Object.assign(classes, {
   // GET /classes/:id
   // Backed by GET /api/admin-class/classes/:id. An unknown or inactive class comes back as an empty body.
@@ -336,38 +351,18 @@ Object.assign(classes, {
       throw error;
     }
   },
-  // GET /classes/:id/sessions
+  // Backed by /api/admin-class/classes/:id/sessions. A class can have many sessions.
   async sessions(classId) {
-    await wait();
-    return sessionsOf(classId).map(copySession);
+    return getAdminClassSessions(classId);
   },
-  // POST /classes/:id/sessions
   async createSession(classId, payload) {
-    await wait();
-    sessionCounter += 1;
-    const session = { ...payload, shares: { ...payload.shares }, id: `s-new-${sessionCounter}` };
-    sessionsOf(classId).push(session);
-    return { ok: true, session: copySession(session) };
+    return checked(await createAdminClassSession(classId, payload));
   },
-  // PUT /classes/:id/sessions/:sessionId
   async updateSession(classId, sessionId, payload) {
-    await wait();
-    const list = sessionsOf(classId);
-    const index = list.findIndex((s) => s.id === sessionId);
-    if (index < 0) throw new Error('Session not found');
-    list[index] = { ...payload, shares: { ...payload.shares }, id: sessionId };
-    return { ok: true, session: copySession(list[index]) };
+    return checked(await updateAdminClassSession(classId, sessionId, payload));
   },
-  // DELETE /classes/:id/sessions/:sessionId
   async deleteSession(classId, sessionId) {
-    await wait();
-    const list = sessionsOf(classId);
-    const index = list.findIndex((s) => s.id === sessionId);
-    if (index >= 0) {
-      delete RESOURCES[list[index].id];
-      list.splice(index, 1);
-    }
-    return { ok: true };
+    return checked(await deleteAdminClassSession(classId, sessionId));
   },
 });
 

@@ -1,0 +1,31 @@
+$kind: http-request
+name: ""
+url: |
+  https://accounts.zoho.com/oauth/v2/token?code=1000.d38b60d73197fc063d13d878f7d4537d.81a836d7cb88a867093ed2fb973af1d6&client_id=1000.95WPOBT57LCQRMZPTGVD8XJPLDBQOL&client_secret=4094da3e11e0b6540e7778b77a0321b9c1483c2ec1&redirect_uri=https://tms.myroadrunner.lk/login&grant_type=authorization_code
+method: POST
+queryParams:
+  - key: code
+    value: 1000.d38b60d73197fc063d13d878f7d4537d.81a836d7cb88a867093ed2fb973af1d6
+    disabled: false
+    description: ""
+  - key: client_id
+    value: 1000.95WPOBT57LCQRMZPTGVD8XJPLDBQOL
+    disabled: false
+    description: ""
+  - key: client_secret
+    value: 4094da3e11e0b6540e7778b77a0321b9c1483c2ec1
+    disabled: false
+    description: ""
+  - key: redirect_uri
+    value: https://tms.myroadrunner.lk/login
+    disabled: false
+    description: ""
+  - key: grant_type
+    value: |
+      authorization_code
+    disabled: false
+    description: ""
+body:
+  type: json
+  content: ""
+order: 1000

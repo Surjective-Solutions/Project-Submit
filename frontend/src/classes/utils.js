@@ -64,7 +64,7 @@ export function totals(tutors) {
 
 // ── Classes of one tutor ────────────────────────────────────────────────────
 
-export const batchKey = (cls) => `${cls.batchYear} ${cls.level}`;
+export const batchKey = (cls) => `${cls.batchYear ?? ""} ${cls.level ?? ""}`.trim() || "Other";
 
 // Batches present in the data, oldest exam year first (A/L before O/L within a year).
 export function batchOptions(classes) {

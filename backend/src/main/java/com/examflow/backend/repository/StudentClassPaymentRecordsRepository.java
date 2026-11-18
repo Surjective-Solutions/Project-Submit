@@ -4,6 +4,10 @@ import java.util.List;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import com.examflow.backend.entity.Classes;
 
 import com.examflow.backend.entity.ClassPaymentRecord;
 import com.examflow.backend.entity.Student;
@@ -26,6 +30,13 @@ public interface StudentClassPaymentRecordsRepository extends JpaRepository<Stud
 
     StudentClassPaymentRecord findTopByStudentAndClassPaymentRecordAndStatusOrderByApprovedTimeDesc(
             Student student, ClassPaymentRecord classPaymentRecord, Integer status);
+
+    // Students of a class whose payment for the given month was paid and approved.
+    @Query("SELECT COUNT(DISTINCT r.student) FROM StudentClassPaymentRecord r " +
+           "WHERE r.classPaymentRecord.classes = :classes AND r.classPaymentRecord.month = :month " +
+           "AND r.classPaymentRecord.year = :year AND r.isPayed = true AND r.isApproved = true")
+    Integer countPaidStudentsForMonth(@Param("classes") Classes classes, @Param("month") Integer month,
+            @Param("year") Integer year);
 
     long countByStatusAndIsForPaymentsAndIsApprovedIsNull(Integer status, Boolean isForPayments);
 

@@ -130,9 +130,9 @@ export default function TutorDetailPage({ tutorId }) {
           )}
 
           {groups.map((group) => (
-            <section key={group.key} className={styles.group} aria-labelledby={`group-${group.year}-${group.level.replace('/', '')}`}>
+            <section key={group.key} className={styles.group} aria-labelledby={`group-${group.year}-${String(group.level ?? '').replace('/', '')}`}>
               <header className={styles.groupHeader}>
-                <h2 id={`group-${group.year}-${group.level.replace('/', '')}`} className={styles.groupTitle}>
+                <h2 id={`group-${group.year}-${String(group.level ?? '').replace('/', '')}`} className={styles.groupTitle}>
                   {group.year} {group.level} batch
                 </h2>
                 <span className={styles.groupCount}>

@@ -79,6 +79,19 @@
 //   Business errors should come back as 200 + { isSuccess: false, message } like the rest of the app, because
 //   a 401/403 is read as an expired login.
 
+import {
+  addAdminSessionResource,
+  createAdminClassSession,
+  deleteAdminSessionResource,
+  deleteAdminClassSession,
+  getAdminClassDetail,
+  getAdminClassSessions,
+  getAdminClassTutors,
+  getAdminSessionResources,
+  getAdminTutorClasses,
+  updateAdminClassSession,
+  API_BASE,
+} from '@/lib/api-client';
 import { registerRecording } from './recordings';
 import { nowLocal } from './sessionUtils';
 
@@ -198,19 +211,13 @@ const TUTORS = TUTOR_BASE.map(({ hall, ...t }) => ({
 
 export const tutors = {
   // GET /tutors
+  // Backed by GET /api/admin-class/tutors: active tutors only.
   async list() {
-    await wait();
-    return TUTORS.map((t) => ({ ...t, mediums: [...t.mediums] }));
+    return getAdminClassTutors();
   },
-  // GET /tutors/:id/classes
+  // Backed by GET /api/admin-class/tutors/:id/classes: the tutor's active classes. Packages are not served yet.
   async classes(id) {
-    await wait();
-    // A class carries what was set when it was edited: payment format, price, special price and class info.
-    const own = (CLASSES[id] || []).map((c) => {
-      const { description, paymentFormat, price, specialPrice, admissionFee, visible } = CLASS_EXTRA[c.id] || {};
-      return { ...c, ...(CLASS_EXTRA[c.id] ? { description, paymentFormat, price, specialPrice, admissionFee, visible } : {}) };
-    });
-    return [...own, ...(PACKAGES[id] || []).map((c) => ({ ...c, classIds: [...c.classIds] }))];
+    return getAdminTutorClasses(id);
   },
 };
 
@@ -330,45 +337,43 @@ export const halls = {
   },
 };
 
+// Business errors come back as 200 + { isSuccess: false, message }; turn them into a rejection so the
+// dialogs stay open and show their error.
+// A stored file's address starts with /uploads/; it is served by the backend, not by this site.
+function withFileAddress(resource) {
+  return resource.kind === 'file' && resource.url && resource.url.startsWith('/uploads/')
+    ? { ...resource, url: `${API_BASE}${resource.url}` }
+    : resource;
+}
+
+function checked(response) {
+  if (response && response.isSuccess === false) throw new Error(response.message || 'Request failed');
+  return { ok: true, ...response };
+}
+
 Object.assign(classes, {
   // GET /classes/:id
+  // Backed by GET /api/admin-class/classes/:id. An unknown or inactive class comes back as an empty body.
   async get(classId) {
-    await wait();
-    const cls = findClass(classId);
-    return cls ? classView(cls) : null;
-  },
-  // GET /classes/:id/sessions
-  async sessions(classId) {
-    await wait();
-    return sessionsOf(classId).map(copySession);
-  },
-  // POST /classes/:id/sessions
-  async createSession(classId, payload) {
-    await wait();
-    sessionCounter += 1;
-    const session = { ...payload, shares: { ...payload.shares }, id: `s-new-${sessionCounter}` };
-    sessionsOf(classId).push(session);
-    return { ok: true, session: copySession(session) };
-  },
-  // PUT /classes/:id/sessions/:sessionId
-  async updateSession(classId, sessionId, payload) {
-    await wait();
-    const list = sessionsOf(classId);
-    const index = list.findIndex((s) => s.id === sessionId);
-    if (index < 0) throw new Error('Session not found');
-    list[index] = { ...payload, shares: { ...payload.shares }, id: sessionId };
-    return { ok: true, session: copySession(list[index]) };
-  },
-  // DELETE /classes/:id/sessions/:sessionId
-  async deleteSession(classId, sessionId) {
-    await wait();
-    const list = sessionsOf(classId);
-    const index = list.findIndex((s) => s.id === sessionId);
-    if (index >= 0) {
-      delete RESOURCES[list[index].id];
-      list.splice(index, 1);
+    try {
+      return (await getAdminClassDetail(classId)) || null;
+    } catch (error) {
+      if (error instanceof SyntaxError) return null; // empty body: class not found
+      throw error;
     }
-    return { ok: true };
+  },
+  // Backed by /api/admin-class/classes/:id/sessions. A class can have many sessions.
+  async sessions(classId) {
+    return getAdminClassSessions(classId);
+  },
+  async createSession(classId, payload) {
+    return checked(await createAdminClassSession(classId, payload));
+  },
+  async updateSession(classId, sessionId, payload) {
+    return checked(await updateAdminClassSession(classId, sessionId, payload));
+  },
+  async deleteSession(classId, sessionId) {
+    return checked(await deleteAdminClassSession(classId, sessionId));
   },
 });
 
@@ -603,34 +608,22 @@ Object.assign(classes, {
 // ── Session resources ───────────────────────────────────────────────────────
 
 Object.assign(classes, {
-  // GET /classes/:id/sessions/:sessionId/resources
+  // Backed by /api/admin-class/classes/:id/sessions/:sessionId/resources. Files are kept on the backend,
+  // in a folder per resource type, so their address is made absolute to open from the admin page.
   async resources(classId, sessionId) {
-    await wait(250);
-    return resourcesOf(sessionId).map(copyResource);
+    return (await getAdminSessionResources(classId, sessionId)).map(withFileAddress);
   },
-  // POST /classes/:id/sessions/:sessionId/resources
   async addResource(classId, sessionId, payload) {
-    await wait(500);
-    resourceCounter += 1;
-    const file = payload.kind === 'file' ? payload.file : null;
-    const resource = {
-      id: `r-new-${resourceCounter}`,
-      type: payload.type,
-      title: payload.title,
-      kind: payload.kind,
-      fileName: file ? file.name : null,
-      size: file ? file.size : null,
-      url: file ? objectUrl(file) || '#' : payload.url,
-    };
-    resourcesOf(sessionId).push(resource);
-    return { ok: true, resource: copyResource(resource) };
+    const form = new FormData();
+    form.append('type', payload.type);
+    form.append('title', payload.title);
+    form.append('kind', payload.kind);
+    if (payload.kind === 'file' && payload.file) form.append('file', payload.file);
+    if (payload.kind === 'link') form.append('url', payload.url || '');
+    const response = checked(await addAdminSessionResource(classId, sessionId, form));
+    return { ...response, resource: withFileAddress(response.resource) };
   },
-  // DELETE /classes/:id/sessions/:sessionId/resources/:resourceId
   async deleteResource(classId, sessionId, resourceId) {
-    await wait(300);
-    const list = resourcesOf(sessionId);
-    const index = list.findIndex((r) => r.id === resourceId);
-    if (index >= 0) list.splice(index, 1);
-    return { ok: true };
+    return checked(await deleteAdminSessionResource(classId, sessionId, resourceId));
   },
 });

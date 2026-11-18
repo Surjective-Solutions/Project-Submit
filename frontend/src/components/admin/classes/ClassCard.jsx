@@ -21,7 +21,8 @@ import styles from './classes.module.css';
 // One class or package. A class opens its own page (the whole card is the link, through the title);
 // a package has no page yet, so it only has the hover state.
 // `catalog` is all of the tutor's classes, so a package can list what it includes whatever filter is on.
-export default function ClassCard({ cls, tutor, catalog = [] }) {
+// `href` builds the link to a class's page (the admin page by default; the teacher account passes its own).
+export default function ClassCard({ cls, tutor, catalog = [], href = (c) => classHref(c.tutorId || tutor.id, c.id) }) {
   const meta = TYPE_META[cls.type] || TYPE_META.Theory;
   const bundle = isPackage(cls);
   const online = cls.mode === 'online';
@@ -42,7 +43,7 @@ export default function ClassCard({ cls, tutor, catalog = [] }) {
         {bundle ? (
           classTitle(cls, tutor)
         ) : (
-          <Link href={classHref(cls.tutorId || tutor.id, cls.id)} className={styles.classLink}>
+          <Link href={href(cls)} className={styles.classLink}>
             {classTitle(cls, tutor)}
           </Link>
         )}

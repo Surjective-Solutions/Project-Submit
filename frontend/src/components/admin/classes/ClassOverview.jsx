@@ -19,8 +19,9 @@ const OPTIONS = [
 ];
 
 // The class at the top of its page: what it is, the "Create session" button, the options (Edit, Notices,
-// Manage students, Analytics) and the three enrollment numbers.
-export default function ClassOverview({ cls, onCreateSession, onOption }) {
+// Manage students, Analytics) and the three enrollment numbers. `hiddenOptions` leaves some options out (the teacher
+// account hides Edit: only the admin changes a class's details).
+export default function ClassOverview({ cls, onCreateSession, onOption, hiddenOptions = [] }) {
   const meta = TYPE_META[cls.type] || TYPE_META.Theory;
   const format = cls.paymentFormat || 'monthly';
   const price = effectivePrice(cls);
@@ -77,7 +78,7 @@ export default function ClassOverview({ cls, onCreateSession, onOption }) {
         </div>
 
         <div className={s.options} role="group" aria-label="Class options">
-          {OPTIONS.map((option) => (
+          {OPTIONS.filter((option) => !hiddenOptions.includes(option.key)).map((option) => (
             <button key={option.key} type="button" className={s.optionButton} onClick={() => onOption(option.key)}>
               <Icon name={option.icon} size={19} weight={500} />
               {option.label}

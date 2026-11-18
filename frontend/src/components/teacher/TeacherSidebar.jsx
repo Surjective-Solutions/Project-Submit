@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { BookOpen, Users, BarChart2, LogOut, User } from 'lucide-react';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { BookOpen, ClipboardList, Users, BarChart2, LogOut, User } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getTokenPayload } from '@/lib/auth';
 import { getTutorById, logoutSession } from '@/lib/api-client';
@@ -27,6 +27,13 @@ const NAV_ITEMS = [
     icon: BookOpen,
     accent: '#B8FF8F',
     activeBg: 'rgba(184,255,143,0.13)',
+  },
+  {
+    label: 'Exams',
+    section: 'exams',
+    icon: ClipboardList,
+    accent: '#FFB86B',
+    activeBg: 'rgba(255,184,107,0.13)',
   },
   {
     label: 'Instructors',
@@ -56,7 +63,15 @@ export default function TeacherSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
 
-  const activeSection = searchParams.get('section') ?? 'classes';
+  const pathname = usePathname();
+
+  // The exam pages (a class's papers, its submissions, grading) live under /teacher/dashboard/exams,
+  // so they keep "Exams" highlighted. Everything else is picked with ?section=.
+  const activeSection = pathname.startsWith('/teacher/dashboard/exams')
+    ? 'exams'
+    : pathname.startsWith('/teacher/dashboard/classes')
+      ? 'classes'
+      : searchParams.get('section') ?? 'classes';
   const [teacher, setTeacher] = useState(null);
 
   useEffect(() => {

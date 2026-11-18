@@ -4,7 +4,8 @@ import Avatar from './Avatar';
 import LevelTag from './LevelTag';
 import styles from './classes.module.css';
 
-// The tutor's photo, details and numbers, with the Create class button (pre-selects this tutor).
+// The tutor's photo, details and numbers, with the Create class button (pre-selects this tutor). Without `onCreate`
+// there is no button (the teacher account shows the same card; only the admin creates classes).
 export default function TutorProfileCard({ tutor, stats, onCreate }) {
   const meta = [
     { icon: 'translate', label: 'Mediums', text: (tutor.mediums || []).join(', ') },
@@ -45,10 +46,12 @@ export default function TutorProfileCard({ tutor, stats, onCreate }) {
             </div>
           ))}
         </dl>
-        <button type="button" className={styles.primaryButton} onClick={onCreate}>
-          <Icon name="add" size={20} weight={600} />
-          Create class
-        </button>
+        {onCreate && (
+          <button type="button" className={styles.primaryButton} onClick={onCreate}>
+            <Icon name="add" size={20} weight={600} />
+            Create class
+          </button>
+        )}
       </div>
     </section>
   );

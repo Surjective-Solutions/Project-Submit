@@ -62,7 +62,7 @@ export default function ClassCard({ classItem, onEdit, onToggleStatus }) {
             size="sm"
             nativeButton={false}
             className="gap-1"
-            render={<Link href={`/teacher/dashboard/classes/${classItem.id}`} />}
+            render={<Link href={`/teacher/dashboard/exams/${classItem.id}`} />}
           >
             <Eye className="h-3.5 w-3.5" />
             View

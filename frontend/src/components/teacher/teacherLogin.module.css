@@ -1,0 +1,531 @@
+/* Teacher sign-in: a navy brand panel with the Syzygy logo animation on the left, the form on the right.
+   One column on phones: a compact navy header strip, then the form. */
+
+.root {
+  --navy-panel: #101e3d;
+  --navy-heading: #14254a;
+  --navy-link: #1f3a6e;
+  --red: #c8323a;
+  --red-hover: #b02b33;
+  --text: #172033;
+  --muted: #5a6478;
+  --on-navy: #c9d3e6;
+  --field-line: #cdd4df;
+  --divider: #e4e8ef;
+  --chip: #eef2f8;
+  --error: #b42318;
+  --error-bg: #fef3f2;
+  --error-line: #f4c7c2;
+  --error-text: #8f1d14;
+  --ring: 0 0 0 3px rgba(31, 58, 110, 0.18);
+
+  /* The page is exactly the screen: it never scrolls. The video shrinks and the form tightens on short screens. */
+  position: fixed;
+  inset: 0;
+  display: flex;
+  overflow: hidden;
+  background: #fff;
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.root,
+.root *,
+.root *::before,
+.root *::after {
+  box-sizing: border-box;
+}
+
+/* ── Left: brand panel ───────────────────────────────────────────────── */
+
+.brand {
+  flex: 0 0 50%;
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+  padding: 40px 0 72px;
+  background: var(--navy-panel);
+  color: #fff;
+}
+
+.video {
+  flex: 0 1 auto;
+  min-height: 0;
+  transform: translateY(-20px); /* moves the video up 40px; */
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  /* The animation's edges are almost the panel colour; fading them out leaves no visible frame at all. */
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent),
+    linear-gradient(to bottom, transparent, #000 8%, #000 92%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent),
+    linear-gradient(to bottom, transparent, #000 8%, #000 92%, transparent);
+  mask-composite: intersect;
+}
+
+.video video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: transparent;
+}
+
+.welcome {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 56px;
+}
+
+.welcomeTitle {
+  margin: 0;
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.welcomeText {
+  margin: 0;
+  max-width: 440px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--on-navy);
+}
+
+/* ── Right: the form ─────────────────────────────────────────────────── */
+
+.formSide {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 32px 32px;
+  overflow-y: auto; /* only if the screen is too short even after tightening */
+}
+
+.portalRow {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ── Short screens: tighter spacing so the form still fits ───────────── */
+
+@media (min-width: 769px) and (max-height: 820px) {
+  .brand {
+    padding: 24px 0 40px;
+  }
+
+  .welcomeTitle {
+    font-size: 36px;
+  }
+
+  .formSide {
+    padding: 16px 32px 20px;
+  }
+
+  .formWrap {
+    padding: 8px 0;
+  }
+
+  .form {
+    gap: 18px;
+  }
+
+  .heading {
+    gap: 6px;
+  }
+}
+
+@media (min-width: 769px) and (max-height: 680px) {
+  .form {
+    gap: 14px;
+  }
+
+  .field {
+    gap: 6px;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .formFooter {
+    padding-top: 12px;
+  }
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--chip);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--navy-link);
+}
+
+.formWrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 0;
+}
+
+.form {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--navy-heading);
+}
+
+.helper {
+  margin: 0;
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--error-line);
+  border-radius: 12px;
+  background: var(--error-bg);
+  color: var(--error-text);
+}
+
+.bannerIcon {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+  border-radius: 50%;
+  background: var(--error);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+}
+
+.bannerTitle {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.bannerText {
+  display: block;
+  font-size: 13px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--navy-heading);
+}
+
+.control {
+  position: relative;
+}
+
+.input {
+  display: block;
+  width: 100%;
+  height: 48px;
+  padding: 0 16px;
+  border: 1.5px solid var(--field-line);
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+  font-size: 15px;
+  color: var(--text);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input::placeholder {
+  color: #8d96a8;
+}
+
+.input:focus {
+  outline: 0;
+  border-color: var(--navy-link);
+  box-shadow: var(--ring);
+}
+
+.input[aria-invalid='true'] {
+  border-color: var(--error);
+}
+
+.input[aria-invalid='true']:focus {
+  box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.16);
+}
+
+.input:disabled {
+  background: #f6f8fb;
+  cursor: not-allowed;
+}
+
+.inputWithToggle {
+  padding-right: 92px;
+}
+
+.toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy-link);
+  cursor: pointer;
+}
+
+.toggle:hover {
+  background: var(--chip);
+}
+
+.fieldError {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--error);
+}
+
+.optionsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.remember {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.remember input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--navy-link);
+  cursor: pointer;
+}
+
+.linkButton {
+  padding: 2px 4px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--navy-link);
+  cursor: pointer;
+}
+
+.linkButton:hover {
+  text-decoration: underline;
+}
+
+.submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 50px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--red);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.submit:hover:not(:disabled) {
+  background: var(--red-hover);
+}
+
+.submit:disabled {
+  cursor: progress;
+  opacity: 0.92;
+}
+
+.submitDone {
+  background: var(--navy-heading);
+  cursor: default;
+  opacity: 1;
+}
+
+.submitDone:hover:not(:disabled) {
+  background: var(--navy-heading);
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.formFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--divider);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.submit:focus-visible,
+.toggle:focus-visible,
+.linkButton:focus-visible,
+.remember input:focus-visible {
+  outline: 3px solid var(--navy-link);
+  outline-offset: 2px;
+}
+
+@media (min-width: 769px) and (max-height: 560px) {
+  .brand {
+    padding: 16px 0 24px;
+  }
+
+  .welcome {
+    gap: 10px;
+  }
+
+  .welcomeTitle {
+    font-size: 30px;
+  }
+
+  .welcomeText {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+}
+
+/* ── Phones: one column ──────────────────────────────────────────────── */
+
+.mobileHeader {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .root {
+    position: static;
+    min-height: 100vh;
+    min-height: 100dvh;
+    flex-direction: column;
+    overflow: visible;
+  }
+
+  .formSide {
+    overflow-y: visible;
+  }
+
+  .brand,
+  .portalRow {
+    display: none;
+  }
+
+  .mobileHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: var(--navy-panel);
+  }
+
+  .wordmark {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #fff;
+  }
+
+  .mobileHeader .pill {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+  }
+
+  .formSide {
+    padding: 24px 20px 24px;
+  }
+
+  .formWrap {
+    align-items: flex-start;
+    padding: 8px 0 24px;
+  }
+
+  .title {
+    font-size: 26px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 1.6s;
+  }
+}

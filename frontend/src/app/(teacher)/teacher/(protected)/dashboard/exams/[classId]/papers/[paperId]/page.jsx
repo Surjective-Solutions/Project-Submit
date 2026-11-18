@@ -259,7 +259,7 @@ const paper = foundClass?.papers?.find(
           variant="outline"
           nativeButton={false}
           className="border-indigo-200 text-indigo-700 hover:bg-indigo-50"
-          render={<Link href={foundClass ? `/teacher/dashboard/classes/${classId}` : '/teacher/dashboard'} />}
+          render={<Link href={foundClass ? `/teacher/dashboard/exams/${classId}` : '/teacher/dashboard?section=exams'} />}
         >
           <ChevronLeft className="h-4 w-4" />
           Back
@@ -289,7 +289,7 @@ const paper = foundClass?.papers?.find(
               variant="ghost"
               nativeButton={false}
               className="mb-3 h-8 px-2 text-gray-500 hover:text-gray-900"
-              render={<Link href={`/teacher/dashboard/classes/${classId}`} />}
+              render={<Link href={`/teacher/dashboard/exams/${classId}`} />}
             >
               <ChevronLeft className="h-4 w-4" />
               Back
@@ -355,7 +355,7 @@ const paper = foundClass?.papers?.find(
                     <Button
                       size="sm"
                       className="bg-indigo-600 text-white hover:bg-indigo-700"
-                      onClick={() => router.push(`/teacher/dashboard/classes/${classId}/papers/${paperId}/grade/${submission.id}`)}
+                      onClick={() => router.push(`/teacher/dashboard/exams/${classId}/papers/${paperId}/grade/${submission.id}`)}
                     >
                       Grade
                     </Button>
@@ -417,7 +417,7 @@ const paper = foundClass?.papers?.find(
                       <Button
                         size="sm"
                         className="gap-1.5 bg-purple-600 text-white hover:bg-purple-700"
-                        onClick={() => router.push(`/teacher/dashboard/classes/${classId}/papers/${paperId}/grade/${submission.id}`)}
+                        onClick={() => router.push(`/teacher/dashboard/exams/${classId}/papers/${paperId}/grade/${submission.id}`)}
                       >
                         <RotateCcw className="h-3.5 w-3.5" />
                         Regrade
@@ -484,7 +484,7 @@ const paper = foundClass?.papers?.find(
                       variant="outline"
                       size="sm"
                       className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:text-indigo-800"
-                      onClick={() => router.push(`/teacher/dashboard/classes/${classId}/papers/${paperId}/grade/${submission.id}`)}
+                      onClick={() => router.push(`/teacher/dashboard/exams/${classId}/papers/${paperId}/grade/${submission.id}`)}
                     >
                       View
                     </Button>

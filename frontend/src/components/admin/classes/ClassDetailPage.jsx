@@ -28,7 +28,9 @@ import styles from './classes.module.css';
 import s from './sessions.module.css';
 
 // One class: enrollment numbers at the top, then its sessions. Sessions are created, edited and deleted here.
-export default function ClassDetailPage({ tutorId, classId }) {
+// `backHref` / `backLabel` change where the back link goes (the teacher account sends it to its own list), and
+// `hiddenOptions` leaves class options out (the teacher account hides "edit").
+export default function ClassDetailPage({ tutorId, classId, backHref, backLabel, hiddenOptions = [] }) {
   const [data, setData] = useState({ status: 'loading', cls: null, sessions: [], halls: [] });
   const [dialog, setDialog] = useState(null); // { mode: 'create' } or { mode: 'edit', id }
   const [participantsId, setParticipantsId] = useState(null);
@@ -75,6 +77,7 @@ export default function ClassDetailPage({ tutorId, classId }) {
   }
 
   function openOption(key) {
+    if (hiddenOptions.includes(key)) return;
     if (key === 'edit') setEditingClass(true);
     else setPanel(key);
   }
@@ -116,9 +119,9 @@ export default function ClassDetailPage({ tutorId, classId }) {
 
   return (
     <div className={styles.page}>
-      <Link href={cls ? tutorHref(cls.tutorId) : tutorHref(tutorId)} className={styles.backLink}>
+      <Link href={backHref || (cls ? tutorHref(cls.tutorId) : tutorHref(tutorId))} className={styles.backLink}>
         <Icon name="arrow_back" size={18} weight={600} />
-        {cls ? cls.tutor.name : 'Back to the tutor'}
+        {backLabel || (cls ? cls.tutor.name : 'Back to the tutor')}
       </Link>
 
       {data.status === 'loading' && (
@@ -148,7 +151,7 @@ export default function ClassDetailPage({ tutorId, classId }) {
 
       {data.status === 'ready' && (
         <>
-          <ClassOverview cls={cls} onCreateSession={() => setDialog({ mode: 'create' })} onOption={openOption} />
+          <ClassOverview cls={cls} onCreateSession={() => setDialog({ mode: 'create' })} onOption={openOption} hiddenOptions={hiddenOptions} />
 
           <section className={s.card} aria-labelledby="sessions-title">
             <header className={s.cardHeader}>

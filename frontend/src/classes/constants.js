@@ -1,6 +1,9 @@
 // Constants for the admin Classes section.
 
 export const CLASSES_ROUTE = '/admin/classes';
+// The teacher account shows the teacher's own classes inside the teacher dashboard.
+export const TEACHER_CLASSES_ROUTE = '/teacher/dashboard?section=classes';
+export const TEACHER_CLASS_ROUTE = '/teacher/dashboard/classes';
 
 export const LEVELS = ['A/L', 'O/L'];
 

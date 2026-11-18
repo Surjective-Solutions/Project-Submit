@@ -1,10 +1,12 @@
-import { ALL, CLASS_TYPES, CLASSES_ROUTE, HONORIFICS, LEVELS, PACKAGE } from './constants';
+import { ALL, CLASS_TYPES, CLASSES_ROUTE, HONORIFICS, LEVELS, PACKAGE, TEACHER_CLASS_ROUTE } from './constants';
 
 // Pure helpers for the Classes section: filtering, counting, grouping and formatting.
 
 export function tutorHref(id) {
   return `${CLASSES_ROUTE}/tutors/${encodeURIComponent(id)}`;
 }
+
+export const teacherClassHref = (classId) => `${TEACHER_CLASS_ROUTE}/${encodeURIComponent(classId)}`;
 
 export function classHref(tutorId, classId) {
   return `${CLASSES_ROUTE}/tutors/${encodeURIComponent(tutorId)}/classes/${encodeURIComponent(classId)}`;

@@ -13,7 +13,7 @@ import { toggleClassStatus } from '@/lib/api-client';
 
 let nextId = MOCK_TEACHER_CLASSES.length + 1;
 
-export default function ClassesSection() {
+export default function ExamsSection() {
   // const [classes, setClasses] = useState(MOCK_TEACHER_CLASSES);
   const [classes, setClasses] = useState([]);
   const [addOpen, setAddOpen] = useState(false);

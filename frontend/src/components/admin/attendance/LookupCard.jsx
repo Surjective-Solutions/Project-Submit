@@ -7,13 +7,14 @@ const MODES = [
   { key: 'phone', label: 'Phone', icon: 'call' },
 ];
 
-function errorText(error) {
+function errorText(error, onlyOwnStudents) {
   if (!error) return '';
   if (error.type === 'invalid') return 'Enter a valid mobile number, e.g. 77 123 4567.';
+  const scope = onlyOwnStudents ? ' Only students enrolled in your classes can be checked.' : '';
   if (error.type === 'notfound' && error.by === 'phone') {
-    return `No student found for phone number “${error.code}”. Check the number and try again.`;
+    return `No student found for phone number “${error.code}”. Check the number and try again.${scope}`;
   }
-  if (error.type === 'notfound') return `No student found for barcode “${error.code}”. Check the card and scan again.`;
+  if (error.type === 'notfound') return `No student found for barcode “${error.code}”. Check the card and scan again.${scope}`;
   return 'Couldn’t reach the server. Check the connection and try again.';
 }
 
@@ -25,6 +26,8 @@ export default function LookupCard({
   phone,
   onPhoneChange,
   inputRef,
+  showTutor = true,
+  onlyOwnStudents = false,
   tutors,
   tutorId,
   onTutorChange,
@@ -107,18 +110,19 @@ export default function LookupCard({
                     type="text"
                     value={barcode}
                     onChange={(e) => onBarcodeChange(e.target.value)}
-                    placeholder="Enter student Barcode ID"
+                    placeholder="Scan or type student ID"
                     autoComplete="off"
                     autoCapitalize="characters"
                     spellCheck={false}
                     aria-invalid={inputInvalid || undefined}
-                    aria-describedby={error ? 'att-lookup-error' : undefined}
+                    aria-describedby={showBanner ? 'att-lookup-error' : undefined}
                   />
                 </>
               )}
             </div>
           </div>
 
+          {showTutor && (
           <div className={`${styles.field} ${styles.fieldTutor}`}>
             <label className={styles.label} htmlFor="att-tutor">
               Tutor
@@ -142,6 +146,7 @@ export default function LookupCard({
               </span>
             </div>
           </div>
+          )}
 
           <div className={`${styles.field} ${styles.fieldDate}`}>
             <label className={styles.label} htmlFor="att-date">
@@ -173,16 +178,15 @@ export default function LookupCard({
               Clear
             </button>
           </div>
-         </div>
-  
+        </div>
+
         {showBanner && (
           <div id="att-lookup-error" className={styles.banner} role="alert">
             <Icon name="error" size={20} weight={600} fill={1} />
-            <span className={styles.bannerText}>{errorText(error)}</span>
+            <span className={styles.bannerText}>{errorText(error, onlyOwnStudents)}</span>
           </div>
         )}
       </form>
-
     </section>
   );
 }

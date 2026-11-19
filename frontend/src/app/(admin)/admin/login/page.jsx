@@ -162,7 +162,7 @@ export default function AdminLoginPage() {
       {/* Logo */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
         <img src="/images/online-logo.png" alt="Syzygy" style={{ height: 80, width: 'auto' }} />
-        <span style={{ fontSize: 12, color: 'rgba(214,222,240,.62)' }}>Admin Console</span>
+        <span style={{ fontSize: 18, color: 'rgba(214,222,240,.62)' }}>Admin Console</span>
       </div>
 
       {/* Card */}
@@ -186,7 +186,7 @@ export default function AdminLoginPage() {
               Sign in
             </h1>
             <p style={{ fontSize: 13.5, color: '#5B6178', margin: '4px 0 0' }}>
-              Staff and administrators only.
+              Administrators only.
             </p>
           </div>
 

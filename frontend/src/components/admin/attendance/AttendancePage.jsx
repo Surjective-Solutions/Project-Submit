@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { attendance, students, tutors as tutorsApi } from '@/attendance/api';
+import * as defaultApi from '@/attendance/api';
 import { loadSaved, save } from '@/attendance/storage';
 import {
   clampDate,
@@ -21,7 +21,17 @@ import MonthCard from './MonthCard';
 import StudentCard from './StudentCard';
 import styles from './attendance.module.css';
 
-export default function AttendancePage() {
+// The attendance check for a student. The admin's page uses the defaults. The teacher's page passes its own `api`
+// (which only knows the students of that teacher's classes), hides the tutor filter and the address, and says so
+// in the messages.
+export default function AttendancePage({
+  api = defaultApi,
+  showTutorFilter = true,
+  showAddress = true,
+  onlyOwnStudents = false,
+  subtitle = 'Scan a student’s barcode to check attendance on any date.',
+}) {
+  const { attendance, students, tutors: tutorsApi } = api;
   // `today` stays empty until the page has mounted, so the server and browser never disagree on the date.
   const [today, setToday] = useState('');
   const [ready, setReady] = useState(false); // saved state has been read
@@ -85,25 +95,27 @@ export default function AttendancePage() {
     } catch {
       if (seq === lookupSeq.current) setLookup({ busy: false, error: { type: 'network' } });
     }
-  }, []);
+  }, [students]);
 
-// First load: read the remembered tutor and date, and fetch the tutors. No student is remembered,
-// the page always opens on the empty prompt. 
+  // First load: read the remembered tutor and date, and fetch the tutors. No student is remembered, so
+  // the page always opens on the empty prompt.
   useEffect(() => {
     const now = todayIso();
     const saved = loadSaved();
     setToday(now);
-    setTutorId(saved.tutorId || '');
+    setTutorId(showTutorFilter ? saved.tutorId || '' : '');
     setDate(saved.date ? clampDate(saved.date, '', now) : now);
     inputRef.current?.focus();
 
     let cancelled = false;
-    tutorsApi
-      .list()
-      .then((list) => {
-        if (!cancelled) setTutors(sortTutors(list));
-      })
-      .catch(() => {});
+    if (showTutorFilter) {
+      tutorsApi
+        .list()
+        .then((list) => {
+          if (!cancelled) setTutors(sortTutors(list));
+        })
+        .catch(() => {});
+    }
 
     setReady(true);
     return () => {
@@ -208,7 +220,7 @@ export default function AttendancePage() {
     <div className={styles.page}>
       <header>
         <h1 className={styles.title}>Attendance</h1>
-        <p className={styles.subtitle}>Scan a student&rsquo;s barcode to check attendance on any date.</p>
+        <p className={styles.subtitle}>{subtitle}</p>
       </header>
 
       <LookupCard
@@ -219,6 +231,8 @@ export default function AttendancePage() {
         phone={phone}
         onPhoneChange={(value) => setPhone(formatPhoneInput(value))}
         inputRef={inputRef}
+        showTutor={showTutorFilter}
+        onlyOwnStudents={onlyOwnStudents}
         tutors={tutors}
         tutorId={tutorId}
         onTutorChange={setTutorId}
@@ -238,7 +252,7 @@ export default function AttendancePage() {
       ) : (
         <>
           <div className={styles.row}>
-            <StudentCard student={student} />
+            <StudentCard student={student} showAddress={showAddress} />
             <DayCard
               student={student}
               tutor={tutor}

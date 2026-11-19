@@ -1,0 +1,717 @@
+/* The teacher's dashboard. Plain CSS, in the teacher login's palette. The page sits inside the teacher shell, so it
+   lays itself out by the width of its own container, not by the window (the side panel takes some of it). */
+
+.page {
+  --navy-deep: #101e3d;
+  --navy-head: #14254a;
+  --navy: #1f3a6e;
+  --red: #c8323a;
+  --red-dot: #e0565c;
+  --bg: #f5f6f9;
+  --card: #ffffff;
+  --border: #e4e8ef;
+  --divider: #f0f2f6;
+  --thead: #fbfcfd;
+  --text: #172033;
+  --text-2: #3a4458;
+  --muted: #5a6478;
+  --faint: #8a93a5;
+  --on-navy: #afc0de;
+  --chip-navy: #eef2f8;
+  --chip-red: #fcedee;
+  --red-text: #a3262d;
+  --positive: #2e7d4f;
+
+  container-type: inline-size;
+  container-name: dash;
+  width: 100%;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 28px 32px;
+  max-width: 1480px;
+  margin: 0 auto;
+}
+
+.inner a,
+.inner button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.inner :focus-visible {
+  outline: 2px solid var(--navy);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ── Header ─────────────────────────────────────────── */
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.date {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.h1 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.2;
+  font-weight: 700;
+  color: var(--navy-head);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* ── Buttons ────────────────────────────────────────── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.btnPrimary {
+  composes: btn;
+  background: var(--red);
+  color: #fff;
+}
+
+.btnPrimary:hover {
+  background: #b32b33;
+}
+
+.btnSecondary {
+  composes: btn;
+  background: #fff;
+  border-color: #cdd4df;
+  color: var(--navy);
+}
+
+.btnSecondary:hover {
+  background: #f7f9fc;
+  border-color: #b9c3d3;
+}
+
+.btnWide {
+  width: 100%;
+}
+
+/* ── Cards ──────────────────────────────────────────── */
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  min-width: 0;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--navy-head);
+}
+
+.cardSub {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.link {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+  text-decoration: none;
+  white-space: nowrap;
+  border-radius: 6px;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+/* ── Two columns ────────────────────────────────────── */
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 352px;
+  gap: 24px;
+  align-items: start;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+
+/* ── Today ──────────────────────────────────────────── */
+
+.sessions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.session {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 20px;
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid var(--divider);
+}
+
+.sessionNext {
+  composes: session;
+  background: var(--thead);
+  border-color: var(--border);
+}
+
+.timeBlock {
+  flex: 0 0 96px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.timeBig {
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--navy-head);
+}
+
+.timeSmall {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.pill {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--chip-red);
+  color: var(--red-text);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pillQuiet {
+  composes: pill;
+  background: var(--chip-navy);
+  color: var(--navy);
+}
+
+.sessionBody {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.sessionTitleRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.sessionTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--navy-head);
+}
+
+.sessionDetail {
+  margin: 4px 0 0;
+  color: var(--text-2);
+}
+
+.chip {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.chipHall {
+  composes: chip;
+  background: var(--chip-navy);
+  color: var(--navy);
+}
+
+.chipOnline {
+  composes: chip;
+  background: var(--chip-red);
+  color: var(--red-text);
+}
+
+.dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dots li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.dotPositive {
+  background: var(--positive);
+}
+
+.dotNegative {
+  background: var(--red);
+}
+
+.dotNavy {
+  background: var(--navy);
+}
+
+.dotHall {
+  background: var(--navy);
+}
+
+.dotOnline {
+  background: var(--red-dot);
+}
+
+.sessionActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.empty {
+  margin: 0;
+  padding: 18px 8px;
+  text-align: center;
+  color: var(--muted);
+}
+
+/* ── Fees ───────────────────────────────────────────── */
+
+.feeList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.feeRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.feeTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.feeName {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.feeCount {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.due {
+  color: var(--red-text);
+  font-weight: 600;
+}
+
+.track {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--divider);
+  overflow: hidden;
+}
+
+.trackFill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--navy);
+}
+
+/* ── Table ──────────────────────────────────────────── */
+
+.tableWrap {
+  margin: 0 -20px -20px;
+  overflow-x: auto;
+  border-top: 1px solid var(--divider);
+}
+
+.table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+}
+
+.table th {
+  padding: 10px 14px;
+  background: var(--thead);
+  text-align: left;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--faint);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 14px;
+  border-top: 1px solid var(--divider);
+  vertical-align: middle;
+  color: var(--text-2);
+}
+
+.table th:first-child,
+.table td:first-child {
+  padding-left: 20px;
+}
+
+.table th:last-child,
+.table td:last-child {
+  padding-right: 20px;
+}
+
+.className {
+  display: block;
+  font-weight: 700;
+  color: var(--navy);
+  text-decoration: none;
+}
+
+.className:hover {
+  text-decoration: underline;
+}
+
+.classVenue {
+  display: block;
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+.rowTitle {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.rowSub {
+  margin: 1px 0 0;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+/* ── Rows (notices, coming up) ──────────────────────── */
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--divider);
+}
+
+.row:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.row:last-child {
+  padding-bottom: 0;
+}
+
+.rowText {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.noticeDot {
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: var(--red-dot);
+  flex: none;
+  align-self: flex-start;
+}
+
+/* ── Week ───────────────────────────────────────────── */
+
+.weekStrip {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.weekDay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 0 10px;
+  border-radius: 10px;
+  color: var(--text-2);
+}
+
+.weekDayToday {
+  composes: weekDay;
+  background: var(--navy);
+  color: #fff;
+}
+
+.weekName {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.weekDayToday .weekName {
+  color: #c9d3e6;
+}
+
+.weekNum {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.weekDots {
+  display: flex;
+  gap: 3px;
+  height: 7px;
+  margin-top: 2px;
+}
+
+.weekDots .dot {
+  width: 6px;
+  height: 6px;
+}
+
+.weekDayToday .dotHall {
+  background: #fff;
+}
+
+.eyebrow {
+  margin: 18px 0 10px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.dateTile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 46px;
+  border-radius: 10px;
+  flex: none;
+  background: var(--chip-navy);
+  color: var(--navy);
+  line-height: 1.1;
+}
+
+.dateTile small {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.dateTile strong {
+  font-size: 16px;
+}
+
+/* ── Loading / error ────────────────────────────────── */
+
+.skeleton {
+  border-radius: 12px;
+  background: linear-gradient(90deg, #eceff4 0%, #f6f7fa 50%, #eceff4 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+.skelHeader {
+  composes: skeleton;
+  height: 64px;
+  max-width: 420px;
+}
+
+.skelBody {
+  composes: skeleton;
+  height: 320px;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.errorBox {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid #f2c9cc;
+  border-radius: 12px;
+  background: var(--chip-red);
+  color: var(--red-text);
+}
+
+.errorText {
+  flex: 1 1 220px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
+
+/* ── Smaller containers ─────────────────────────────── */
+
+@container dash (max-width: 940px) {
+  .inner {
+    padding: 22px 20px;
+  }
+
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .col:last-child {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    align-items: start;
+  }
+}
+
+@container dash (max-width: 560px) {
+  .inner {
+    padding: 18px 14px;
+  }
+
+  .h1 {
+    font-size: 24px;
+  }
+
+  .actions,
+  .actions .btn {
+    width: 100%;
+  }
+
+  .card {
+    padding: 16px;
+  }
+
+  .tableWrap {
+    margin: 0 -16px -16px;
+  }
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

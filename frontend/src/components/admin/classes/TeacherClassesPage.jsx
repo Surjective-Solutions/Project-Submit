@@ -5,7 +5,7 @@ import Icon from '@/components/admin/Icon';
 import { tutors as tutorsApi } from '@/classes/api';
 import { ALL } from '@/classes/constants';
 import { loadSaved, save } from '@/classes/storage';
-import { TEACHER_TUTOR_ID } from '@/classes/teacher';
+import { useTeacherId } from '@/classes/teacher';
 import {
   applyFilters,
   batchCounts,
@@ -25,22 +25,28 @@ import styles from './classes.module.css';
 // page for a tutor: the teacher's profile card (without the Create class button, since the admin creates the classes),
 // the filters and the class cards.
 export default function TeacherClassesPage() {
-  const tutorId = TEACHER_TUTOR_ID;
+  const tutorId = useTeacherId(); // undefined until the login token is read, null when signed out
   const [data, setData] = useState({ status: 'loading', tutor: null, classes: [] });
   const [filters, setFilters] = useState({ batch: ALL, type: ALL });
 
   useEffect(() => {
+    if (!tutorId) return;
     const saved = loadSaved();
     if (saved.tutorId === String(tutorId)) setFilters({ batch: saved.batch, type: saved.type });
   }, [tutorId]);
 
   const load = useCallback(() => {
+    if (tutorId === undefined) return undefined;
+    if (tutorId === null) {
+      setData({ status: 'missing', tutor: null, classes: [] });
+      return undefined;
+    }
     setData({ status: 'loading', tutor: null, classes: [] });
     let cancelled = false;
     Promise.all([tutorsApi.list(), tutorsApi.classes(tutorId)])
       .then(([tutors, classes]) => {
         if (cancelled) return;
-        const tutor = tutors.find((t) => t.id === String(tutorId)) || null;
+        const tutor = tutors.find((t) => String(t.id) === tutorId) || null;
         setData({ status: tutor ? 'ready' : 'missing', tutor, classes });
       })
       .catch(() => !cancelled && setData({ status: 'error', tutor: null, classes: [] }));
@@ -58,7 +64,7 @@ export default function TeacherClassesPage() {
   function change(patch) {
     const next = { batch, type, ...patch };
     setFilters(next);
-    save({ tutorId: String(tutorId), batch: next.batch, type: next.type });
+    save({ tutorId: String(tutorId ?? ''), batch: next.batch, type: next.type });
   }
 
   const shown = useMemo(() => applyFilters(classes, { batch, type }), [classes, batch, type]);

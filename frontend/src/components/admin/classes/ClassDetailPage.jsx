@@ -52,7 +52,7 @@ export default function ClassDetailPage({ tutorId, classId, backHref, backLabel,
     Promise.all([classesApi.get(classId), classesApi.sessions(classId), hallsApi.list()])
       .then(([cls, sessions, halls]) => {
         if (cancelled) return;
-        const found = cls && cls.tutorId === String(tutorId) ? cls : null;
+        const found = cls && String(cls.tutorId) === String(tutorId) ? cls : null;
         setData({ status: found ? 'ready' : 'missing', cls: found, sessions, halls });
         setPeriod(defaultMonth(sessions, new Date()));
       })

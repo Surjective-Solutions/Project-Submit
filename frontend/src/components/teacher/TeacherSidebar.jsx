@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { BookOpen, ClipboardList, Users, BarChart2, LogOut, User } from 'lucide-react';
+import { BookOpen, CalendarCheck, LayoutDashboard, ClipboardList, GraduationCap, Users, BarChart2, LogOut, User } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getTokenPayload } from '@/lib/auth';
 import { getTutorById, logoutSession } from '@/lib/api-client';
@@ -22,11 +22,32 @@ import {
 
 const NAV_ITEMS = [
   {
+    label: 'Dashboard',
+    section: 'dashboard',
+    icon: LayoutDashboard,
+    accent: '#F9A8D4',
+    activeBg: 'rgba(249,168,212,0.14)',
+  },
+  {
     label: 'Classes',
     section: 'classes',
     icon: BookOpen,
     accent: '#B8FF8F',
     activeBg: 'rgba(184,255,143,0.13)',
+  },
+  {
+    label: 'Students',
+    section: 'students',
+    icon: GraduationCap,
+    accent: '#9CEEF9',
+    activeBg: 'rgba(156,238,249,0.14)',
+  },
+  {
+    label: 'Attendance',
+    section: 'attendance',
+    icon: CalendarCheck,
+    accent: '#C4B5FD',
+    activeBg: 'rgba(196,181,253,0.14)',
   },
   {
     label: 'Exams',
@@ -71,7 +92,7 @@ export default function TeacherSidebar() {
     ? 'exams'
     : pathname.startsWith('/teacher/dashboard/classes')
       ? 'classes'
-      : searchParams.get('section') ?? 'classes';
+      : searchParams.get('section') ?? 'dashboard';
   const [teacher, setTeacher] = useState(null);
 
   useEffect(() => {
@@ -97,42 +118,27 @@ export default function TeacherSidebar() {
     <Sidebar
       collapsible="icon"
       innerStyle={{
-        background: 'linear-gradient(165deg, #1e1b4b 0%, #1a2e50 30%, #0e3540 60%, #053a34 100%)',
+        background: 'linear-gradient(180deg, #1C2554 0%, #172C4E 55%, #0F3447 100%)',
       }}
     >
       {/* ── Brand ───────────────────────────────────────────────────── */}
-      <SidebarHeader className={collapsed ? 'px-0 py-4' : 'px-4 py-5'}>
-        <div className={collapsed ? 'flex justify-center' : 'flex items-center gap-3'}>
-          <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-            style={{
-              background: 'linear-gradient(135deg, #B8FF8F 0%, #34A0C5 100%)',
-              boxShadow: '0 3px 10px rgba(52,160,197,0.5)',
-            }}
-          >
-            <span className="text-xs font-black tracking-tight" style={{ color: '#0e1a2a' }}>
-              SX
-            </span>
-          </div>
-
-          {!collapsed && (
-            <div className="min-w-0">
-              <p
-                className="text-sm font-bold leading-none tracking-tight"
-                style={{
-                  background: 'linear-gradient(90deg, #ffffff 0%, #B8FF8F 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}
-              >
-                SubmitX
-              </p>
-              <p className="text-[10px] mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                Teacher Console
-              </p>
-            </div>
+      <SidebarHeader className={collapsed ? 'px-0 py-4' : 'px-4 pt-5 pb-2'}>
+        <div className="flex justify-center">
+          {collapsed ? (
+            <img src="/images/teacher-sidebar-logo-icon.png" alt="Syzygy" className="h-8 w-8 object-contain" />
+          ) : (
+            <img src="/images/teacher-sidebar-logo.png" alt="Syzygy" className="w-full h-auto max-w-[130px]" />
           )}
         </div>
+
+        {!collapsed && (
+          <p
+            className="mt-1 text-center text-sm font-semibold tracking-wide"
+            style={{ color: 'rgba(255,255,255,0.6)' }}
+          >
+            Teacher Portal
+          </p>
+        )}
 
         {!collapsed && (
           <div
@@ -146,11 +152,11 @@ export default function TeacherSidebar() {
       </SidebarHeader>
 
       {/* ── Navigation ──────────────────────────────────────────────── */}
-      <SidebarContent className="px-2 pt-1">
-        <SidebarGroup>
+      <SidebarContent className="px-2 pt-0">
+        <SidebarGroup className="pt-1">
           {!collapsed && (
             <SidebarGroupLabel
-              className="text-[10px] font-semibold uppercase tracking-widest px-2 mb-2"
+              className="h-6 text-[10px] font-semibold uppercase tracking-widest px-2 mb-1"
               style={{ color: 'rgba(255,255,255,0.28)' }}
             >
               Main Menu

@@ -16,7 +16,7 @@ function InfoRow({ icon, label, value }) {
   );
 }
 
-export default function StudentCard({ student }) {
+export default function StudentCard({ student, showAddress = true }) {
   return (
     <section className={`${styles.card} ${styles.studentCol}`} aria-label="Student details">
       <div className={styles.studentHead}>
@@ -34,7 +34,7 @@ export default function StudentCard({ student }) {
       <dl className={styles.infoList}>
         <InfoRow icon="school" label="Grade" value={student.grade} />
         <InfoRow icon="call" label="Phone number" value={formatPhone(student.phone)} />
-        <InfoRow icon="home" label="Address" value={student.address} />
+        {showAddress && <InfoRow icon="home" label="Address" value={student.address} />}
       </dl>
     </section>
   );

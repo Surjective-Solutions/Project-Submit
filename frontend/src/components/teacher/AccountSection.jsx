@@ -1,66 +1,80 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { Geist } from 'next/font/google';
 import { Pencil } from 'lucide-react';
 import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
 import EditTeacherProfileDialog from './EditTeacherProfileDialog';
 import { getTokenPayload } from '@/lib/auth';
 import { getTutorById } from '@/lib/api-client';
+import s from './account.module.css';
 
-const STATUS_STYLES = {
-  ACTIVE:   'bg-green-100 text-green-700',
-  INACTIVE: 'bg-gray-100 text-gray-600',
-};
+const font = Geist({ subsets: ['latin'], display: 'swap', fallback: ['system-ui', 'sans-serif'] });
 
-function Field({ label, value }) {
-  return (
-    <div>
-      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">{label}</p>
-      <p className="text-sm text-gray-800">{value || <span className="text-gray-400 italic">Not set</span>}</p>
-    </div>
-  );
-}
-
-function SectionDivider({ label }) {
-  return (
-    <div className="flex items-center gap-3 pt-1 pb-2">
-      <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest whitespace-nowrap">{label}</span>
-      <div className="flex-1 h-px bg-gray-200" />
-    </div>
-  );
-}
+const filled = (v) => typeof v === 'string' ? v.trim() !== '' : v != null && v !== '';
 
 function formatMemberSince(dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return '';
   return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 }
 
+// The letter shown when there is no photo.
+const initialOf = (t) => (t.displayName || t.first_name || t.username || '?').trim().charAt(0).toUpperCase() || '?';
+
+function Field({ label, value }) {
+  return (
+    <div className={s.field}>
+      <dt className={s.label}>{label}</dt>
+      <dd className={s.value}>{filled(value) ? value : <span className={s.empty}>Not set</span>}</dd>
+    </div>
+  );
+}
+
+// A titled panel. The pill counts how many of its fields have a value.
+function Panel({ id, title, fields, single }) {
+  const set = fields.filter((f) => filled(f.value)).length;
+  return (
+    <section className={s.panel} aria-labelledby={id}>
+      <div className={s.strip}>
+        <h2 id={id} className={s.title}>
+          {title}
+        </h2>
+        <span className={s.pill}>
+          {set} of {fields.length} set
+        </span>
+      </div>
+      <dl className={single ? `${s.body} ${s.bodyOne}` : s.body}>
+        {fields.map((f) => (
+          <Field key={f.label} label={f.label} value={f.value} />
+        ))}
+      </dl>
+    </section>
+  );
+}
+
 export default function AccountSection() {
+  const [status, setStatus] = useState('loading'); // loading | ready | error
   const [teacher, setTeacher] = useState(null);
   const [editOpen, setEditOpen] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
 
-  useEffect(() => {
-    loadTeacherProfile();
-  }, []);
-
-  async function loadTeacherProfile() {
+  const load = useCallback(async () => {
+    setStatus('loading');
     try {
-      const payload = getTokenPayload();
-      const userSeq = payload?.userSeq;
-      if (!userSeq) return;
-      const data = await getTutorById(userSeq);
-      setTeacher(data);
+      const userSeq = getTokenPayload()?.userSeq;
+      if (!userSeq) throw new Error('not signed in');
+      setTeacher(await getTutorById(userSeq));
+      setStatus('ready');
     } catch {
       toast.error('Failed to load profile');
+      setStatus('error');
     }
-  }
-
-  if (!teacher) return <p className="text-center text-gray-400 py-12">Loading profile...</p>;
-    const initials = `${teacher.displayName?.[0] ?? ''}`.toUpperCase() || '?';
-    const statusClass = STATUS_STYLES[teacher.status] ?? STATUS_STYLES.INACTIVE;
+  }, []);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   async function handleSave(data) {
     setEditLoading(true);
@@ -74,81 +88,87 @@ export default function AccountSection() {
   }
 
   return (
-    <div className="flex justify-center">
-      <div className="w-full max-w-[700px] space-y-6">
+    <div className={`${s.page} ${font.className}`}>
+      <div className={s.wrap}>
+        {status === 'loading' && (
+          <div className={s.card} role="status" aria-busy="true" aria-label="Loading profile">
+            <div className={s.skeleton} />
+            <div className={s.skeleton} />
+            <div className={s.skeleton} />
+          </div>
+        )}
 
-        {/* Avatar + name + badges */}
-        <div className="flex flex-col items-center gap-3 py-6">
-          {teacher.profile_image_url ? (
-            <img
-              src={teacher.profile_image_url}
-              alt={teacher.displayName}
-              className="w-20 h-20 rounded-full object-cover ring-4 ring-indigo-100"
-            />
-          ) : (
-            <div
-              className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold text-white ring-4 ring-indigo-100"
-              style={{ background: 'linear-gradient(135deg, #3940A0 0%, #34A0C5 100%)' }}
-            >
-              {initials}
+        {status === 'error' && (
+          <div className={s.card} role="alert">
+            <p className={s.message}>Couldn’t load your profile.</p>
+            <div className={s.editRow} style={{ justifyContent: 'center', margin: 0 }}>
+              <button type="button" className={s.edit} onClick={load}>
+                Try again
+              </button>
             </div>
-          )}
-
-          <div className="flex flex-col items-center gap-1.5">
-            <p className="text-lg font-bold text-gray-900">
-              {teacher.displayName}
-            </p>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-700 font-semibold">
-              {teacher.subject_area}
-            </span>
-            <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${statusClass}`}>
-              {teacher.status}
-            </span>
           </div>
+        )}
 
-          <Button
-            variant="outline"
-            className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 gap-1.5"
-            onClick={() => setEditOpen(true)}
-          >
-            <Pencil className="h-3.5 w-3.5" />
-            Edit Profile
-          </Button>
-        </div>
+        {status === 'ready' && teacher && (
+          <>
+            <div className={s.hero}>
+              <button type="button" className={s.avatarBtn} onClick={() => setEditOpen(true)} aria-label="Change profile photo">
+                {teacher.profile_image_url ? (
+                  <img src={teacher.profile_image_url} alt="" className={s.avatar} />
+                ) : (
+                  <span className={s.avatar} aria-hidden="true">
+                    {initialOf(teacher)}
+                  </span>
+                )}
+                <span className={s.avatarEdit} aria-hidden="true">
+                  <Pencil size={13} />
+                </span>
+              </button>
+              <button type="button" className={s.edit} onClick={() => setEditOpen(true)}>
+                Edit profile
+              </button>
+            </div>
 
-        {/* Profile details */}
-        <div className="bg-white rounded-2xl border border-border shadow-sm px-6 py-5 space-y-5">
+            <div className={s.card}>
+              <Panel
+                id="acct-personal"
+                title="Personal information"
+                fields={[
+                  { label: 'First name', value: teacher.first_name },
+                  { label: 'Last name', value: teacher.last_name },
+                  { label: 'Email', value: teacher.email },
+                  { label: 'Contact number', value: teacher.contact_number },
+                ]}
+              />
+              <Panel
+                id="acct-professional"
+                title="Professional information"
+                single
+                fields={[
+                  { label: 'Subject area', value: teacher.subject_area },
+                  { label: 'Bio', value: teacher.bio },
+                ]}
+              />
+              <Panel
+                id="acct-account"
+                title="Account"
+                fields={[
+                  { label: 'Username', value: teacher.username },
+                  { label: 'Member since', value: formatMemberSince(teacher.created_at) },
+                ]}
+              />
+            </div>
 
-          <SectionDivider label="Personal Information" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="First Name"     value={teacher.first_name} />
-            <Field label="Last Name"      value={teacher.last_name} />
-            <Field label="Email"          value={teacher.email} />
-            <Field label="Contact Number" value={teacher.contact_number} />
-          </div>
-
-          <SectionDivider label="Professional Information" />
-          <div className="space-y-4">
-            <Field label="Subject Area" value={teacher.subject_area} />
-            <Field label="Bio"          value={teacher.bio} />
-          </div>
-
-          <SectionDivider label="Account" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Username"     value={teacher.username} />
-            <Field label="Member Since" value={formatMemberSince(teacher.created_at)} />
-          </div>
-
-        </div>
+            <EditTeacherProfileDialog
+              open={editOpen}
+              onOpenChange={setEditOpen}
+              teacher={teacher}
+              onSave={handleSave}
+              isLoading={editLoading}
+            />
+          </>
+        )}
       </div>
-
-      <EditTeacherProfileDialog
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        teacher={teacher}
-        onSave={handleSave}
-        isLoading={editLoading}
-      />
     </div>
   );
 }

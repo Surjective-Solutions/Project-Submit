@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '@/components/admin/Icon';
 import { SUBJECTS } from '@/study-packs/constants';
+import { parseExamLevels } from '@/study-packs/examLevel';
 import { toNumber, validatePack } from '@/study-packs/utils';
 import ActionBar from './ActionBar';
 import ClassSection from './ClassSection';
@@ -22,8 +23,9 @@ function revokeBlob(url) {
 // `pack` is the saved pack being edited (null when creating).
 // `draft` = { form, coverFile } is the pending work held by the parent, so it survives a trip to step 2.
 // `onNext({ form, coverFile })` moves on to the recordings step; `onCancel(coverUrl)` throws the draft away.
-// `lockedTeacher` ({ id, name, subject }) is set in the teacher account: the form is already filled with that teacher
-// and their subject, so the Class card doesn't ask for them, and the revenue split (set by the institute) isn't shown.
+// `lockedTeacher` ({ id, name, subject, examLevel }) is set in the teacher account: the form is already filled with that
+// teacher and their subject, so the Class card doesn't ask for them, only offers grades of their exam level, and the
+// revenue split (set by the institute) isn't shown.
 export default function StudyPackForm({ pack, draft, teachers, lockedTeacher = null, onCancel, onNext }) {
   const isPublished = pack?.status === 'published';
 
@@ -128,6 +130,7 @@ export default function StudyPackForm({ pack, draft, teachers, lockedTeacher = n
             onTeacherChange={handleTeacherChange}
             hideTeacher={Boolean(lockedTeacher)}
             hideSubject={Boolean(lockedTeacher?.subject)}
+            examLevels={parseExamLevels(lockedTeacher?.examLevel)}
           />
           <PriceValiditySection form={form} errors={shownErrors} onChange={update} />
           {lockedTeacher ? null : (

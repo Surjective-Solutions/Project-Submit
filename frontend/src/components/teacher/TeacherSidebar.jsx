@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { BookOpen, CalendarCheck, LayoutDashboard, ClipboardList, GraduationCap, Package, Users, BarChart2, LogOut, User } from 'lucide-react';
+import { BookOpen, CalendarCheck, LayoutDashboard, ClipboardList, GraduationCap, Package, Users, BarChart2, FileText, LogOut, User, Video } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getTokenPayload } from '@/lib/auth';
 import { getTutorById, logoutSession } from '@/lib/api-client';
@@ -57,6 +57,13 @@ const NAV_ITEMS = [
     activeBg: 'rgba(252,165,165,0.14)',
   },
   {
+    label: 'Class Recordings',
+    section: 'class-recordings',
+    icon: Video,
+    accent: '#F0ABFC',
+    activeBg: 'rgba(240,171,252,0.14)',
+  },
+  {
     label: 'Exams',
     section: 'exams',
     icon: ClipboardList,
@@ -76,6 +83,13 @@ const NAV_ITEMS = [
     icon: BarChart2,
     accent: '#E9D848',
     activeBg: 'rgba(233,216,72,0.13)',
+  },
+  {
+    label: 'Reports',
+    section: 'reports',
+    icon: FileText,
+    accent: '#6EE7B7',
+    activeBg: 'rgba(110,231,183,0.13)',
   },
   {
     label: 'My Account',

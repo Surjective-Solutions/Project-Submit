@@ -1,17 +1,32 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { flushSync } from 'react-dom';
 import Icon from '@/components/admin/Icon';
 import * as adminApi from '@/study-packs/api';
+import { GRADES } from '@/study-packs/constants';
+import { gradeAllowed, parseExamLevels } from '@/study-packs/examLevel';
 import { formToValues, packToForm, teacherName } from '@/study-packs/utils';
 import AddRecordingsPage from './AddRecordingsPage';
 import PackCard from './PackCard';
+import PackDetail from './PackDetail';
 import PackFilters from './PackFilters';
 import StudyPackForm from './StudyPackForm';
 import Toast from './Toast';
 import styles from './study-packs.module.css';
 
 const TOAST_MS = 6000;
+
+// Runs a state change as a smooth "shared element" transition (a pack card growing into its detail view) when the
+// browser supports View Transitions; otherwise, or with reduced motion, the change just happens.
+function morph(update) {
+  const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  if (typeof document.startViewTransition === 'function' && !reduce) {
+    document.startViewTransition(() => flushSync(update));
+  } else {
+    update();
+  }
+}
 
 function revokeBlob(url) {
   if (typeof url === 'string' && url.startsWith('blob:')) URL.revokeObjectURL(url);
@@ -37,8 +52,10 @@ export default function StudyPacksPage({ api = adminApi, ownTeacher = false }) {
   const [status, setStatus] = useState('all'); // 'all' | 'published' | 'draft'
   const [search, setSearch] = useState('');
   const [subject, setSubject] = useState('');
+  const [batch, setBatch] = useState(''); // teacher account only: filters by grade / batch instead of subject
 
   const [toast, setToast] = useState(null); // { id, message }
+  const [detailId, setDetailId] = useState(null); // the pack card that is open as a detail view
 
   useEffect(() => {
     let cancelled = false;
@@ -84,23 +101,31 @@ export default function StudyPacksPage({ api = adminApi, ownTeacher = false }) {
     return packs.filter((pack) => {
       if (status !== 'all' && pack.status !== status) return false;
       if (subject && pack.subject !== subject) return false;
+      if (batch && pack.grade !== batch) return false;
       if (!query) return true;
       return (
         pack.name.toLowerCase().includes(query) ||
         teacherName(teachers, pack.teacherId).toLowerCase().includes(query)
       );
     });
-  }, [packs, teachers, status, subject, search]);
+  }, [packs, teachers, status, subject, batch, search]);
 
   const editingPack = packs.find((p) => p.id === editingId) ?? null;
+  const detailPack = packs.find((p) => p.id === detailId) ?? null;
 
   // In the teacher account the only "teacher" is the signed-in one; their id and subject go into every form.
   const lockedTeacher = ownTeacher ? (teachers[0] ?? null) : null;
-  const lockForm = (form) =>
-    lockedTeacher
-      ? { ...form, teacherId: String(lockedTeacher.id), subject: lockedTeacher.subject || form.subject }
-      : form;
-  const filtersActive = status !== 'all' || subject !== '' || search.trim() !== '';
+  // A grade of the wrong exam level (an O/L grade for an A/L teacher) is cleared, so they have to pick one of their own.
+  const lockForm = (form) => {
+    if (!lockedTeacher) return form;
+    const grade = gradeAllowed(form.grade, parseExamLevels(lockedTeacher.examLevel)) ? form.grade : '';
+    return { ...form, grade, teacherId: String(lockedTeacher.id), subject: lockedTeacher.subject || form.subject };
+  };
+  // The batches the teacher can filter by: the grades of their own exam level.
+  const batchOptions = ownTeacher
+    ? GRADES.filter((grade) => gradeAllowed(grade, parseExamLevels(lockedTeacher?.examLevel)))
+    : null;
+  const filtersActive = status !== 'all' || subject !== '' || batch !== '' || search.trim() !== '';
 
   function openCreate() {
     setEditingId(null);
@@ -108,7 +133,12 @@ export default function StudyPacksPage({ api = adminApi, ownTeacher = false }) {
     setView('settings');
   }
 
+  // Clicking a card opens its detail view; Edit inside it goes on to the form.
+  const openDetail = (pack) => morph(() => setDetailId(pack.id));
+  const closeDetail = useCallback(() => morph(() => setDetailId(null)), []);
+
   function openEdit(pack) {
+    setDetailId(null);
     setEditingId(pack.id);
     setDraft({ form: lockForm(packToForm(pack)), coverFile: null, items: getPackItems(pack) });
     setView('settings');
@@ -165,6 +195,7 @@ export default function StudyPacksPage({ api = adminApi, ownTeacher = false }) {
     setStatus('all');
     setSearch('');
     setSubject('');
+    setBatch('');
     discardDraft();
     setToast({ id: Date.now(), message });
   }
@@ -191,6 +222,7 @@ export default function StudyPacksPage({ api = adminApi, ownTeacher = false }) {
         draft={draft}
         teachers={teachers}
         lookupRecording={api.getRecordingByCode}
+        canPublish={!ownTeacher}
         onItemsChange={handleItemsChange}
         onBackToSettings={handleBackToSettings}
         onCancel={() => discardDraft()}
@@ -216,7 +248,14 @@ export default function StudyPacksPage({ api = adminApi, ownTeacher = false }) {
     listContent = (
       <div className={styles.grid}>
         {visiblePacks.map((pack) => (
-          <PackCard key={pack.id} pack={pack} teachers={teachers} onEdit={openEdit} />
+          <div
+            key={pack.id}
+            className="pack-slot"
+            // the open card gives its name to the detail view, so the two can morph into each other
+            style={detailId === pack.id ? undefined : { viewTransitionName: `pack-${pack.id}`, viewTransitionClass: 'pack-vt' }}
+          >
+            <PackCard pack={pack} teachers={teachers} onEdit={openDetail} />
+          </div>
         ))}
       </div>
     );
@@ -253,9 +292,24 @@ export default function StudyPacksPage({ api = adminApi, ownTeacher = false }) {
         onSearchChange={setSearch}
         subject={subject}
         onSubjectChange={setSubject}
+        batchOptions={batchOptions}
+        batch={batch}
+        onBatchChange={setBatch}
+        searchLabel={ownTeacher ? 'Search your packs' : undefined}
       />
 
       {listContent}
+
+      {detailPack ? (
+        <PackDetail
+          key={detailPack.id}
+          pack={detailPack}
+          teachers={teachers}
+          items={getPackItems(detailPack)}
+          onClose={closeDetail}
+          onEdit={openEdit}
+        />
+      ) : null}
     </div>
   );
 }

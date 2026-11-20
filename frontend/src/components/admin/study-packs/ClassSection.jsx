@@ -2,6 +2,7 @@
 
 import Icon from '@/components/admin/Icon';
 import { GRADES, SUBJECTS } from '@/study-packs/constants';
+import { gradeAllowed } from '@/study-packs/examLevel';
 import { ERROR_MESSAGES } from '@/study-packs/utils';
 import FormSection, { Field } from './FormSection';
 import styles from './study-packs.module.css';
@@ -37,6 +38,7 @@ function SelectField({ id, value, onChange, placeholder, options, invalid }) {
 
 // `hideTeacher` / `hideSubject` are set in the teacher account: the pack always belongs to the signed-in teacher and
 // their own subject, so those two fields aren't shown (the form is already filled with them).
+// `examLevels` (e.g. ['A/L']) limits the grades to the teacher's own level; empty or missing shows every grade.
 export default function ClassSection({
   form,
   errors,
@@ -45,9 +47,13 @@ export default function ClassSection({
   onTeacherChange,
   hideTeacher = false,
   hideSubject = false,
+  examLevels = [],
 }) {
   const teacherOptions = teachers.map((teacher) => ({ value: String(teacher.id), label: teacher.name }));
-  const gradeOptions = GRADES.map((grade) => ({ value: grade, label: grade }));
+  const gradeOptions = GRADES.filter((grade) => gradeAllowed(grade, examLevels)).map((grade) => ({
+    value: grade,
+    label: grade,
+  }));
   const subjectOptions = SUBJECTS.map((subject) => ({ value: subject, label: subject }));
 
   return (

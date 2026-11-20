@@ -38,11 +38,13 @@ function joinParts(...parts) {
 // `onSave({ intent, items })` may throw; the message is shown in the banner.
 // `lookupRecording(code, hint)` finds a recording by its code; the teacher account passes one that only finds that
 // teacher's own recordings. It defaults to the admin lookup.
+// `canPublish` is false in the teacher account: teachers can only save, so there is no Save & publish.
 export default function AddRecordingsPage({
   pack,
   draft,
   teachers,
   lookupRecording = getRecordingByCode,
+  canPublish = true,
   onItemsChange,
   onBackToSettings,
   onCancel,
@@ -423,6 +425,7 @@ export default function AddRecordingsPage({
         step={2}
         live={live}
         saving={saving}
+        canPublish={canPublish}
         onCancel={() => onCancel()}
         onSave={() => handleAction('save')}
         onPublish={() => handleAction('publish')}

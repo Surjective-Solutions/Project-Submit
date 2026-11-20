@@ -7,25 +7,21 @@ import { toast } from 'sonner';
 import EditTeacherProfileDialog from './EditTeacherProfileDialog';
 import { getTokenPayload } from '@/lib/auth';
 import { getTutorById } from '@/lib/api-client';
+import { filled, readMediums, readOnlyValues } from '@/lib/teacher-profile';
 import s from './account.module.css';
 
 const font = Geist({ subsets: ['latin'], display: 'swap', fallback: ['system-ui', 'sans-serif'] });
 
-const filled = (v) => typeof v === 'string' ? v.trim() !== '' : v != null && v !== '';
-
-function formatMemberSince(dateStr) {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  if (Number.isNaN(d.getTime())) return '';
-  return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-}
+// The name shown under the photo.
+const nameOf = (t) =>
+  (t.displayName || [t.first_name, t.last_name].filter(Boolean).join(' ') || t.username || '').trim();
 
 // The letter shown when there is no photo.
 const initialOf = (t) => (t.displayName || t.first_name || t.username || '?').trim().charAt(0).toUpperCase() || '?';
 
-function Field({ label, value }) {
+function Field({ label, value, full }) {
   return (
-    <div className={s.field}>
+    <div className={full ? `${s.field} ${s.full}` : s.field}>
       <dt className={s.label}>{label}</dt>
       <dd className={s.value}>{filled(value) ? value : <span className={s.empty}>Not set</span>}</dd>
     </div>
@@ -33,7 +29,7 @@ function Field({ label, value }) {
 }
 
 // A titled panel. The pill counts how many of its fields have a value.
-function Panel({ id, title, fields, single }) {
+function Panel({ id, title, fields }) {
   const set = fields.filter((f) => filled(f.value)).length;
   return (
     <section className={s.panel} aria-labelledby={id}>
@@ -45,9 +41,9 @@ function Panel({ id, title, fields, single }) {
           {set} of {fields.length} set
         </span>
       </div>
-      <dl className={single ? `${s.body} ${s.bodyOne}` : s.body}>
+      <dl className={s.body}>
         {fields.map((f) => (
-          <Field key={f.label} label={f.label} value={f.value} />
+          <Field key={f.label} label={f.label} value={f.value} full={f.full} />
         ))}
       </dl>
     </section>
@@ -87,6 +83,8 @@ export default function AccountSection() {
     }
   }
 
+  const locked = readOnlyValues(teacher);
+
   return (
     <div className={`${s.page} ${font.className}`}>
       <div className={s.wrap}>
@@ -124,6 +122,12 @@ export default function AccountSection() {
                   <Pencil size={13} />
                 </span>
               </button>
+              <div className={s.identity}>
+                <p className={s.name}>{nameOf(teacher)}</p>
+                {locked.tutor_id ? <p className={s.tutorId}>
+                    Tutor ID: <strong>{locked.tutor_id}</strong>
+                  </p> : null}
+              </div>
               <button type="button" className={s.edit} onClick={() => setEditOpen(true)}>
                 Edit profile
               </button>
@@ -137,15 +141,16 @@ export default function AccountSection() {
                   { label: 'First name', value: teacher.first_name },
                   { label: 'Last name', value: teacher.last_name },
                   { label: 'Email', value: teacher.email },
-                  { label: 'Contact number', value: teacher.contact_number },
+                  { label: 'Contact number', value: locked.contact_number },
                 ]}
               />
               <Panel
                 id="acct-professional"
                 title="Professional information"
-                single
                 fields={[
-                  { label: 'Subject area', value: teacher.subject_area },
+                  { label: 'Subject', value: locked.subject_area },
+                  { label: 'Exam level', value: locked.exam_level },
+                  { label: 'Medium', value: readMediums(teacher).join(', ') },
                   { label: 'Bio', value: teacher.bio },
                 ]}
               />
@@ -153,8 +158,9 @@ export default function AccountSection() {
                 id="acct-account"
                 title="Account"
                 fields={[
-                  { label: 'Username', value: teacher.username },
-                  { label: 'Member since', value: formatMemberSince(teacher.created_at) },
+                  { label: 'Tutor ID', value: locked.tutor_id },
+                  { label: 'Username', value: locked.username },
+                  { label: 'Member since', value: locked.member_since },
                 ]}
               />
             </div>

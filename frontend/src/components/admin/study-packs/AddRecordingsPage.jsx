@@ -36,10 +36,13 @@ function joinParts(...parts) {
 // `draft` = { form, coverFile, items } is held by the parent so going back to step 1 keeps the sessions.
 // `onItemsChange` accepts a new array or an updater function.
 // `onSave({ intent, items })` may throw; the message is shown in the banner.
+// `lookupRecording(code, hint)` finds a recording by its code; the teacher account passes one that only finds that
+// teacher's own recordings. It defaults to the admin lookup.
 export default function AddRecordingsPage({
   pack,
   draft,
   teachers,
+  lookupRecording = getRecordingByCode,
   onItemsChange,
   onBackToSettings,
   onCancel,
@@ -127,7 +130,7 @@ export default function AddRecordingsPage({
     setLooking(true);
     let outcome;
     try {
-      const recording = await getRecordingByCode(normalized);
+      const recording = await lookupRecording(normalized, { teacherId: form.teacherId, subject: form.subject });
       outcome = recording
         ? { status: 'found', code: normalized, recording }
         : { status: 'notfound', code: normalized };

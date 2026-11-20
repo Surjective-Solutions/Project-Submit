@@ -22,7 +22,9 @@ function revokeBlob(url) {
 // `pack` is the saved pack being edited (null when creating).
 // `draft` = { form, coverFile } is the pending work held by the parent, so it survives a trip to step 2.
 // `onNext({ form, coverFile })` moves on to the recordings step; `onCancel(coverUrl)` throws the draft away.
-export default function StudyPackForm({ pack, draft, teachers, onCancel, onNext }) {
+// `lockedTeacher` ({ id, name, subject }) is set in the teacher account: the form is already filled with that teacher
+// and their subject, so the Class card doesn't ask for them, and the revenue split (set by the institute) isn't shown.
+export default function StudyPackForm({ pack, draft, teachers, lockedTeacher = null, onCancel, onNext }) {
   const isPublished = pack?.status === 'published';
 
   const [form, setForm] = useState(draft.form);
@@ -124,14 +126,18 @@ export default function StudyPackForm({ pack, draft, teachers, onCancel, onNext 
             teachers={teachers}
             onChange={update}
             onTeacherChange={handleTeacherChange}
+            hideTeacher={Boolean(lockedTeacher)}
+            hideSubject={Boolean(lockedTeacher?.subject)}
           />
           <PriceValiditySection form={form} errors={shownErrors} onChange={update} />
-          <RevenueShareSection
-            form={form}
-            price={toNumber(form.price)}
-            total={validation.total}
-            onShareChange={updateShare}
-          />
+          {lockedTeacher ? null : (
+            <RevenueShareSection
+              form={form}
+              price={toNumber(form.price)}
+              total={validation.total}
+              onShareChange={updateShare}
+            />
+          )}
           <CoverSection coverUrl={form.coverUrl} onSelect={handleCoverSelect} onRemove={handleCoverRemove} />
         </div>
 

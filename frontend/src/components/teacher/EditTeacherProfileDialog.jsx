@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, UserCircle } from 'lucide-react';
+import { Geist } from 'next/font/google';
+import { Loader2 } from 'lucide-react';
 
 import {
   Dialog,
@@ -11,46 +12,147 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { BorderTrail } from '@/components/core/border-trail';
 import AvatarUpload from '@/components/admin/AvatarUpload';
 import PasswordField from '@/components/admin/PasswordField';
 import PasswordStrengthIndicator from '@/components/admin/PasswordStrengthIndicator';
 import { teacherProfileSchema } from '@/lib/validations/teacher';
+import { filled, readMediums, readOnlyValues } from '@/lib/teacher-profile';
+import s from './editProfile.module.css';
 
-function Field({ label, required, error, id, children }) {
+const font = Geist({ subsets: ['latin'], display: 'swap', fallback: ['system-ui', 'sans-serif'] });
+
+// The photo circle uses the same gradient as the panel headers (AvatarUpload's own default is a brighter blue).
+const AVATAR_GRADIENT = 'linear-gradient(135deg, #1c2554 0%, #172c4e 55%, #0f3447 100%)';
+
+// How long the border animation runs after Save is pressed, before the changes are handed over to be saved.
+const TRAIL_MS = 1600;
+// How wide the line of the border animation is, in px.
+const TRAIL_THICKNESS = 3;
+
+// What a teacher can change here: first name, last name, email, bio, medium, the photo and the password. Everything else
+// on the form is shown but locked.
+const EDITABLE = ['first_name', 'last_name', 'email', 'bio'];
+const MEDIUMS = ['Sinhala', 'English', 'Tamil'];
+
+// Fields that are locked can't be fixed by the teacher, so a problem with one of them (an old record with no contact
+// number, say) must not stop the editable ones from being saved.
+const LOCKED = ['contact_number', 'subject_area', 'username'];
+const lockedTolerantResolver = (schema) => {
+  const inner = zodResolver(schema);
+  return async (values, context, options) => {
+    const r = await inner(values, context, options);
+    if (!r.errors || Object.keys(r.errors).length === 0) return r;
+    const errors = Object.fromEntries(Object.entries(r.errors).filter(([k]) => !LOCKED.includes(k)));
+    // A schema skips its cross-field rules while any single field is invalid, so with a locked field failing, the
+    // "passwords match" rule would be skipped too. It is checked here instead.
+    const { new_password: pw = '', confirm_password: confirm = '' } = values;
+    if ((pw || confirm) && pw !== confirm && !errors.confirm_password) {
+      errors.confirm_password = { type: 'validate', message: 'Passwords do not match' };
+    }
+    return Object.keys(errors).length ? { values: {}, errors } : { values, errors: {} };
+  };
+};
+
+function Field({ label, required, error, id, hint, children }) {
   return (
-    <div className="space-y-1.5">
-      <Label htmlFor={id} className={error ? 'text-destructive' : 'text-gray-700'}>
-        {label}{required && <span className="text-destructive ml-0.5">*</span>}
-      </Label>
+    <div className={s.field}>
+      <label htmlFor={id} className={s.label}>
+        {label}
+        {required && <span className={s.req} aria-hidden="true">*</span>}
+      </label>
       {children}
-      {error && <p className="text-xs text-destructive" role="alert">{error}</p>}
+      {hint && <p className={s.hint}>{hint}</p>}
+      {error && (
+        <p className={s.error} role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
 
-function SectionDivider({ label }) {
+// A locked field: it looks like the others but is grey and can't be focused or edited.
+function Locked({ label, value }) {
   return (
-    <div className="flex items-center gap-3 pt-2 pb-1">
-      <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest whitespace-nowrap">{label}</span>
-      <div className="flex-1 h-px bg-gray-200" />
+    <div className={s.field}>
+      <span className={s.label}>{label}</span>
+      <div className={s.locked} aria-readonly="true">
+        {filled(value) ? value : <span className={s.empty}>Not set</span>}
+      </div>
     </div>
+  );
+}
+
+// Medium: any of the languages the teacher teaches in.
+function MediumPicker({ options, selected, onToggle }) {
+  return (
+    <fieldset className={s.chips}>
+      <legend className={s.label}>Medium</legend>
+      <div className={s.chipRow}>
+        {options.map((m) => (
+          <label key={m} className={s.chip}>
+            <input type="checkbox" className={s.chipInput} checked={selected.includes(m)} onChange={() => onToggle(m)} />
+            <span>{m}</span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
+// A titled panel with the same gradient strip as the My account page. `count` adds the "N of M set" pill.
+function Panel({ id, title, count, single, children }) {
+  return (
+    <section className={s.panel} aria-labelledby={id}>
+      <div className={s.strip}>
+        <h3 id={id} className={s.title}>
+          {title}
+        </h3>
+        {count && (
+          <span className={s.pill}>
+            {count.set} of {count.total} set
+          </span>
+        )}
+      </div>
+      <div className={single ? `${s.body} ${s.bodyOne}` : s.body}>{children}</div>
+    </section>
   );
 }
 
 export default function EditTeacherProfileDialog({ open, onOpenChange, teacher, onSave, isLoading }) {
   const [photoUrl, setPhotoUrl] = useState(null);
+  const [saving, setSaving] = useState(false); // the border animation is running
+  const runRef = useRef(0); // changes whenever a save starts or the dialog closes, so a stale save can tell
+  const mountedRef = useRef(true);
 
   const { register, handleSubmit, watch, reset, formState: { errors } } = useForm({
-    resolver: zodResolver(teacherProfileSchema),
+    resolver: lockedTolerantResolver(teacherProfileSchema),
   });
+  const [mediums, setMediums] = useState([]);
 
-  const newPasswordValue = watch('new_password', '');
-  const firstNameValue = watch('first_name', teacher?.first_name ?? '');
-  const lastNameValue = watch('last_name', teacher?.last_name ?? '');
+  useEffect(() => {
+    if (!open) {
+      runRef.current += 1;
+      setSaving(false);
+    }
+  }, [open]);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  const values = watch();
+  const newPasswordValue = values.new_password ?? '';
+  const firstNameValue = values.first_name ?? teacher?.first_name ?? '';
+  const lastNameValue = values.last_name ?? teacher?.last_name ?? '';
+  const locked = readOnlyValues(teacher);
+  const valueOf = (k) => (k === 'mediums' ? mediums : k in locked ? locked[k] : values[k]);
+  const countOf = (keys) => ({ set: keys.filter((k) => filled(valueOf(k))).length, total: keys.length });
+  const mediumOptions = [...MEDIUMS, ...readMediums(teacher).filter((m) => !MEDIUMS.includes(m))];
+  const toggleMedium = (m) => setMediums((cur) => (cur.includes(m) ? cur.filter((x) => x !== m) : [...cur, m]));
 
   useEffect(() => {
     if (teacher && open) {
@@ -58,143 +160,155 @@ export default function EditTeacherProfileDialog({ open, onOpenChange, teacher, 
         first_name:       teacher.first_name ?? '',
         last_name:        teacher.last_name ?? '',
         email:            teacher.email ?? '',
-        contact_number:   teacher.contact_number ?? '',
-        subject_area:     teacher.subject_area ?? '',
         bio:              teacher.bio ?? '',
-        username:         teacher.username ?? '',
         new_password:     '',
         confirm_password: '',
       });
       setPhotoUrl(teacher.profile_image_url ?? null);
+      setMediums(readMediums(teacher));
     }
   }, [teacher, open, reset]);
 
-  function onSubmit(data) {
-    onSave({ ...data, profile_image_url: photoUrl });
+  // Only what can be changed is sent; the locked fields are not part of the save.
+  // Pressing Save first lets the border animation run around the dialog, then the changes are handed to onSave.
+  // Closing the dialog in the meantime cancels the save.
+  async function onSubmit(data) {
+    if (saving) return;
+    const changes = Object.fromEntries(EDITABLE.map((k) => [k, data[k]]));
+    const payload = {
+      ...changes,
+      mediums,
+      new_password: data.new_password,
+      confirm_password: data.confirm_password,
+      profile_image_url: photoUrl,
+    };
+    const run = ++runRef.current;
+    setSaving(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, TRAIL_MS));
+      if (runRef.current !== run) return; // the dialog was closed meanwhile
+      await onSave(payload);
+    } finally {
+      if (mountedRef.current) setSaving(false);
+    }
   }
+
+  const busy = saving || Boolean(isLoading);
+  const cls = (name) => (errors[name] ? `${s.input} ${s.invalid}` : s.input);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="sm:max-w-2xl p-0 gap-0 overflow-hidden max-h-[90vh]"
+        className={`${s.dialog} ${font.className} sm:max-w-2xl p-0 gap-0 overflow-hidden max-h-[90vh] rounded-[20px]`}
         style={{ display: 'flex', flexDirection: 'column' }}
       >
-        {/* Fixed header */}
-        <div
-          className="px-6 py-5 flex items-center gap-3 shrink-0"
-          style={{ background: 'linear-gradient(135deg, #3940A0 0%, #5a62ff 100%)' }}
-        >
-          <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
-            <UserCircle className="h-5 w-5 text-white" />
-          </div>
-          <div>
-            <DialogTitle className="text-white text-base font-semibold leading-tight m-0">Edit Profile</DialogTitle>
-            <DialogDescription className="text-white/60 text-xs mt-0.5 m-0">{teacher?.username}</DialogDescription>
-          </div>
+        {busy && (
+          <BorderTrail
+            className="bg-linear-to-l from-green-300 via-green-500 to-green-300"
+            size={120}
+            thickness={TRAIL_THICKNESS}
+            transition={{ ease: [0, 0.5, 0.8, 0.5], duration: TRAIL_MS / 1000, repeat: Infinity }}
+          />
+        )}
+
+        <div className={s.top}>
+          <DialogTitle className={s.heading}>Edit profile</DialogTitle>
+          <DialogDescription className={s.sub}>Fields shown in grey are locked and can’t be changed here.</DialogDescription>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col flex-1 overflow-hidden">
-          <div className="flex-1 min-h-0 overflow-y-auto">
-            <div className="px-6 py-5 space-y-4">
-
-              {/* Avatar */}
-              <div className="flex justify-center pb-1">
+          <div className={s.scroll}>
+            <div className={s.stack}>
+              <div className={s.avatar}>
                 <AvatarUpload
                   key={teacher?.id}
                   name={`${firstNameValue} ${lastNameValue}`}
                   initialUrl={teacher?.profile_image_url ?? null}
                   onChange={(_, url) => setPhotoUrl(url)}
                   size={80}
+                  gradient={AVATAR_GRADIENT}
                 />
               </div>
 
-              {/* Personal */}
-              <SectionDivider label="Personal Information" />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="First Name" required id="first_name" error={errors.first_name?.message}>
-                  <Input id="first_name" placeholder="First name" {...register('first_name')} />
+              <Panel
+                id="edit-personal"
+                title="Personal information"
+                count={countOf(['first_name', 'last_name', 'email', 'contact_number'])}
+              >
+                <Field label="First name" required id="first_name" error={errors.first_name?.message}>
+                  <input id="first_name" className={cls('first_name')} placeholder="First name" {...register('first_name')} />
                 </Field>
-                <Field label="Last Name" required id="last_name" error={errors.last_name?.message}>
-                  <Input id="last_name" placeholder="Last name" {...register('last_name')} />
+                <Field label="Last name" required id="last_name" error={errors.last_name?.message}>
+                  <input id="last_name" className={cls('last_name')} placeholder="Last name" {...register('last_name')} />
                 </Field>
                 <Field label="Email" id="email" error={errors.email?.message}>
-                  <Input id="email" type="email" placeholder="you@example.com" {...register('email')} />
+                  <input id="email" type="email" className={cls('email')} placeholder="you@example.com" {...register('email')} />
                 </Field>
-                <Field label="Contact Number" required id="contact_number" error={errors.contact_number?.message}>
-                  <Input id="contact_number" placeholder="+94XXXXXXXXX" {...register('contact_number')} />
-                </Field>
-              </div>
+                <Locked label="Contact number" value={locked.contact_number} />
+              </Panel>
 
-              {/* Professional */}
-              <SectionDivider label="Professional Information" />
-              <div className="grid grid-cols-1 gap-4">
-                <Field label="Subject Area" required id="subject_area" error={errors.subject_area?.message}>
-                  <Input id="subject_area" placeholder="e.g. Combined Mathematics" {...register('subject_area')} />
-                </Field>
-                <Field label="Bio" id="bio" error={errors.bio?.message}>
-                  <Textarea
-                    id="bio"
-                    placeholder="Short bio..."
-                    rows={3}
-                    {...register('bio')}
-                  />
-                </Field>
-              </div>
-
-              {/* Account */}
-              <SectionDivider label="Account" />
-              <div className="grid grid-cols-1 gap-4">
-                <Field label="Username" required id="username" error={errors.username?.message}>
-                  <Input id="username" placeholder="e.g. john.perera" {...register('username')} />
-                  <p className="text-[11px] text-gray-400 mt-1">
-                    Only letters, numbers, and dots allowed. Changing your username will affect your login credentials.
-                  </p>
-                </Field>
-              </div>
-
-              {/* Password */}
-              <div className="rounded-lg bg-gray-50 border border-gray-200 px-4 py-4 space-y-4">
-                <SectionDivider label="Change Password" />
-                <p className="text-xs text-gray-400">Leave blank to keep current password.</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
-                  <div>
-                    <PasswordField
-                      id="new_password"
-                      label="New Password"
-                      placeholder="New password (min 8 chars)"
-                      error={errors.new_password?.message}
-                      registration={register('new_password')}
+              <Panel
+                id="edit-professional"
+                title="Professional information"
+                count={countOf(['subject_area', 'exam_level', 'mediums', 'bio'])}
+              >
+                <Locked label="Subject" value={locked.subject_area} />
+                <Locked label="Exam level" value={locked.exam_level} />
+                <div className={s.full}>
+                  <MediumPicker options={mediumOptions} selected={mediums} onToggle={toggleMedium} />
+                </div>
+                <div className={s.full}>
+                  <Field label="Bio" id="bio" error={errors.bio?.message}>
+                    <textarea
+                      id="bio"
+                      className={errors.bio ? `${s.textarea} ${s.invalid}` : s.textarea}
+                      placeholder="Short bio..."
+                      rows={3}
+                      {...register('bio')}
                     />
-                    <PasswordStrengthIndicator value={newPasswordValue} />
-                  </div>
+                  </Field>
+                </div>
+              </Panel>
+
+              <Panel id="edit-account" title="Account" count={countOf(['tutor_id', 'username', 'member_since'])}>
+                <Locked label="Tutor ID" value={locked.tutor_id} />
+                <Locked label="Username" value={locked.username} />
+                <Locked label="Member since" value={locked.member_since} />
+              </Panel>
+
+              <Panel id="edit-password" title="Change password">
+                <p className={s.note}>Leave blank to keep current password.</p>
+                <div className={s.pw}>
+                  <PasswordField
+                    id="new_password"
+                    label="New password"
+                    placeholder="New password (min 8 chars)"
+                    error={errors.new_password?.message}
+                    registration={register('new_password')}
+                  />
+                  <PasswordStrengthIndicator value={newPasswordValue} />
+                </div>
+                <div className={s.pw}>
                   <PasswordField
                     id="confirm_password"
-                    label="Confirm Password"
+                    label="Confirm password"
                     placeholder="Repeat new password"
                     error={errors.confirm_password?.message}
                     registration={register('confirm_password')}
                   />
                 </div>
-              </div>
-
-              <div className="h-1" />
+              </Panel>
             </div>
           </div>
 
-          {/* Fixed footer */}
-          <div className="shrink-0 flex items-center justify-end gap-3 px-6 py-4 border-t bg-gray-50/60 rounded-b-xl">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
+          <div className={s.footer}>
+            <button type="button" className={`${s.btn} ${s.cancel}`} onClick={() => onOpenChange(false)} disabled={busy}>
               Cancel
-            </Button>
-            <Button
-              type="submit"
-              className="min-w-[120px] text-white"
-              style={{ background: 'linear-gradient(135deg, #3940A0 0%, #5a62ff 100%)' }}
-              disabled={isLoading}
-            >
-              {isLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              Save Changes
-            </Button>
+            </button>
+            <button type="submit" className={`${s.btn} ${s.save}`} disabled={busy}>
+              {busy && <Loader2 size={16} className={s.spin} aria-hidden="true" />}
+              Save changes
+            </button>
           </div>
         </form>
       </DialogContent>

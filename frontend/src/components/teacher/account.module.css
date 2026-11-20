@@ -10,6 +10,7 @@
   --ink: #1c1f26;
   --label: #7c828e;
   --empty: #a3a8b2;
+  /* The side panel's exact gradient (all three stops), tilted so it runs across the header. */
   --strip-bg: linear-gradient(135deg, #1c2554 0%, #172c4e 55%, #0f3447 100%);
   --strip-edge: #172c4e;
   --pill-bg: oklch(0.95 0.03 262);
@@ -89,8 +90,8 @@
   gap: 18px 32px;
 }
 
-.bodyOne {
-  grid-template-columns: minmax(0, 1fr);
+.full {
+  grid-column: 1 / -1;
 }
 
 /* ── A field ────────────────────────────────────────── */
@@ -102,7 +103,7 @@
 .label {
   margin: 0 0 2px;
   font-size: 13px;
-  color: #5e6060;
+  color: #000;
 }
 
 .value {
@@ -126,6 +127,38 @@
   align-items: center;
   gap: 12px;
   margin-bottom: 20px;
+}
+
+.identity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-top: -2px;
+  text-align: center;
+}
+
+.name {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.tutorId {
+  margin: 4px 0 0;
+  padding: 4px 14px;
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  background: var(--strip);
+  font-size: 14px;
+  color: #4a505c;
+}
+
+.tutorId strong {
+  font-weight: 600;
+  color: var(--ink);
 }
 
 .avatarBtn {

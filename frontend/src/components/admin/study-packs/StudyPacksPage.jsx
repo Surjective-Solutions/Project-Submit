@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Icon from '@/components/admin/Icon';
-import { getPackItems, getPacks, getTeachers, savePackWithSessions } from '@/study-packs/api';
+import * as adminApi from '@/study-packs/api';
 import { formToValues, packToForm, teacherName } from '@/study-packs/utils';
 import AddRecordingsPage from './AddRecordingsPage';
 import PackCard from './PackCard';
@@ -17,7 +17,11 @@ function revokeBlob(url) {
   if (typeof url === 'string' && url.startsWith('blob:')) URL.revokeObjectURL(url);
 }
 
-export default function StudyPacksPage() {
+// `api` is where the packs come from. The admin page uses the admin API (every pack, every teacher). The teacher page
+// passes study-packs/teacherApi.js and `ownTeacher`: the packs are then only that teacher's, the teacher and subject are
+// fixed to them (the form doesn't ask), and the recordings step only accepts their own recordings.
+export default function StudyPacksPage({ api = adminApi, ownTeacher = false }) {
+  const { getPackItems, getPacks, getTeachers, savePackWithSessions } = api;
   const [packs, setPacks] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +58,7 @@ export default function StudyPacksPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [getPacks, getTeachers]);
 
   useEffect(() => {
     if (!toast) return undefined;
@@ -89,17 +93,24 @@ export default function StudyPacksPage() {
   }, [packs, teachers, status, subject, search]);
 
   const editingPack = packs.find((p) => p.id === editingId) ?? null;
+
+  // In the teacher account the only "teacher" is the signed-in one; their id and subject go into every form.
+  const lockedTeacher = ownTeacher ? (teachers[0] ?? null) : null;
+  const lockForm = (form) =>
+    lockedTeacher
+      ? { ...form, teacherId: String(lockedTeacher.id), subject: lockedTeacher.subject || form.subject }
+      : form;
   const filtersActive = status !== 'all' || subject !== '' || search.trim() !== '';
 
   function openCreate() {
     setEditingId(null);
-    setDraft({ form: packToForm(null), coverFile: null, items: [] });
+    setDraft({ form: lockForm(packToForm(null)), coverFile: null, items: [] });
     setView('settings');
   }
 
   function openEdit(pack) {
     setEditingId(pack.id);
-    setDraft({ form: packToForm(pack), coverFile: null, items: getPackItems(pack) });
+    setDraft({ form: lockForm(packToForm(pack)), coverFile: null, items: getPackItems(pack) });
     setView('settings');
   }
 
@@ -165,6 +176,7 @@ export default function StudyPacksPage() {
         pack={editingPack}
         draft={draft}
         teachers={teachers}
+        lockedTeacher={lockedTeacher}
         onCancel={discardDraft}
         onNext={handleNext}
       />
@@ -178,6 +190,7 @@ export default function StudyPacksPage() {
         pack={editingPack}
         draft={draft}
         teachers={teachers}
+        lookupRecording={api.getRecordingByCode}
         onItemsChange={handleItemsChange}
         onBackToSettings={handleBackToSettings}
         onCancel={() => discardDraft()}
@@ -219,7 +232,12 @@ export default function StudyPacksPage() {
             they missed.
           </p>
         </div>
-        <button type="button" className={styles.primaryButton} onClick={openCreate}>
+        <button
+          type="button"
+          className={styles.primaryButton}
+          onClick={openCreate}
+          disabled={ownTeacher && !lockedTeacher}
+        >
           <Icon name="add" size={18} weight={600} />
           Create study pack
         </button>

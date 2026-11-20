@@ -35,25 +35,41 @@ function SelectField({ id, value, onChange, placeholder, options, invalid }) {
   );
 }
 
-export default function ClassSection({ form, errors, teachers, onChange, onTeacherChange }) {
+// `hideTeacher` / `hideSubject` are set in the teacher account: the pack always belongs to the signed-in teacher and
+// their own subject, so those two fields aren't shown (the form is already filled with them).
+export default function ClassSection({
+  form,
+  errors,
+  teachers,
+  onChange,
+  onTeacherChange,
+  hideTeacher = false,
+  hideSubject = false,
+}) {
   const teacherOptions = teachers.map((teacher) => ({ value: String(teacher.id), label: teacher.name }));
   const gradeOptions = GRADES.map((grade) => ({ value: grade, label: grade }));
   const subjectOptions = SUBJECTS.map((subject) => ({ value: subject, label: subject }));
 
   return (
-    <FormSection icon="school" title="Class" subtitle="Who teaches it, and which students it is for.">
+    <FormSection
+      icon="school"
+      title="Class"
+      subtitle={hideTeacher ? 'Which students it is for.' : 'Who teaches it, and which students it is for.'}
+    >
       <div className={styles.fieldGrid}>
-        <Field id="sp-teacher" label="Teacher" required error={errors.teacherId ? ERROR_MESSAGES.teacherId : ''}>
-          <SelectField
-            id="sp-teacher"
-            icon="co_present"
-            value={form.teacherId}
-            placeholder="Select a teacher"
-            options={teacherOptions}
-            invalid={errors.teacherId}
-            onChange={onTeacherChange}
-          />
-        </Field>
+        {hideTeacher ? null : (
+          <Field id="sp-teacher" label="Teacher" required error={errors.teacherId ? ERROR_MESSAGES.teacherId : ''}>
+            <SelectField
+              id="sp-teacher"
+              icon="co_present"
+              value={form.teacherId}
+              placeholder="Select a teacher"
+              options={teacherOptions}
+              invalid={errors.teacherId}
+              onChange={onTeacherChange}
+            />
+          </Field>
+        )}
 
         <Field id="sp-grade" label="Grade" required error={errors.grade ? ERROR_MESSAGES.grade : ''}>
           <SelectField
@@ -67,17 +83,19 @@ export default function ClassSection({ form, errors, teachers, onChange, onTeach
           />
         </Field>
 
-        <Field id="sp-subject" label="Subject" required error={errors.subject ? ERROR_MESSAGES.subject : ''}>
-          <SelectField
-            id="sp-subject"
-            icon="menu_book"
-            value={form.subject}
-            placeholder="Select a subject"
-            options={subjectOptions}
-            invalid={errors.subject}
-            onChange={(value) => onChange('subject', value)}
-          />
-        </Field>
+        {hideSubject ? null : (
+          <Field id="sp-subject" label="Subject" required error={errors.subject ? ERROR_MESSAGES.subject : ''}>
+            <SelectField
+              id="sp-subject"
+              icon="menu_book"
+              value={form.subject}
+              placeholder="Select a subject"
+              options={subjectOptions}
+              invalid={errors.subject}
+              onChange={(value) => onChange('subject', value)}
+            />
+          </Field>
+        )}
       </div>
     </FormSection>
   );

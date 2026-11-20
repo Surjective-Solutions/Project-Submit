@@ -18,6 +18,8 @@ export default function AvatarUpload({
   initialUrl = null,
   onChange,
   size = 80,
+  // The fill of the circle while there is no photo. Pages that use another palette can pass their own.
+  gradient = 'linear-gradient(135deg, #3940A0 0%, #5a62ff 100%)',
 }) {
   const [preview, setPreview] = useState(initialUrl);
   const [objectUrl, setObjectUrl] = useState(null);
@@ -76,7 +78,7 @@ export default function AvatarUpload({
             <div
               className="w-full h-full flex items-center justify-center font-bold text-white select-none rounded-full"
               style={{
-                background: 'linear-gradient(135deg, #3940A0 0%, #5a62ff 100%)',
+                background: gradient,
                 fontSize,
               }}
             >

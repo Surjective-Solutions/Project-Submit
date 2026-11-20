@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { BookOpen, CalendarCheck, LayoutDashboard, ClipboardList, GraduationCap, Users, BarChart2, LogOut, User } from 'lucide-react';
+import { BookOpen, CalendarCheck, LayoutDashboard, ClipboardList, GraduationCap, Package, Users, BarChart2, LogOut, User } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getTokenPayload } from '@/lib/auth';
 import { getTutorById, logoutSession } from '@/lib/api-client';
@@ -48,6 +48,13 @@ const NAV_ITEMS = [
     icon: CalendarCheck,
     accent: '#C4B5FD',
     activeBg: 'rgba(196,181,253,0.14)',
+  },
+  {
+    label: 'Study Packs',
+    section: 'study-packs',
+    icon: Package,
+    accent: '#FCA5A5',
+    activeBg: 'rgba(252,165,165,0.14)',
   },
   {
     label: 'Exams',

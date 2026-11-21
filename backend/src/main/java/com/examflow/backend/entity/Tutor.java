@@ -27,6 +27,12 @@ public class Tutor {
 
     private String medium;
 
+    // a short text the teacher writes about themselves
+    private String bio;
+
+    // where the profile photo is served from, e.g. "/uploads/profile_photos/1730000000000_ab12cd34.jpg"
+    private String profilePhoto;
+
     private String tutorCode;
 
     private String userName;
@@ -200,6 +206,24 @@ public class Tutor {
 
     public void setMedium(String medium) {
         this.medium = medium;
+    }
+
+    @Column(name = "bio", length = 500)
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
+    }
+
+    @Column(name = "profile_photo")
+    public String getProfilePhoto() {
+        return profilePhoto;
+    }
+
+    public void setProfilePhoto(String profilePhoto) {
+        this.profilePhoto = profilePhoto;
     }
 
 }

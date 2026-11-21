@@ -927,6 +927,15 @@ export async function updateAdminAccount(formData) {
   });
 }
 
+// Saves the signed-in teacher's profile. `formData` is multipart: firstName, lastName, email, bio, mediums (comma
+// separated), removePhoto, an optional `photo` image, and currentPassword + newPassword to change the password.
+// Returns { isSuccess, message, field } where `field` names the input the server refused.
+export async function updateTeacherProfile(formData) {
+  return protectedRequestWithFileHandling("/api/teacher-account/update", {
+    body: formData,
+  });
+}
+
 // Changes the signed-in admin's password. Returns { isSuccess, message, field } — `field` is
 // "currentPassword" when the current password was wrong.
 export async function changeAdminPassword({ currentPassword, newPassword }) {

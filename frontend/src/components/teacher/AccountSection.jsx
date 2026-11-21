@@ -6,7 +6,7 @@ import { Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import EditTeacherProfileDialog from './EditTeacherProfileDialog';
 import { getTokenPayload } from '@/lib/auth';
-import { getTutorById } from '@/lib/api-client';
+import { API_BASE, getTutorById, updateTeacherProfile } from '@/lib/api-client';
 import { filled, readMediums, readOnlyValues } from '@/lib/teacher-profile';
 import s from './account.module.css';
 
@@ -15,6 +15,10 @@ const font = Geist({ subsets: ['latin'], display: 'swap', fallback: ['system-ui'
 // The name shown under the photo.
 const nameOf = (t) =>
   (t.displayName || [t.first_name, t.last_name].filter(Boolean).join(' ') || t.username || '').trim();
+
+// The server sends the photo as a path on itself ("/uploads/profile_photos/..."), so it needs the server's address.
+const withPhotoAddress = (t) =>
+  t?.profile_image_url?.startsWith('/') ? { ...t, profile_image_url: `${API_BASE}${t.profile_image_url}` } : t;
 
 // The letter shown when there is no photo.
 const initialOf = (t) => (t.displayName || t.first_name || t.username || '?').trim().charAt(0).toUpperCase() || '?';
@@ -61,7 +65,7 @@ export default function AccountSection() {
     try {
       const userSeq = getTokenPayload()?.userSeq;
       if (!userSeq) throw new Error('not signed in');
-      setTeacher(await getTutorById(userSeq));
+      setTeacher(withPhotoAddress(await getTutorById(userSeq)));
       setStatus('ready');
     } catch {
       toast.error('Failed to load profile');
@@ -75,9 +79,30 @@ export default function AccountSection() {
   async function handleSave(data) {
     setEditLoading(true);
     try {
-      setTeacher((prev) => ({ ...prev, ...data }));
+      const form = new FormData();
+      form.append('firstName', data.first_name ?? '');
+      form.append('lastName', data.last_name ?? '');
+      form.append('email', data.email ?? '');
+      form.append('bio', data.bio ?? '');
+      form.append('mediums', (data.mediums ?? []).join(','));
+      if (data.photo_file) form.append('photo', data.photo_file);
+      form.append('removePhoto', String(Boolean(data.remove_photo)));
+      if (data.new_password) {
+        form.append('currentPassword', data.current_password ?? '');
+        form.append('newPassword', data.new_password);
+      }
+      const result = await updateTeacherProfile(form);
+      if (!result?.isSuccess) {
+        toast.error(result?.message || 'Could not save your profile');
+        return;
+      }
+      // Show what the server now holds (the new photo address, the cleaned-up values).
+      const userSeq = getTokenPayload()?.userSeq;
+      setTeacher(withPhotoAddress(await getTutorById(userSeq)));
       toast.success('Profile updated');
       setEditOpen(false);
+    } catch {
+      toast.error('Could not save your profile. Check the connection and try again.');
     } finally {
       setEditLoading(false);
     }

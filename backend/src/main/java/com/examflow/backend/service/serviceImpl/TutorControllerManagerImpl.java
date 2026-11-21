@@ -181,7 +181,7 @@ private static final java.util.regex.Pattern STRONG_PASSWORD_PATTERN =
             tutorResponse.setUsername(tutor.getUserName());
             tutorResponse.setTeacher_name(tutor.getName());
             tutorResponse.setSubject_area(tutor.getSubject());
-            tutorResponse.setBio(tutor.getSubject());
+            tutorResponse.setBio(tutor.getBio());
             tutorResponse.setStatus(tutor.getStatus());
             tutorResponse.setTutorCode(tutor.getTutorCode());
             tutorResponse.setExamLevel(tutor.getExamLevel());
@@ -507,7 +507,7 @@ private static final java.util.regex.Pattern STRONG_PASSWORD_PATTERN =
                 tutorResponse.setSubject(tutor.getSubject());
                 tutorResponse.setTeacher_name(tutor.getName());
                 tutorResponse.setSubject_area(tutor.getSubject());
-                tutorResponse.setBio(tutor.getSubject());
+                tutorResponse.setBio(tutor.getBio());
 
                 List<Classes> classesList = classesRepository.findByStatusAndTutor(2, tutor);
                 List<ClassResponse> classResponses = new ArrayList<>();
@@ -546,7 +546,13 @@ private static final java.util.regex.Pattern STRONG_PASSWORD_PATTERN =
         tutorResponse.setUsername(tutor.getUserName());
         tutorResponse.setTeacher_name(tutor.getName());
         tutorResponse.setSubject_area(tutor.getSubject());
-        tutorResponse.setBio(tutor.getSubject());
+        tutorResponse.setBio(tutor.getBio());
+        tutorResponse.setProfile_image_url(tutor.getProfilePhoto());
+        // The table keeps one name; the profile page shows it as first and last name (split at the first space).
+        String fullName = tutor.getName() == null ? "" : tutor.getName().trim();
+        int space = fullName.indexOf(' ');
+        tutorResponse.setFirst_name(space < 0 ? fullName : fullName.substring(0, space));
+        tutorResponse.setLast_name(space < 0 ? "" : fullName.substring(space + 1).trim());
         tutorResponse.setStatus(tutor.getStatus());
         tutorResponse.setTutorCode(tutor.getTutorCode());
         tutorResponse.setExamLevel(tutor.getExamLevel());

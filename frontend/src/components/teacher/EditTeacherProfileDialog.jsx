@@ -122,6 +122,7 @@ function Panel({ id, title, count, single, children }) {
 
 export default function EditTeacherProfileDialog({ open, onOpenChange, teacher, onSave, isLoading }) {
   const [photoUrl, setPhotoUrl] = useState(null);
+  const [photoFile, setPhotoFile] = useState(null); // a newly chosen image, not yet uploaded
   const [saving, setSaving] = useState(false); // the border animation is running
   const runRef = useRef(0); // changes whenever a save starts or the dialog closes, so a stale save can tell
   const mountedRef = useRef(true);
@@ -163,8 +164,10 @@ export default function EditTeacherProfileDialog({ open, onOpenChange, teacher, 
         bio:              teacher.bio ?? '',
         new_password:     '',
         confirm_password: '',
+        current_password: '',
       });
       setPhotoUrl(teacher.profile_image_url ?? null);
+      setPhotoFile(null);
       setMediums(readMediums(teacher));
     }
   }, [teacher, open, reset]);
@@ -180,7 +183,10 @@ export default function EditTeacherProfileDialog({ open, onOpenChange, teacher, 
       mediums,
       new_password: data.new_password,
       confirm_password: data.confirm_password,
+      current_password: data.current_password,
       profile_image_url: photoUrl,
+      photo_file: photoFile,
+      remove_photo: !photoUrl && Boolean(teacher?.profile_image_url),
     };
     const run = ++runRef.current;
     setSaving(true);
@@ -224,7 +230,10 @@ export default function EditTeacherProfileDialog({ open, onOpenChange, teacher, 
                   key={teacher?.id}
                   name={`${firstNameValue} ${lastNameValue}`}
                   initialUrl={teacher?.profile_image_url ?? null}
-                  onChange={(_, url) => setPhotoUrl(url)}
+                  onChange={(file, url) => {
+                    setPhotoFile(file);
+                    setPhotoUrl(url);
+                  }}
                   size={80}
                   gradient={AVATAR_GRADIENT}
                 />
@@ -278,6 +287,15 @@ export default function EditTeacherProfileDialog({ open, onOpenChange, teacher, 
 
               <Panel id="edit-password" title="Change password">
                 <p className={s.note}>Leave blank to keep current password.</p>
+                <div className={s.pw}>
+                  <PasswordField
+                    id="current_password"
+                    label="Current password"
+                    placeholder="Needed only to set a new password"
+                    error={errors.current_password?.message}
+                    registration={register('current_password')}
+                  />
+                </div>
                 <div className={s.pw}>
                   <PasswordField
                     id="new_password"

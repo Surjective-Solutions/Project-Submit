@@ -31,6 +31,7 @@ export const teacherProfileSchema = z
       .optional()
       .or(z.literal('')),
     confirm_password: z.string().optional().or(z.literal('')),
+    current_password: z.string().optional().or(z.literal('')),
   })
   .refine(
     (data) => {
@@ -40,7 +41,11 @@ export const teacherProfileSchema = z
       return true;
     },
     { message: 'Passwords do not match', path: ['confirm_password'] }
-  );
+  )
+  .refine((data) => !data.new_password || Boolean(data.current_password), {
+    message: 'Enter your current password',
+    path: ['current_password'],
+  });
 
 export const teacherClassSchema = z.object({
   display_name: z.string().min(1, 'Display name is required'),

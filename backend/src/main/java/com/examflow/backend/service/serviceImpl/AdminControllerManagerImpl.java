@@ -22,6 +22,7 @@ import com.examflow.backend.dto.ChangeAdminPasswordRequest;
 import com.examflow.backend.dto.ChangeAdminPasswordResponse;
 import com.examflow.backend.dto.RegisteredTodayResponse;
 import com.examflow.backend.dto.StudentDuplicateCheckResponse;
+import com.examflow.backend.enums.StudentStatus;
 import com.examflow.backend.entity.AdminUser;
 import com.examflow.backend.entity.Student;
 import com.examflow.backend.repository.AdminUserRepository;
@@ -36,7 +37,7 @@ import jakarta.servlet.http.HttpServletRequest;
 public class AdminControllerManagerImpl implements AdminControllerManager {
 
     // Students with this status can log in; it is also what a signed-up student gets.
-    private static final Integer ACTIVE_STUDENT_STATUS = 2;
+    private static final Integer ACTIVE_STUDENT_STATUS = StudentStatus.ACTIVE.getSequence();
 
     // The academy runs on Sri Lanka time, so "today" and a student's age are measured there.
     private static final ZoneId ACADEMY_ZONE = ZoneId.of("Asia/Colombo");

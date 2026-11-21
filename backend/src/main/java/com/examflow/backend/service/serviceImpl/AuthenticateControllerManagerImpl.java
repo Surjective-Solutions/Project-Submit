@@ -1,6 +1,7 @@
 package com.examflow.backend.service.serviceImpl;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -14,6 +15,7 @@ import com.examflow.backend.entity.Instructor;
 import com.examflow.backend.entity.Student;
 import com.examflow.backend.entity.Tutor;
 import com.examflow.backend.entity.UserLoginAudit;
+import com.examflow.backend.enums.StudentStatus;
 import com.examflow.backend.repository.AdminUserRepository;
 import com.examflow.backend.repository.CashierRepository;
 import com.examflow.backend.repository.InstructorRepository;
@@ -68,7 +70,7 @@ public class AuthenticateControllerManagerImpl implements AuthenticateController
     public LoginResponse login(String identifier, String password) {
         LoginResponse loginResponse = new LoginResponse();
         String role = "student";
-        Student student = studentRepository.findByContactNumberAndStatus(identifier, 2);
+        Student student = studentRepository.findByContactNumberAndStatus(identifier, StudentStatus.ACTIVE.getSequence());
         if (student != null) {
             if (passwordEncoder.matches(password, student.getFinalPassword())) {
                 String token = jwtUtil.generateToken(student.getContactNumber(), role, student.getStudentSeq());
@@ -87,7 +89,8 @@ public class AuthenticateControllerManagerImpl implements AuthenticateController
                 return loginResponse;
             }
         } else {
-            student = studentRepository.findByEmailAndStatus(identifier, 2);
+            student = studentRepository.findByEmailAndStatus(identifier, StudentStatus.ACTIVE.getSequence());
+            Student nonActiveStudent = student == null ? findNonActiveStudent(identifier, password) : null;
             if (student != null) {
                 if (passwordEncoder.matches(password, student.getFinalPassword())) {
                     String token = jwtUtil.generateToken(student.getEmail(), role, student.getStudentSeq());
@@ -105,11 +108,12 @@ public class AuthenticateControllerManagerImpl implements AuthenticateController
                     loginResponse.setMessage("Invalid password");
                     return loginResponse;
                 }
-            } else if (isDisabledStudent(identifier, password)) {
-                System.out.println("Disabled student tried to log in: " + identifier);
+            } else if (nonActiveStudent != null) {
+                StudentStatus status = StudentStatus.fromSequence(nonActiveStudent.getStatus());
+                System.out.println("Non-active student tried to log in: " + identifier + " (" + status + ")");
                 loginResponse.setToken(null);
                 loginResponse.setIsSuccess(false);
-                loginResponse.setMessage("Your account has been disabled. Please contact the institute.");
+                loginResponse.setMessage(disabledMessage(status));
                 return loginResponse;
             } else {
                 System.out.println("Student not found with email: " + identifier);
@@ -122,13 +126,28 @@ public class AuthenticateControllerManagerImpl implements AuthenticateController
 
     }
 
-    // Only reports "disabled" once the password checks out, so it doesn't reveal more than a normal login does.
-    private boolean isDisabledStudent(String identifier, String password) {
-        Student student = studentRepository.findByContactNumberAndStatus(identifier, 1);
+    // A student who exists but is not ACTIVE (device locked, suspended, graduated or left), or null. A deleted
+    // student is treated as not found. The student is only returned once the password checks out, so this doesn't
+    // reveal more than a normal login does.
+    private Student findNonActiveStudent(String identifier, String password) {
+        List<Integer> statuses = List.of(StudentStatus.DEVICE_LOCKED.getSequence(),
+                StudentStatus.SUSPENDED.getSequence(), StudentStatus.GRADUATED.getSequence(),
+                StudentStatus.LEFT.getSequence());
+        Student student = studentRepository.findFirstByContactNumberAndStatusIn(identifier, statuses);
         if (student == null) {
-            student = studentRepository.findByEmailAndStatus(identifier, 1);
+            student = studentRepository.findFirstByEmailAndStatusIn(identifier, statuses);
         }
-        return student != null && passwordEncoder.matches(password, student.getFinalPassword());
+        return student != null && passwordEncoder.matches(password, student.getFinalPassword()) ? student : null;
+    }
+
+    private String disabledMessage(StudentStatus status) {
+        if (status == StudentStatus.SUSPENDED) {
+            return "Your account has been suspended. Please contact the institute.";
+        }
+        if (status == StudentStatus.GRADUATED || status == StudentStatus.LEFT) {
+            return "Your account is no longer active. Please contact the institute.";
+        }
+        return "Your account has been disabled. Please contact the institute.";
     }
 
     private void recordLogin(Integer userSeq, String role, String token) {

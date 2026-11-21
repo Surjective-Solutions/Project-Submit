@@ -13,6 +13,7 @@ import com.examflow.backend.dto.InstructorSignUpRequest;
 import com.examflow.backend.dto.OtpRespond;
 import com.examflow.backend.dto.UserSignUpRequest;
 import com.examflow.backend.dto.UserSignUpRespond;
+import com.examflow.backend.enums.StudentStatus;
 import com.examflow.backend.entity.Instructor;
 import com.examflow.backend.entity.OtpConfiguration;
 import com.examflow.backend.entity.Student;
@@ -95,7 +96,7 @@ public class UserSignUpControllerManagerImpl implements UserSignUpControllermana
             student.setStudentNo(noConfig.NoConfigCreation("student"));
             student.setTermsAccepted(userSignUpRequest.getTermsAccepted());
             student.setFinalPassword(passwordEncoder.encode(userSignUpRequest.getConfirmPassword()));
-            student.setStatus(2);// set status to approved status
+            student.setStatus(StudentStatus.ACTIVE.getSequence()); // a signed-up student is active straight away
             student.setIsFirstLogin(true);
 
             studentRepository.save(student);

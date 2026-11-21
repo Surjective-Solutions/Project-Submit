@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.examflow.backend.config.JwtUtil;
 import com.examflow.backend.dto.DeviceVerifyResponse;
+import com.examflow.backend.enums.StudentStatus;
 import com.examflow.backend.entity.Student;
 import com.examflow.backend.entity.UserLoginAudit;
 import com.examflow.backend.repository.StudentRepository;
@@ -22,8 +23,8 @@ import jakarta.servlet.http.HttpServletRequest;
 public class DeviceVerificationControllerManagerImpl implements DeviceVerificationControllerManager {
 
     private static final String STUDENT_ROLE = "student";
-    private static final int ACTIVE_STATUS = 2;
-    private static final int INACTIVE_STATUS = 1;
+    private static final int ACTIVE_STATUS = StudentStatus.ACTIVE.getSequence();
+    private static final int INACTIVE_STATUS = StudentStatus.DEVICE_LOCKED.getSequence();
     private static final int MAX_DEVICE_ID_LENGTH = 64;
     private static final String DISABLED_MESSAGE = "This account was used on another device and has been disabled. Please contact the institute.";
 

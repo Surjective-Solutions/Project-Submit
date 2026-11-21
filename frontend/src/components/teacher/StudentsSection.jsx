@@ -32,6 +32,8 @@ const STATUS_STYLES = {
   INACTIVE: { backgroundColor: 'rgba(107,114,128,0.1)', color: '#6b7280' },
   SUSPENDED: { backgroundColor: 'rgba(239,68,68,0.1)', color: '#dc2626' },
   GRADUATED: { backgroundColor: 'rgba(59,130,246,0.1)', color: '#2563eb' },
+  DEVICE_LOCKED: { backgroundColor: 'rgba(245,158,11,0.12)', color: '#b45309' },
+  LEFT: { backgroundColor: 'rgba(107,114,128,0.1)', color: '#6b7280' },
 };
 
 // Strip everything but digits, then drop a leading "94" (country code) or a leading "0" (local trunk prefix), so
@@ -305,7 +307,7 @@ export default function StudentsSection() {
                 className="inline-block text-[11px] font-semibold px-2 py-0.5 rounded-full mt-1"
                 style={STATUS_STYLES[student.status] ?? STATUS_STYLES.INACTIVE}
               >
-                {student.status}
+                {student.status_description || student.status}
               </span>
               <div className="flex items-center flex-wrap gap-2 mt-1.5">
                 {student.student_number && (

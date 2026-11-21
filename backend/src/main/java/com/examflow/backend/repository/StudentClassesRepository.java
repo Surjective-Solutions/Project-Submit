@@ -48,4 +48,15 @@ public interface StudentClassesRepository extends JpaRepository<StudentClass, In
     List<Object[]> countDistinctEnrolledStudentsGroupedByTutor(@Param("enrollmentStatus") Integer enrollmentStatus,
             @Param("classStatus") Integer classStatus);
 
+    // Every live enrolment in an active class of this tutor, with the student and the class loaded in the same
+    // query. Deleted students are left out. Used by the teacher's Students page.
+    @Query("SELECT sc FROM StudentClass sc JOIN FETCH sc.student s JOIN FETCH sc.classes c " +
+           "WHERE c.tutor = :tutor AND sc.statusSeq = :enrollmentStatus AND c.status = :classStatus " +
+           "AND s.status <> :deletedStudentStatus " +
+           "ORDER BY s.firstName, s.lastName, c.displayName")
+    List<StudentClass> findEnrolmentsOfTutorsStudents(@Param("tutor") Tutor tutor,
+            @Param("enrollmentStatus") Integer enrollmentStatus,
+            @Param("classStatus") Integer classStatus,
+            @Param("deletedStudentStatus") Integer deletedStudentStatus);
+
 }

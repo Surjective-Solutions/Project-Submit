@@ -1,4 +1,4 @@
-import { protectedRequestPath } from '@/lib/api-client';
+import { API_BASE, protectedRequestPath } from '@/lib/api-client';
 
 // The students of the signed-in teacher: those enrolled in at least one of the teacher's own classes.
 //
@@ -11,6 +11,7 @@ import { protectedRequestPath } from '@/lib/api-client';
 //   Student = { student_number, first_name, last_name, status: "ACTIVE"|"INACTIVE"|"SUSPENDED"|"GRADUATED",
 //               profile_photo_url|null, gender, date_of_birth, grade, subject_stream, school_name, district,
 //               contact_number, whatsapp_number, email, guardian_name, guardian_contact,
+//               status_description,        // e.g. "Locked: logged in from another device"; status can also be DEVICE_LOCKED or LEFT
 //               classes: [{ id, title }]   // the teacher's classes this student is enrolled in
 //             }
 //
@@ -31,5 +32,9 @@ export async function getMyStudents() {
   }
   const list = await protectedRequestPath('/api/teacher-student/my-students', { method: 'GET' });
   if (!Array.isArray(list)) throw new Error('Unexpected response');
-  return list;
+  // The server sends photos as a path on itself ("/uploads/profile_photos/..."), so it needs the server's address.
+  return list.map((student) => ({
+    ...student,
+    profile_photo_url: student.profile_photo_url ? `${API_BASE}${student.profile_photo_url}` : null,
+  }));
 }

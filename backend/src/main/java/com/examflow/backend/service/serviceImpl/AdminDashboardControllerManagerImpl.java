@@ -20,6 +20,7 @@ import com.examflow.backend.dto.SlipsToVerifyResponse;
 import com.examflow.backend.dto.StreamCountResponse;
 import com.examflow.backend.dto.StudentSummaryResponse;
 import com.examflow.backend.dto.StudentsByStreamResponse;
+import com.examflow.backend.enums.StudentStatus;
 import com.examflow.backend.entity.ClassPaymentRecord;
 import com.examflow.backend.entity.Classes;
 import com.examflow.backend.entity.Student;
@@ -32,7 +33,7 @@ import com.examflow.backend.service.AdminDashboardControllerManager;
 public class AdminDashboardControllerManagerImpl implements AdminDashboardControllerManager {
 
     // Students with this status can log in; it is set on signup approval.
-    private static final Integer ACTIVE_STUDENT_STATUS = 2;
+    private static final Integer ACTIVE_STUDENT_STATUS = StudentStatus.ACTIVE.getSequence();
 
     // The academy runs on Sri Lanka time, so "this month" starts at midnight Colombo time.
     private static final ZoneId ACADEMY_ZONE = ZoneId.of("Asia/Colombo");

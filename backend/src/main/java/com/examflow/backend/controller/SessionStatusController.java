@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.examflow.backend.dto.SessionStatusResponse;
 import com.examflow.backend.entity.Cashier;
+import com.examflow.backend.enums.StudentStatus;
 import com.examflow.backend.entity.Instructor;
 import com.examflow.backend.entity.Student;
 import com.examflow.backend.entity.Tutor;
@@ -70,7 +71,7 @@ public class SessionStatusController {
             case "student":
                 // students get disabled when their account is used on a second device
                 Student student = studentRepository.findByStudentSeq(userSeq);
-                response.setActive(student != null && student.getStatus() != null && student.getStatus() == 2);
+                response.setActive(student != null && StudentStatus.ACTIVE.equals(StudentStatus.fromSequence(student.getStatus())));
                 return response;
             default:
                 // admin isn't covered by this feature

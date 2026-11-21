@@ -22,6 +22,12 @@ public interface StudentRepository extends JpaRepository<Student, Integer> {
 
     Student findByEmailAndStatus(String email, Integer status);
 
+    // First student with the number / email whose status is any of the given ones (used by login to tell a
+    // non-active student from one that does not exist).
+    Student findFirstByContactNumberAndStatusIn(String contactNumber, List<Integer> statuses);
+
+    Student findFirstByEmailAndStatusIn(String email, List<Integer> statuses);
+
     List<Student> findByStatus(Integer status);
 
     Student findByStudentSeq(Integer studentSeq);

@@ -59,4 +59,29 @@ public interface StudentClassesRepository extends JpaRepository<StudentClass, In
             @Param("classStatus") Integer classStatus,
             @Param("deletedStudentStatus") Integer deletedStudentStatus);
 
+    // The enrolments, in this tutor's active classes, of the one student whose student number is the code. The code
+    // must already be lower case without spaces or dashes; the stored number is brought to that form here. Empty
+    // when the student has no class of this tutor, so a teacher can never find someone else's student.
+    @Query("SELECT sc FROM StudentClass sc JOIN FETCH sc.student s JOIN FETCH sc.classes c " +
+           "WHERE c.tutor = :tutor AND sc.statusSeq = :enrollmentStatus AND c.status = :classStatus " +
+           "AND s.status <> :deletedStudentStatus " +
+           "AND LOWER(REPLACE(REPLACE(s.studentNo, ' ', ''), '-', '')) = :code " +
+           "ORDER BY c.displayName")
+    List<StudentClass> findEnrolmentsOfTutorsStudentByStudentNo(@Param("tutor") Tutor tutor,
+            @Param("code") String code,
+            @Param("enrollmentStatus") Integer enrollmentStatus,
+            @Param("classStatus") Integer classStatus,
+            @Param("deletedStudentStatus") Integer deletedStudentStatus);
+
+    // Same, for the student whose contact number is one of the given spellings of it (see the caller).
+    @Query("SELECT sc FROM StudentClass sc JOIN FETCH sc.student s JOIN FETCH sc.classes c " +
+           "WHERE c.tutor = :tutor AND sc.statusSeq = :enrollmentStatus AND c.status = :classStatus " +
+           "AND s.status <> :deletedStudentStatus AND s.contactNumber IN :contactNumbers " +
+           "ORDER BY c.displayName")
+    List<StudentClass> findEnrolmentsOfTutorsStudentByContactNumber(@Param("tutor") Tutor tutor,
+            @Param("contactNumbers") java.util.Collection<String> contactNumbers,
+            @Param("enrollmentStatus") Integer enrollmentStatus,
+            @Param("classStatus") Integer classStatus,
+            @Param("deletedStudentStatus") Integer deletedStudentStatus);
+
 }

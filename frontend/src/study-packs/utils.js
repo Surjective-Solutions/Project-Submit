@@ -119,6 +119,7 @@ export function packToForm(pack) {
     name: pack?.name ?? '',
     description: pack?.description ?? '',
     teacherId: pack?.teacherId != null ? String(pack.teacherId) : '',
+    classId: pack?.classId != null ? String(pack.classId) : '',
     grade: pack?.grade ?? '',
     subject: pack?.subject ?? '',
     price: pack?.price ? String(pack.price) : '',
@@ -140,6 +141,7 @@ export function formToValues(form) {
     name: form.name.trim(),
     description: form.description.trim(),
     teacherId: form.teacherId,
+    classId: form.classId,
     grade: form.grade,
     subject: form.subject,
     price: toNumber(form.price),
@@ -156,6 +158,7 @@ export function formToValues(form) {
 export const ERROR_MESSAGES = {
   name: 'Give the pack a name.',
   teacherId: 'Select a teacher.',
+  classId: 'Select a class.',
   grade: 'Select a grade.',
   subject: 'Select a subject.',
   price: 'Enter a price above zero.',
@@ -171,6 +174,7 @@ export function validatePack(form) {
   const errors = {
     name: !form.name.trim(),
     teacherId: !form.teacherId,
+    classId: !form.classId,
     grade: !form.grade,
     subject: !form.subject,
     price: !(price > 0),

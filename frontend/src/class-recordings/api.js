@@ -1,189 +1,117 @@
-// Class Recordings API for the admin console. Stubbed with an in-memory store until the backend exists.
+// Class Recordings API for the admin console. A "recording" here is only a record: its title, teacher, class date,
+// length and (optionally) a link to where the video is hosted. The video file is never uploaded. Saving a record makes
+// a recording code on the server (REC-1001, REC-1002, ...) that study packs and sessions use to point at it.
 //
-// Every function returns a Promise and throws an Error whose message is safe to show on screen, so the pages don't
-// change when real calls replace these. Nothing here is saved anywhere: a page refresh puts the sample data back.
+// Every function returns a Promise and throws an Error whose message is safe to show on screen.
 //
-// Planned endpoints (admin-only):
-//   GET   /tutors                                    -> [{ id, name, photoUrl, subject, level, mediums }]
-//   GET   /tutors/:id/folders                        -> every folder of the tutor [{ id, name, parentId }]
-//                                                       (GET ...?parent=:folderId for one level)
-//   GET   /tutors/:id/recordings                     -> [{ id, title, folderId, durationSec, sizeBytes, uploadedAt, code, shareUrl }]
-//                                                       (GET ...?folder=:folderId for one folder)
-//   POST  /folders        { tutorId, parentId, name }
-//   PATCH /folders/:id    { name?, parentId? }
-//   PATCH /recordings/:id { title?, folderId? }
-//   POST  /recordings     multipart or a signed-URL upload with progress { tutorId, folderId, title, file } -> { id, code, shareUrl }
-//   GET   /search?tutorId&folderId&q -> { folders, recordings }
-// getLibrary() below is those list calls together; the page filters and searches what it gets.
+// Endpoints (admin or tutor token):
+//   POST /api/class-recording/create  { title, tutorId?, classDate?, durationMins?, videoUrl? }
+//        -> { isSuccess, message, recording: { id, code, title, tutorId, tutorName, classDate, durationMins, videoUrl, createdAt } }
+//        An admin names the teacher (tutorId); for a teacher the server uses the one in the token.
+//   GET  /api/class-recording/list?tutorId=   -> [recording]   (a teacher always gets their own)
 //
-// The server must repeat every rule the page checks, because the page can be bypassed:
-//   - the caller is an admin
-//   - folder names: required, no / or \, no duplicate in the same parent (ignoring case)
-//   - a folder can't be moved into itself or one of its own sub-folders; the new parent must belong to the same tutor
-//   - a recording's folder must belong to the same tutor
-//   - uploads: a video file only (MP4, MOV, MKV or WebM), at most 10 GB, a non-empty title
-//   - the recording code (REC-XXXX-XXXX, characters A-Z and 2-9 without I, L, O, 0, 1) is made on the server and is unique
+// Folders are not on the server yet, so every recording sits at the top level and folders can't be made or changed.
+// The server repeats every rule the form checks, because the page can be bypassed.
 
-import { buildSeed } from './mockData';
-import { buildIndex, makeCode, normaliseCode, shareUrlFor, subtreeIds, videoFileError } from './utils';
-import { folderNameError, recordingTitleError } from './validators';
+import { API_BASE, getTutorById, getTutors, protectedRequestPath } from '@/lib/api-client';
+import { shareUrlFor } from './utils';
+import { recordingTitleError } from './validators';
 
-const LATENCY_MS = 150;
-const wait = (ms = LATENCY_MS) => new Promise((resolve) => setTimeout(resolve, ms));
-const clone = (value) => JSON.parse(JSON.stringify(value));
+const NO_FOLDERS = 'Folders are not available yet. Recordings are kept at the top level.';
 
-const db = buildSeed();
-let counter = 1000;
-const nextId = (prefix) => `${prefix}-${(counter += 1)}`;
-
-function requireTutor(tutorId) {
-  const tutor = db.tutors.find((t) => t.id === String(tutorId));
-  if (!tutor) throw new Error('This tutor no longer exists.');
-  return tutor;
-}
-
-function requireFolder(tutorId, folderId) {
-  if (folderId === null || folderId === undefined) return null;
-  const folder = db.folders.find((f) => f.id === folderId && f.tutorId === String(tutorId));
-  if (!folder) throw new Error('That folder no longer exists.');
-  return folder;
-}
-
-const siblingsOf = (tutorId, parentId) =>
-  db.folders.filter((f) => f.tutorId === String(tutorId) && (f.parentId ?? null) === (parentId ?? null));
-
-// Mock only: finds the library of a signed-in teacher (used by teacherApi.js). The sample tutors are made-up people,
-// so a teacher is matched by id first, then by subject; a teacher with neither gets a library of their own with one
-// folder, as the admin would have made it. The real backend looks the tutor up from the login token instead.
-export function resolveTutor({ id, name, subject, level, mediums }) {
-  let tutor = db.tutors.find((t) => t.id === String(id)) ?? (subject ? db.tutors.find((t) => t.subject === subject) : null);
-  if (!tutor) {
-    tutor = { id: String(id), name: name || 'You', photoUrl: null, subject: subject || '', level: level || 'A/L', mediums: mediums?.length ? mediums : ['English'] };
-    db.tutors.push(tutor);
-    db.folders.push({ id: `f-${tutor.id}-term`, tutorId: tutor.id, name: 'Term 2 · 2026', parentId: null });
-  }
-  return clone(tutor);
-}
-
-export async function listTutors() {
-  await wait();
-  return clone(db.tutors);
-}
-
-// Everything of one tutor: all folders and all recordings.
-export async function getLibrary(tutorId) {
-  await wait();
-  const tutor = requireTutor(tutorId);
+// The shape the pages use, built from what the server sends.
+export function toRecording(row) {
   return {
-    tutor: clone(tutor),
-    folders: clone(db.folders.filter((f) => f.tutorId === tutor.id)),
-    recordings: clone(db.recordings.filter((r) => r.tutorId === tutor.id)),
+    id: String(row.id),
+    tutorId: String(row.tutorId),
+    folderId: null,
+    title: row.title,
+    durationSec: (row.durationMins ?? 0) * 60,
+    sizeBytes: null,
+    classDate: row.classDate ?? null,
+    uploadedAt: row.createdAt,
+    code: row.code,
+    videoUrl: row.videoUrl ?? null,
+    shareUrl: row.videoUrl || shareUrlFor(row.code),
   };
 }
 
-export async function createFolder({ tutorId, parentId = null, name }) {
-  await wait();
-  requireTutor(tutorId);
-  requireFolder(tutorId, parentId);
-  const error = folderNameError(name, siblingsOf(tutorId, parentId));
-  if (error) throw new Error(error);
-  const folder = { id: nextId('f'), tutorId: String(tutorId), name: name.trim(), parentId };
-  db.folders.push(folder);
-  return clone(folder);
+// The server sends a photo as a path on itself, so it needs the server's address.
+const photoOf = (path) => (path ? (path.startsWith('/') ? `${API_BASE}${path}` : path) : null);
+
+// A tutor as the pages use them, from the server's profile.
+export function toTutor(profile) {
+  return {
+    id: String(profile.id),
+    name: profile.displayName || profile.teacher_name || profile.username || 'Teacher',
+    photoUrl: photoOf(profile.profile_image_url),
+    subject: profile.subject_area || profile.subject || '',
+    level: profile.examLevel || '',
+    mediums: String(profile.medium ?? '')
+      .split(/[,/]/)
+      .map((m) => m.trim())
+      .filter(Boolean),
+  };
 }
 
-// `changes` is { name?, parentId? }.
-export async function updateFolder(id, changes) {
-  await wait();
-  const folder = db.folders.find((f) => f.id === id);
-  if (!folder) throw new Error('That folder no longer exists.');
-
-  const nextName = changes.name !== undefined ? changes.name : folder.name;
-  const nextParent = changes.parentId !== undefined ? changes.parentId : folder.parentId;
-  requireFolder(folder.tutorId, nextParent);
-
-  if (nextParent !== null) {
-    const index = buildIndex(db.folders.filter((f) => f.tutorId === folder.tutorId), []);
-    if (subtreeIds(folder.id, index).has(nextParent)) throw new Error('A folder can’t be moved into itself.');
+async function request(path, options) {
+  try {
+    return await protectedRequestPath(path, options);
+  } catch (error) {
+    throw new Error(error?.message?.startsWith('HTTP Error 403')
+      ? 'You are not allowed to do this.'
+      : 'Could not reach the server. Please try again.');
   }
-  const error = folderNameError(nextName, siblingsOf(folder.tutorId, nextParent), folder.id);
-  if (error) throw new Error(error);
-
-  folder.name = String(nextName).trim();
-  folder.parentId = nextParent;
-  return clone(folder);
 }
 
-// `changes` is { title?, folderId? }.
-export async function updateRecording(id, changes) {
-  await wait();
-  const rec = db.recordings.find((r) => r.id === id);
-  if (!rec) throw new Error('That recording no longer exists.');
-  if (changes.folderId !== undefined) requireFolder(rec.tutorId, changes.folderId);
-  if (changes.title !== undefined) {
-    const error = recordingTitleError(changes.title);
-    if (error) throw new Error(error);
-    rec.title = changes.title.trim();
+export async function listTutors() {
+  const rows = await getTutors();
+  return (Array.isArray(rows) ? rows : []).map(toTutor);
+}
+
+// Everything of one tutor: their recordings (there are no folders yet).
+export async function getLibrary(tutorId) {
+  const profile = await getTutorById(tutorId);
+  if (!profile) throw new Error('This tutor no longer exists.');
+  const rows = await request(`/api/class-recording/list?tutorId=${encodeURIComponent(tutorId)}`, { method: 'GET' });
+  return {
+    tutor: toTutor(profile),
+    folders: [],
+    recordings: (Array.isArray(rows) ? rows : []).map(toRecording),
+  };
+}
+
+export async function createFolder() {
+  throw new Error(NO_FOLDERS);
+}
+
+export async function updateFolder() {
+  throw new Error(NO_FOLDERS);
+}
+
+export async function updateRecording() {
+  throw new Error('Recordings can’t be edited yet.');
+}
+
+// Saves the record. `tutorId` is ignored by the server for a teacher. `durationSec` is converted to whole minutes.
+// Resolves with the saved recording, including its new code.
+export async function saveRecording({ tutorId, title, classDate, durationSec = 0, videoUrl }) {
+  const titleError = recordingTitleError(title);
+  if (titleError) throw new Error(titleError);
+
+  const body = {
+    title: title.trim(),
+    tutorId: tutorId === undefined || tutorId === null ? undefined : Number(tutorId),
+    classDate: classDate || undefined,
+    durationMins: durationSec ? Math.round(durationSec / 60) : undefined,
+    videoUrl: videoUrl?.trim() || undefined,
+  };
+  const result = await request('/api/class-recording/create', { method: 'POST', body });
+  if (!result?.isSuccess || !result.recording) {
+    throw new Error(result?.message || 'The recording could not be saved.');
   }
-  if (changes.folderId !== undefined) rec.folderId = changes.folderId;
-  return clone(rec);
+  return toRecording(result.recording);
 }
 
-function uniqueCode() {
-  const taken = new Set(db.recordings.map((r) => normaliseCode(r.code)));
-  for (let attempt = 0; attempt < 50; attempt += 1) {
-    const code = makeCode();
-    if (!taken.has(normaliseCode(code))) return code;
-  }
-  throw new Error('Could not make a recording code. Please try again.');
-}
-
-// Mock upload: counts up like a real transfer. `onProgress({ loaded, total })` is called as it goes and `signal`
-// (an AbortSignal) cancels it. `durationSec` is what the browser read from the video.
-export function uploadRecording({ tutorId, folderId = null, title, file, durationSec = 0 }, { onProgress, signal } = {}) {
-  return new Promise((resolve, reject) => {
-    try {
-      requireTutor(tutorId);
-      requireFolder(tutorId, folderId);
-      const titleError = recordingTitleError(title);
-      if (titleError) throw new Error(titleError);
-      const fileError = videoFileError(file);
-      if (fileError) throw new Error(fileError);
-    } catch (err) {
-      reject(err);
-      return;
-    }
-
-    const total = file.size || 1;
-    const steps = 20;
-    let step = 0;
-    onProgress?.({ loaded: 0, total });
-
-    const timer = setInterval(() => {
-      step += 1;
-      onProgress?.({ loaded: Math.min(total, Math.round((total * step) / steps)), total });
-      if (step >= steps) {
-        clearInterval(timer);
-        const code = uniqueCode();
-        const recording = {
-          id: nextId('r'),
-          tutorId: String(tutorId),
-          folderId,
-          title: title.trim(),
-          durationSec,
-          sizeBytes: file.size,
-          uploadedAt: new Date().toISOString(),
-          code,
-          shareUrl: shareUrlFor(code),
-        };
-        db.recordings.push(recording);
-        resolve(clone(recording));
-      }
-    }, 130);
-
-    signal?.addEventListener('abort', () => {
-      clearInterval(timer);
-      reject(Object.assign(new Error('Upload cancelled.'), { name: 'AbortError' }));
-    });
-  });
-}
+// The library provider and the dialog call this name; it saves the record (nothing is uploaded).
+export const uploadRecording = saveRecording;

@@ -207,6 +207,7 @@ export default function StudyPacksPage({ api = adminApi, ownTeacher = false }) {
         pack={editingPack}
         draft={draft}
         teachers={teachers}
+        getClasses={api.getClasses}
         lockedTeacher={lockedTeacher}
         onCancel={discardDraft}
         onNext={handleNext}

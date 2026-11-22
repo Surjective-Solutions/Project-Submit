@@ -26,7 +26,7 @@ function revokeBlob(url) {
 // `lockedTeacher` ({ id, name, subject, examLevel }) is set in the teacher account: the form is already filled with that
 // teacher and their subject, so the Class card doesn't ask for them, only offers grades of their exam level, and the
 // revenue split (set by the institute) isn't shown.
-export default function StudyPackForm({ pack, draft, teachers, lockedTeacher = null, onCancel, onNext }) {
+export default function StudyPackForm({ pack, draft, teachers, getClasses, lockedTeacher = null, onCancel, onNext }) {
   const isPublished = pack?.status === 'published';
 
   const [form, setForm] = useState(draft.form);
@@ -36,6 +36,23 @@ export default function StudyPackForm({ pack, draft, teachers, lockedTeacher = n
   const [bannerTick, setBannerTick] = useState(0);
 
   const bannerRef = useRef(null);
+
+  // The classes of the chosen teacher. `teacherId` says which teacher the list is for, so a list that is still loading
+  // for the previous teacher is never shown for the next one.
+  const [classState, setClassState] = useState({ teacherId: '', list: [], failed: false });
+  useEffect(() => {
+    if (!form.teacherId || !getClasses) return undefined;
+    const teacherId = form.teacherId;
+    let cancelled = false;
+    getClasses(teacherId)
+      .then((list) => !cancelled && setClassState({ teacherId, list, failed: false }))
+      .catch(() => !cancelled && setClassState({ teacherId, list: [], failed: true }));
+    return () => {
+      cancelled = true;
+    };
+  }, [form.teacherId, getClasses]);
+  const classesReady = Boolean(form.teacherId) && classState.teacherId === form.teacherId;
+  const classOptions = classesReady ? classState.list : [];
 
   const validation = useMemo(() => validatePack(form), [form]);
 
@@ -59,11 +76,21 @@ export default function StudyPackForm({ pack, draft, teachers, lockedTeacher = n
   // Picking a teacher fills Subject, but only while Subject is still empty.
   function handleTeacherChange(teacherId) {
     setForm((prev) => {
-      const next = { ...prev, teacherId };
+      const next = { ...prev, teacherId, classId: '' }; // a class belongs to one teacher
       const teacher = teachers.find((t) => String(t.id) === String(teacherId));
       if (!prev.subject && teacher?.subject && SUBJECTS.includes(teacher.subject)) {
         next.subject = teacher.subject;
       }
+      return next;
+    });
+  }
+
+  // Picking a class fills Subject from the class, but only while Subject is still empty.
+  function handleClassChange(classId) {
+    setForm((prev) => {
+      const next = { ...prev, classId };
+      const picked = classOptions.find((c) => c.id === classId);
+      if (!prev.subject && picked?.subject && SUBJECTS.includes(picked.subject)) next.subject = picked.subject;
       return next;
     });
   }
@@ -126,8 +153,11 @@ export default function StudyPackForm({ pack, draft, teachers, lockedTeacher = n
             form={form}
             errors={shownErrors}
             teachers={teachers}
+            classOptions={classOptions}
+            classesState={!form.teacherId ? 'no-teacher' : !classesReady ? 'loading' : classState.failed ? 'failed' : 'ready'}
             onChange={update}
             onTeacherChange={handleTeacherChange}
+            onClassChange={handleClassChange}
             hideTeacher={Boolean(lockedTeacher)}
             hideSubject={Boolean(lockedTeacher?.subject)}
             examLevels={parseExamLevels(lockedTeacher?.examLevel)}

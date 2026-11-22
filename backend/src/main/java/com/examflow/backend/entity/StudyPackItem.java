@@ -15,19 +15,23 @@ import jakarta.persistence.Table;
 // One session of a study pack: a link to a class recording, plus the lesson title the admin
 // wrote for it and the position it is watched in.
 //
-// recordingCode is the only real link. The recording_* columns beside it are a copy of what
-// the recording looked like when the pack was saved, so the pack page can show dates and
-// durations while the Class Recordings module is still a frontend stub. Once that module has
-// a backend, fill these from it instead of from the request and they become a plain snapshot.
+// classRecording is the link to the saved recording record (class_recording_seq); recordingCode is
+// the same recording's code, kept beside it because the code is what students and the pages use. The
+// recording_* columns are a copy of what the recording looked like when the pack was saved, so the
+// pack keeps showing what was sold even if the record is changed later. Rows saved before the link
+// existed have no class_recording_seq.
 @Entity
 @Table(name = "study_pack_item")
 public class StudyPackItem {
 
     public static final Integer STATUS_ACTIVE = 2;
+    public static final Integer STATUS_DELETED = 0;
 
     private Integer studyPackItemSeq;
 
     private StudyPack studyPack;
+
+    private ClassRecording classRecording;
 
     private String recordingCode;
 
@@ -73,6 +77,17 @@ public class StudyPackItem {
 
     public void setStudyPack(StudyPack studyPack) {
         this.studyPack = studyPack;
+    }
+
+    // null only for sessions saved before this link existed
+    @ManyToOne
+    @JoinColumn(name = "class_recording_seq")
+    public ClassRecording getClassRecording() {
+        return classRecording;
+    }
+
+    public void setClassRecording(ClassRecording classRecording) {
+        this.classRecording = classRecording;
     }
 
     @Column(name = "recording_code")

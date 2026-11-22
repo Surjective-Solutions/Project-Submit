@@ -887,6 +887,15 @@ export async function createStudyPack(formData) {
   });
 }
 
+// Saves a study pack as the signed-in teacher. It is always a draft: the teacher comes from the token, the revenue
+// split is the institute's standard one, and only the teacher's own recordings and classes are accepted.
+// Same multipart form as createStudyPack. Returns { isSuccess, message }.
+export async function createMyStudyPack(formData) {
+  return protectedRequestWithFileHandling("/api/study-pack/create-mine", {
+    body: formData,
+  });
+}
+
 // ── Admin: student registration ─────────────────────────────────────────────────
 
 // Returns { isSuccess, message, duplicate, name, studentId } — name and studentId describe the
@@ -925,6 +934,37 @@ export async function updateAdminAccount(formData) {
   return protectedRequestWithFileHandling("/api/admin/account/update", {
     body: formData,
   });
+}
+
+// Every study pack with its sessions. A teacher's token gets only their own packs.
+export async function getStudyPacks() {
+  return protectedRequestPath("/api/study-pack/list", { method: "GET" });
+}
+
+// Changes a study pack as an admin. Same multipart form as createStudyPack; the sessions are replaced.
+// Returns { isSuccess, message, pack }.
+export async function updateStudyPack(id, formData) {
+  return protectedRequestWithFileHandling(`/api/study-pack/update/${id}`, {
+    method: "PUT",
+    body: formData,
+  });
+}
+
+// Changes one of the signed-in teacher's own study packs. Its status and revenue split stay as they are.
+export async function updateMyStudyPack(id, formData) {
+  return protectedRequestWithFileHandling(`/api/study-pack/update-mine/${id}`, {
+    method: "PUT",
+    body: formData,
+  });
+}
+
+// The active classes of a teacher, for the study pack form's Class dropdown. Returns [{ id, name, subject }].
+// A teacher's token always gets their own classes, whatever id is sent.
+export async function getStudyPackClasses(tutorId) {
+  return protectedRequestPath(
+    `/api/study-pack/classes?tutorId=${encodeURIComponent(tutorId)}`,
+    { method: "GET" }
+  );
 }
 
 // Saves the signed-in teacher's profile. `formData` is multipart: firstName, lastName, email, bio, mediums (comma

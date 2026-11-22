@@ -9,13 +9,14 @@ import styles from './study-packs.module.css';
 
 // A select with a leading icon. The placeholder option is hidden, so with nothing chosen the
 // control shows the prompt in the normal text colour.
-function SelectField({ id, value, onChange, placeholder, options, invalid }) {
+function SelectField({ id, value, onChange, placeholder, options, invalid, disabled = false }) {
   return (
     <div className={styles.selectWrap}>
       <select
         id={id}
         className={invalid ? `${styles.select} ${styles.inputInvalid}` : styles.select}
         value={value}
+        disabled={disabled}
         aria-invalid={invalid ? 'true' : undefined}
         aria-describedby={invalid ? `${id}-error` : undefined}
         onChange={(e) => onChange(e.target.value)}
@@ -43,8 +44,11 @@ export default function ClassSection({
   form,
   errors,
   teachers,
+  classOptions = [],
+  classesState = 'ready',
   onChange,
   onTeacherChange,
+  onClassChange,
   hideTeacher = false,
   hideSubject = false,
   examLevels = [],
@@ -54,6 +58,17 @@ export default function ClassSection({
     value: grade,
     label: grade,
   }));
+  const classChoices = classOptions.map((c) => ({ value: c.id, label: c.name }));
+  const classPlaceholder =
+    classesState === 'no-teacher'
+      ? 'Select a teacher first'
+      : classesState === 'loading'
+        ? 'Loading classes…'
+        : classesState === 'failed'
+          ? 'Could not load classes'
+          : classChoices.length
+            ? 'Select a class'
+            : 'This teacher has no active classes';
   const subjectOptions = SUBJECTS.map((subject) => ({ value: subject, label: subject }));
 
   return (
@@ -76,6 +91,18 @@ export default function ClassSection({
             />
           </Field>
         )}
+
+        <Field id="sp-class" label="Class" required error={errors.classId ? ERROR_MESSAGES.classId : ''}>
+          <SelectField
+            id="sp-class"
+            value={form.classId}
+            placeholder={classPlaceholder}
+            options={classChoices}
+            invalid={errors.classId}
+            disabled={classChoices.length === 0}
+            onChange={onClassChange}
+          />
+        </Field>
 
         <Field id="sp-grade" label="Grade" required error={errors.grade ? ERROR_MESSAGES.grade : ''}>
           <SelectField

@@ -104,7 +104,9 @@ public class FileStorageService {
                 directory.mkdirs();
             }
 
-            String originalName = file.getOriginalFilename();
+            // Only safe characters, so the name can go straight into a web address.
+            String originalName = file.getOriginalFilename() == null ? "cover"
+                    : file.getOriginalFilename().replaceAll("[^A-Za-z0-9._-]", "_");
             String uniqueName = System.currentTimeMillis() + "_" + originalName;
 
             String filePath = UPLOAD_STUDY_PACK_COVER_DIR + uniqueName;
@@ -158,6 +160,24 @@ public class FileStorageService {
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to store file", e);
+        }
+    }
+
+    // Deletes a stored study pack cover, given the file name saveStudyPackCover returned. Only a file directly in the
+    // cover folder is removed; a missing file is fine, and this never throws.
+    public void deleteStudyPackCover(String fileName) {
+        if (fileName == null || fileName.isBlank() || fileName.contains("/") || fileName.contains("\\")
+                || fileName.contains("..")) {
+            return;
+        }
+        try {
+            java.nio.file.Path directory = java.nio.file.Paths.get(UPLOAD_STUDY_PACK_COVER_DIR).toAbsolutePath().normalize();
+            java.nio.file.Path file = directory.resolve(fileName).normalize();
+            if (directory.equals(file.getParent())) {
+                java.nio.file.Files.deleteIfExists(file);
+            }
+        } catch (Exception e) {
+            System.out.println("Could not delete study pack cover " + fileName);
         }
     }
 

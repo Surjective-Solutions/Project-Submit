@@ -2,7 +2,10 @@ package com.examflow.backend.entity;
 
 import java.time.LocalDateTime;
 
+import com.examflow.backend.enums.StudyPackStatus;
+
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -16,9 +19,6 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "study_pack")
 public class StudyPack {
-
-    // study_pack.status — the row's lifecycle, the same values the rest of the app uses.
-    public static final Integer STATUS_ACTIVE = 2;
 
     // validity_type — how long a student keeps access after buying.
     // "custom" is the only one that reads validity_days; "exam" ends on the grade's exam day.
@@ -65,7 +65,8 @@ public class StudyPack {
     // how many students have bought the pack
     private Integer soldCount;
 
-    private Integer status;
+    // draft, published, expired or deleted (see StudyPackStatus)
+    private StudyPackStatus status;
 
     private LocalDateTime createdDateTime;
 
@@ -223,12 +224,13 @@ public class StudyPack {
         this.soldCount = soldCount;
     }
 
+    @Convert(converter = StudyPackStatusConverter.class)
     @Column(name = "status")
-    public Integer getStatus() {
+    public StudyPackStatus getStatus() {
         return status;
     }
 
-    public void setStatus(Integer status) {
+    public void setStatus(StudyPackStatus status) {
         this.status = status;
     }
 

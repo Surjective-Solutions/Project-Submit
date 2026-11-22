@@ -22,12 +22,18 @@ export default function RecordingRow({
     <div className={className} data-recording={recording.title}>
       <span className={styles.thumb} aria-hidden="true">
         <Icon name="play_arrow" size={24} fill={1} />
-        <span className={styles.thumbDur}>{formatClock(recording.durationSec)}</span>
+        {recording.durationSec ? <span className={styles.thumbDur}>{formatClock(recording.durationSec)}</span> : null}
       </span>
       <div className={styles.recMain}>
         <p className={styles.recTitle}>{recording.title}</p>
         <p className={styles.recMeta}>
-          {formatDate(recording.uploadedAt)} · {formatDuration(recording.durationSec)} · {formatBytes(recording.sizeBytes)}
+          {[
+            formatDate(recording.uploadedAt),
+            recording.durationSec ? formatDuration(recording.durationSec) : null,
+            recording.sizeBytes ? formatBytes(recording.sizeBytes) : null,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
         </p>
         {pathLabel ? (
           <button type="button" className={styles.resultPath} onClick={onOpenPath}>

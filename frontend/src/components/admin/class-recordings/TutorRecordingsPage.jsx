@@ -201,7 +201,7 @@ export default function TutorRecordingsPage({
       ) : null}
       <button type="button" className={styles.btnPrimary} onClick={() => setModal({ kind: 'upload' })}>
         <Icon name="upload" size={18} weight={600} />
-        Upload recording
+        Add recording
       </button>
     </>
   );
@@ -236,8 +236,8 @@ export default function TutorRecordingsPage({
           <h1 className={styles.title}>Class Recordings</h1>
           <p className={styles.subtitle}>
             {canManageFolders
-              ? 'Upload recordings and organise them into folders.'
-              : 'Upload your recordings into the folders set up by the admin.'}
+              ? 'Add your class recordings and get a code for each.'
+              : 'Add your class recordings and get a code for each.'}
           </p>
         </div>
       ) : (
@@ -283,7 +283,7 @@ export default function TutorRecordingsPage({
         {isEmpty ? (
           <div className={styles.empty}>
             <span className={styles.emptyTitle}>{folderId ? 'This folder is empty' : 'No recordings yet'}</span>
-            <span>{canManageFolders ? 'Create a sub-folder or upload a recording here.' : 'Upload a recording here.'}</span>
+            <span>{canManageFolders ? 'Create a sub-folder or add a recording here.' : 'Add a recording here.'}</span>
             <div className={styles.emptyActions}>{buttons}</div>
           </div>
         ) : null}

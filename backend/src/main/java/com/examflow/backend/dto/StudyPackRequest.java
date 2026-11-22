@@ -11,6 +11,9 @@ public class StudyPackRequest {
 
     private Integer teacher_id;
 
+    // the class the pack is for; must be an active class of the teacher
+    private Integer class_id;
+
     private String grade;
 
     private String subject;
@@ -31,6 +34,9 @@ public class StudyPackRequest {
     // true for "Save & publish". A pack that is already published stays published.
     private Boolean publish;
 
+    // true to remove the pack's current cover when no new one is sent (editing a pack)
+    private Boolean remove_cover;
+
     private String items;
 
     public String getName() {
@@ -47,6 +53,22 @@ public class StudyPackRequest {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public Boolean getRemove_cover() {
+        return remove_cover;
+    }
+
+    public void setRemove_cover(Boolean remove_cover) {
+        this.remove_cover = remove_cover;
+    }
+
+    public Integer getClass_id() {
+        return class_id;
+    }
+
+    public void setClass_id(Integer class_id) {
+        this.class_id = class_id;
     }
 
     public Integer getTeacher_id() {

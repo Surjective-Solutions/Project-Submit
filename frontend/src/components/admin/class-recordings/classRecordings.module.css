@@ -293,7 +293,7 @@
   font-size: 15.5px;
   font-weight: 800;
   line-height: 1.25;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .tutorSubject {
@@ -305,6 +305,7 @@
 
 .levelTag {
   flex: none;
+  white-space: nowrap;
   padding: 3px 10px;
   border-radius: 999px;
   font-size: 12px;

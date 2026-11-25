@@ -16,6 +16,19 @@ export default function TutorAvatar({ tutor, size = 56 }) {
   );
 }
 
+// The server may send the level as "A/L", "G.C.E. Advanced Level", "Advanced Level"... This turns any of them into
+// 'A/L' or 'O/L' (or '' when it is neither), so the tag, the filter and the counts all agree.
+export function levelKey(level) {
+  const text = String(level ?? '').toLowerCase();
+  if (/(^|[^a-z])a\s*\/\s*l([^a-z]|$)|advanced/.test(text)) return 'A/L';
+  if (/(^|[^a-z])o\s*\/\s*l([^a-z]|$)|ordinary/.test(text)) return 'O/L';
+  return '';
+}
+
+// Always the short form (A/L or O/L), so a long level name never squeezes the tutor's name.
 export function LevelTag({ level }) {
-  return <span className={`${styles.levelTag} ${level === 'O/L' ? styles.levelOL : styles.levelAL}`}>{level}</span>;
+  const key = levelKey(level);
+  const label = key || String(level ?? '');
+  if (!label) return null;
+  return <span className={`${styles.levelTag} ${key === 'O/L' ? styles.levelOL : styles.levelAL}`}>{label}</span>;
 }

@@ -5,7 +5,7 @@ import TeacherAttendancePage from '@/components/teacher/TeacherAttendancePage';
 import TeacherStudyPacksPage from '@/components/teacher/TeacherStudyPacksPage';
 import TeacherClassRecordingsPage from '@/components/teacher/TeacherClassRecordingsPage';
 import ExamsSection from '@/components/teacher/ExamsSection';
-import InstructorsSection from '@/components/teacher/InstructorsSection';
+import TeacherInstructorsPage from '@/components/teacher/instructors/TeacherInstructorsPage';
 import StatisticsSection from '@/components/teacher/StatisticsSection';
 import TeacherReportsPage from '@/components/teacher/reports/TeacherReportsPage';
 import AccountSection from '@/components/teacher/AccountSection';
@@ -25,7 +25,7 @@ export default async function TeacherDashboardPage({ searchParams }) {
   if (section === 'study-packs') return <TeacherStudyPacksPage />;
   if (section === 'class-recordings') return <TeacherClassRecordingsPage />;
   if (section === 'exams') return <ExamsSection />;
-  if (section === 'instructors') return <InstructorsSection />;
+  if (section === 'instructors') return <TeacherInstructorsPage />;
   if (section === 'statistics') return <StatisticsSection />;
   if (section === 'reports') return <TeacherReportsPage />;
   if (section === 'account') return <AccountSection />;

@@ -5,7 +5,7 @@ import { useTransitionNavigate } from '@/components/PageTransition';
 import Icon from '@/components/admin/Icon';
 import { listTutors } from '@/class-recordings/api';
 import { tutorHref } from '@/class-recordings/paths';
-import TutorAvatar, { LevelTag } from './TutorAvatar';
+import TutorAvatar, { LevelTag, levelKey } from './TutorAvatar';
 import styles from './classRecordings.module.css';
 
 const LEVEL_KEY = 'syz.classRecordings.level';
@@ -106,12 +106,12 @@ export default function ClassRecordingsPage() {
   const counts = useMemo(
     () => ({
       all: matching.length,
-      'A/L': matching.filter((t) => t.level === 'A/L').length,
-      'O/L': matching.filter((t) => t.level === 'O/L').length,
+      'A/L': matching.filter((t) => levelKey(t.level) === 'A/L').length,
+      'O/L': matching.filter((t) => levelKey(t.level) === 'O/L').length,
     }),
     [matching]
   );
-  const shown = level === 'all' ? matching : matching.filter((t) => t.level === level);
+  const shown = level === 'all' ? matching : matching.filter((t) => levelKey(t.level) === level);
 
   let body;
   if (status === 'loading') {
